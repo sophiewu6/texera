@@ -44,8 +44,11 @@ public class RegexToGramQueryTranslator {
             throws com.google.re2j.PatternSyntaxException {
 
         GramBooleanQuery result = translateUnsimplified(regex, gramLength);
+        System.out.println(result.toString());
         GramBooleanQuery dnf = GramBooleanQuery.toDNF(result);
+        System.out.println(dnf.toString());
         GramBooleanQuery simplifiedDNF = GramBooleanQuery.simplifyDNF(dnf);
+        System.out.println(simplifiedDNF.toString());
 
         TranslatorUtils.escapeSpecialCharacters(simplifiedDNF);
 

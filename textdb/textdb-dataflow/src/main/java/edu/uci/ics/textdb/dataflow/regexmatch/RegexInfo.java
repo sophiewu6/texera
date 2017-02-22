@@ -148,7 +148,7 @@ class RegexInfo {
         int gramLength = TranslatorUtils.GRAM_LENGTH;
 
         // Add the current prefix/suffix set to "match" query.
-        match = GramBooleanQuery.combine(match, strList);
+        //TODO match = GramBooleanQuery.combine(match, strList);
 
         // This loop reduces the length of prefix/suffix. It cuts all
         // strings longer than {@code gramLength}, and continues to cut strings

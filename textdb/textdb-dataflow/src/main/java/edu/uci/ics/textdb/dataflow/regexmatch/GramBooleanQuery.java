@@ -23,18 +23,21 @@ public class GramBooleanQuery {
 
     // leaf is useful only when operator == LEAF
     String leaf;
+    int gramOffset;
     // subQuerySet is useful only when (operator == AND || operator == OR)
     Set<GramBooleanQuery> subQuerySet;
 
     GramBooleanQuery(QueryOp operator) {
         this.operator = operator;
         leaf = "";
+        gramOffset = 0;
         subQuerySet = new HashSet<GramBooleanQuery>();
     }
 
-    static GramBooleanQuery newLeafNode(String literal) {
+    static GramBooleanQuery newLeafNode(String literal, int gramOffset) {
         GramBooleanQuery leafNode = new GramBooleanQuery(QueryOp.LEAF);
         leafNode.leaf = literal;
+        leafNode.gramOffset = gramOffset;
         return leafNode;
     }
 
@@ -86,8 +89,9 @@ public class GramBooleanQuery {
      */
     private static GramBooleanQuery literalNode(String literal) {
         GramBooleanQuery literalNode = new GramBooleanQuery(QueryOp.AND);
+        int gramOffset = 0;
         for (String gram : literalToNGram(literal)) {
-            literalNode.subQuerySet.add(newLeafNode(gram));
+            literalNode.subQuerySet.add(newLeafNode(gram, gramOffset++));
         }
         return literalNode;
     }
@@ -371,7 +375,7 @@ public class GramBooleanQuery {
         if (query.operator == QueryOp.ANY || query.operator == QueryOp.NONE) {
             return new GramBooleanQuery(query.operator);
         } else if (query.operator == QueryOp.LEAF) {
-            return newLeafNode(query.leaf);
+            return newLeafNode(query.leaf, query.gramOffset);
         } else {
             GramBooleanQuery toReturn = new GramBooleanQuery(query.operator);
             for (GramBooleanQuery subQuery : query.subQuerySet) {
@@ -391,7 +395,7 @@ public class GramBooleanQuery {
     public int hashCode() {
         int hashCode = this.operator.toString().hashCode();
         if (operator == QueryOp.LEAF) {
-            hashCode = hashCode ^ this.leaf.hashCode();
+            hashCode = hashCode ^ (this.leaf.hashCode() + ((Integer)(this.gramOffset)).hashCode());
         }
         // this hashCode() function requires the query object to be immutable
         // otherwise, it will cause errors equals() in hash based collections
@@ -425,7 +429,7 @@ public class GramBooleanQuery {
             return true;
         }
         if (this.operator == QueryOp.LEAF) {
-            return this.leaf.equals(that.leaf);
+            return this.leaf.equals(that.leaf) && (this.gramOffset == that.gramOffset);
         }
         if (!this.subQuerySet.equals(that.subQuerySet)) {
             return false;
@@ -486,7 +490,7 @@ public class GramBooleanQuery {
             return "";
         }
         if (query.operator == QueryOp.LEAF) {
-            return query.leaf;
+            return query.leaf + ":" + query.gramOffset;
         }
 
         StringJoiner joiner = new StringJoiner((query.operator == QueryOp.AND) ? " AND " : " OR ");

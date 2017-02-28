@@ -1,7 +1,11 @@
 package edu.uci.ics.textdb.dataflow.regexmatch;
 
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 
 import edu.uci.ics.textdb.api.common.ITuple;
@@ -76,6 +80,39 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         }
         
         return luceneQuery;
+    }
+    
+    public static Query createLucenePhraseQuery(RegexPredicate predicate, String fieldName) throws DataFlowException {
+    	Query luceneQuery;
+        String queryString;
+        GramBooleanQuery queryTree;
+        // Try to apply translator. If it fails, use scan query.
+        try {
+            queryTree = RegexToGramQueryTranslator.translate(predicate.getRegex());
+        } catch (com.google.re2j.PatternSyntaxException e) {
+            queryTree = null;
+        }
+
+        // If top operator is AND, create a flat AND query
+        if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
+            PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
+            for(GramBooleanQuery leaf : queryTree.subQuerySet){
+                phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.gramOffset);
+            }
+            return phraseQueryBuilder.build();
+        }else if (queryTree.operator == GramBooleanQuery.QueryOp.OR){
+            BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+            for(GramBooleanQuery orChild : queryTree.subQuerySet){
+                PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
+                for(GramBooleanQuery leaf: orChild.subQuerySet){
+                    phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.gramOffset);
+                }
+                booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.SHOULD);
+            }
+            return booleanQueryBuilder.build();
+        }
+        
+        return null;
     }
 
 }

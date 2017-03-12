@@ -9,14 +9,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
 import edu.uci.ics.textdb.dataflow.common.FuzzyTokenPredicate;
 import edu.uci.ics.textdb.dataflow.fuzzytokenmatcher.FuzzyTokenMatcherSourceOperator;
 import edu.uci.ics.textdb.perftest.medline.MedlineIndexWriter;
@@ -125,9 +126,10 @@ public class FuzzyTokenMatcherPerformanceTest {
             long startMatchTime = System.currentTimeMillis();
             fuzzyTokenSource.open();
             int counter = 0;
-            ITuple nextTuple = null;
+            Tuple nextTuple = null;
             while ((nextTuple = fuzzyTokenSource.getNextTuple()) != null) {
-                List<Span> spanList = ((ListField<Span>) nextTuple.getField(SchemaConstants.SPAN_LIST)).getValue();
+                ListField<Span> spanListField = nextTuple.getField(SchemaConstants.SPAN_LIST);
+                List<Span> spanList = spanListField.getValue();
                 counter += spanList.size();
             }
             fuzzyTokenSource.close();

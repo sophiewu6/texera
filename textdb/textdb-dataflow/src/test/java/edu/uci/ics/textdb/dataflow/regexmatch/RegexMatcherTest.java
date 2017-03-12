@@ -9,17 +9,17 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.TestConstants;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.utils.Utils;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
+import edu.uci.ics.textdb.api.utils.Utils;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 
 /**
  * Unit tests for RegexMatcher. Integration tests with RegexToGramTranslator.
@@ -48,20 +48,20 @@ public class RegexMatcherTest {
     @Test
     public void testGetNextTuplePeopleFirstName() throws Exception {
         String query = "g[^\\s]*";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 PEOPLE_TABLE, query, Arrays.asList(TestConstants.FIRST_NAME));
 
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "brad lie angelina"
-        List<ITuple> data = TestConstants.getSamplePeopleTuples();
+        List<Tuple> data = TestConstants.getSamplePeopleTuples();
         Schema spanSchema = Utils.addAttributeToSchema(TestConstants.SCHEMA_PEOPLE, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(TestConstants.FIRST_NAME, 11, 17, query, "gelina"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(2).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "george lin lin"
         spans.clear();
@@ -69,7 +69,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(3).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -77,20 +77,20 @@ public class RegexMatcherTest {
     @Test
     public void testGetNextTupleCorpURL() throws Exception {
         String query = "^(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w \\.-]*)*\\/?$";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 CORP_TABLE, query, Arrays.asList(RegexTestConstantsCorp.URL));
 
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "http://weibo.com"
-        List<ITuple> data = RegexTestConstantsCorp.getSampleCorpTuples();
+        List<Tuple> data = RegexTestConstantsCorp.getSampleCorpTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsCorp.SCHEMA_CORP, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsCorp.URL, 0, 16, query, "http://weibo.com"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(1).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "https://www.microsoft.com/en-us/"
         spans.clear();
@@ -98,7 +98,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(2).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -106,20 +106,20 @@ public class RegexMatcherTest {
     @Test
     public void testGetNextTupleCorpIP() throws Exception {
         String query = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 CORP_TABLE, query, Arrays.asList(RegexTestConstantsCorp.IP_ADDRESS));
 
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "66.220.144.0"
-        List<ITuple> data = RegexTestConstantsCorp.getSampleCorpTuples();
+        List<Tuple> data = RegexTestConstantsCorp.getSampleCorpTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsCorp.SCHEMA_CORP, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsCorp.IP_ADDRESS, 0, 12, query, "66.220.144.0"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(0).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "180.149.134.141"
         spans.clear();
@@ -127,7 +127,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(1).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "131.107.0.89"
         spans.clear();
@@ -135,7 +135,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(2).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
 
@@ -144,20 +144,20 @@ public class RegexMatcherTest {
     @Test
     public void testGetNextTupleStaffEmail() throws Exception {
         String query = "^([a-z0-9_\\.-]+)@([\\da-z\\.-]+)\\.([a-z\\.]{2,6})$";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 STAFF_TABLE, query, Arrays.asList(RegexTestConstantStaff.EMAIL));
 
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "k.bocanegra@uci.edu"
-        List<ITuple> data = RegexTestConstantStaff.getSampleStaffTuples();
+        List<Tuple> data = RegexTestConstantStaff.getSampleStaffTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantStaff.SCHEMA_STAFF, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantStaff.EMAIL, 0, 19, query, "m.bocanegra@164.com"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(0).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "hwangl@ics.uci.edu"
         spans.clear();
@@ -165,7 +165,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(1).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -173,13 +173,13 @@ public class RegexMatcherTest {
     @Test
     public void testRegexText1() throws Exception {
         String query = "test(er|ing|ed|s)?";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT));
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "test" & testing"
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 5, 9, query, "test"));
@@ -187,7 +187,7 @@ public class RegexMatcherTest {
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(0).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "tests"
         spans.clear();
@@ -195,7 +195,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(2).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "tested"
         spans.clear();
@@ -203,7 +203,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(3).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -211,13 +211,13 @@ public class RegexMatcherTest {
     @Test
     public void testRegexText2() throws Exception {
         String query = "follow(-| )?up";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT));
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "followup"
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 28, 36, query, "followup"));
@@ -225,7 +225,7 @@ public class RegexMatcherTest {
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(4).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "follow up"
         spans.clear();
@@ -234,7 +234,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(5).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "follow-up" & "followup"
         spans.clear();
@@ -243,7 +243,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(6).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -251,13 +251,13 @@ public class RegexMatcherTest {
     @Test
     public void testRegexText3() throws Exception {
         String query = "([a-zA-Z])+o[a-z]a[a-z]o";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT));
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match "Tomato" & "tomato"
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 0, 6, query, "Tomato"));
@@ -265,7 +265,7 @@ public class RegexMatcherTest {
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(7).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "Potato"
         spans.clear();
@@ -273,7 +273,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(8).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         // expected to match "avocado"
         spans.clear();
@@ -281,7 +281,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(9).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -289,13 +289,13 @@ public class RegexMatcherTest {
     @Test
     public void testRegexText4() throws Exception {
         String query = "\\[(.)?\\]";
-        List<ITuple> exactResults = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResults = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT));
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
         // expected to match [a] & [!]
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 110, 113, query, "[a]"));
@@ -303,7 +303,7 @@ public class RegexMatcherTest {
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(10).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         Assert.assertTrue(TestUtils.equals(expectedResults, exactResults));
     }
@@ -311,19 +311,19 @@ public class RegexMatcherTest {
     @Test
     public void testRegexWithLimit() throws Exception {
         String query = "patient";
-        List<ITuple> exactResultsWithLimit = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResultsWithLimit = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT), true, 2, 0);
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 4, 11, query, "patient"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(4).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         spans.clear();
         fields.clear();
@@ -332,7 +332,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(5).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         spans.clear();
         fields.clear();
@@ -340,7 +340,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(6).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         exactResultsWithLimit = Utils.removeFields(exactResultsWithLimit, SchemaConstants.PAYLOAD);
         Assert.assertTrue(TestUtils.containsAll(expectedResults, exactResultsWithLimit));
@@ -351,19 +351,19 @@ public class RegexMatcherTest {
     @Test
     public void testRegexWithLimitOffset() throws Exception {
         String query = "patient";
-        List<ITuple> exactResultsWithLimitOffset = RegexMatcherTestHelper.getQueryResults(
+        List<Tuple> exactResultsWithLimitOffset = RegexMatcherTestHelper.getQueryResults(
                 TEXT_TABLE, query, Arrays.asList(RegexTestConstantsText.CONTENT), true, 2, 1);
         
-        List<ITuple> expectedResults = new ArrayList<ITuple>();
+        List<Tuple> expectedResults = new ArrayList<Tuple>();
 
-        List<ITuple> data = RegexTestConstantsText.getSampleTextTuples();
+        List<Tuple> data = RegexTestConstantsText.getSampleTextTuples();
         Schema spanSchema = Utils.addAttributeToSchema(RegexTestConstantsText.SCHEMA_TEXT, SchemaConstants.SPAN_LIST_ATTRIBUTE);
         List<Span> spans = new ArrayList<Span>();
         spans.add(new Span(RegexTestConstantsText.CONTENT, 4, 11, query, "patient"));
         IField spanField = new ListField<Span>(new ArrayList<Span>(spans));
         List<IField> fields = new ArrayList<IField>(data.get(4).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         spans.clear();
         fields.clear();
@@ -372,7 +372,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(5).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         spans.clear();
         fields.clear();
@@ -380,7 +380,7 @@ public class RegexMatcherTest {
         spanField = new ListField<Span>(new ArrayList<Span>(spans));
         fields = new ArrayList<IField>(data.get(6).getFields());
         fields.add(spanField);
-        expectedResults.add(new DataTuple(spanSchema, fields.toArray(new IField[fields.size()])));
+        expectedResults.add(new Tuple(spanSchema, fields.toArray(new IField[fields.size()])));
 
         exactResultsWithLimitOffset = Utils.removeFields(exactResultsWithLimitOffset, SchemaConstants.PAYLOAD);
         Assert.assertTrue(TestUtils.containsAll(expectedResults, exactResultsWithLimitOffset));

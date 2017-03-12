@@ -9,22 +9,21 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.textdb.api.common.Attribute;
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.DateField;
-import edu.uci.ics.textdb.common.field.DoubleField;
-import edu.uci.ics.textdb.common.field.IntegerField;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.field.StringField;
-import edu.uci.ics.textdb.common.field.TextField;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.TestConstants;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
+import edu.uci.ics.textdb.api.field.DateField;
+import edu.uci.ics.textdb.api.field.DoubleField;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.field.IntegerField;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.field.StringField;
+import edu.uci.ics.textdb.api.field.TextField;
+import edu.uci.ics.textdb.api.schema.Attribute;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
 
 /**
  * @author ZhenfengQi
@@ -64,7 +63,7 @@ public class KeywordSubstringTest {
         attributeNames.add(TestConstants.DESCRIPTION);
 
         // Perform Query
-        List<ITuple> results = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
+        List<Tuple> results = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
 
         // Perform Check
         Assert.assertEquals(0, results.size());
@@ -100,12 +99,12 @@ public class KeywordSubstringTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
+        List<Tuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -143,12 +142,12 @@ public class KeywordSubstringTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
+        List<Tuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -188,12 +187,12 @@ public class KeywordSubstringTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
+        List<Tuple> resultList = KeywordTestHelper.getScanSourceResults(PEOPLE_TABLE, query, attributeNames, substring, Integer.MAX_VALUE, 0);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);

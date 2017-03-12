@@ -5,16 +5,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import edu.uci.ics.textdb.api.common.FieldType;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.utils.Utils;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.schema.AttributeType;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.Utils;
 import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.textdb.dataflow.common.FuzzyTokenPredicate;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 
 /**
  *  @author Zuozhi Wang (zuozhiw)
@@ -50,20 +52,20 @@ public class FuzzyTokenMatcher extends AbstractSingleInputOperator {
     }
 
     @Override
-    protected ITuple computeNextMatchingTuple() throws TextDBException {
-        ITuple inputTuple = null;
-        ITuple resultTuple = null;
+    protected Tuple computeNextMatchingTuple() throws TextDBException {
+        Tuple inputTuple = null;
+        Tuple resultTuple = null;
         
         while ((inputTuple = inputOperator.getNextTuple()) != null) {          
             // There's an implicit assumption that, in open() method, PAYLOAD is
             // checked before SPAN_LIST.
             // Therefore, PAYLOAD needs to be checked and added first
             if (!inputSchema.containsField(SchemaConstants.PAYLOAD)) {
-                inputTuple = Utils.getSpanTuple(inputTuple.getFields(),
-                        Utils.generatePayloadFromTuple(inputTuple, predicate.getLuceneAnalyzer()), outputSchema);
+                inputTuple = DataflowUtils.getSpanTuple(inputTuple.getFields(),
+                        DataflowUtils.generatePayloadFromTuple(inputTuple, predicate.getLuceneAnalyzer()), outputSchema);
             }
             if (!inputSchema.containsField(SchemaConstants.SPAN_LIST)) {
-                inputTuple = Utils.getSpanTuple(inputTuple.getFields(), new ArrayList<Span>(), outputSchema);
+                inputTuple = DataflowUtils.getSpanTuple(inputTuple.getFields(), new ArrayList<Span>(), outputSchema);
             }
             
             resultTuple = processOneInputTuple(inputTuple);
@@ -76,8 +78,9 @@ public class FuzzyTokenMatcher extends AbstractSingleInputOperator {
     }
 
     @Override
-    public ITuple processOneInputTuple(ITuple inputTuple) throws TextDBException {
-        List<Span> payload = (List<Span>) inputTuple.getField(SchemaConstants.PAYLOAD).getValue();
+    public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
+        ListField<Span> payloadField = inputTuple.getField(SchemaConstants.PAYLOAD);
+        List<Span> payload = payloadField.getValue();
         List<Span> relevantSpans = filterRelevantSpans(payload);
         List<Span> matchResults = new ArrayList<>();
 
@@ -87,17 +90,17 @@ public class FuzzyTokenMatcher extends AbstractSingleInputOperator {
          * 5 matching tokens, and we set threshold to 10, the number of spans
          * returned is 15. So we need to filter those 5 spans for attribute B.
          */
-        for (String fieldName : this.predicate.getAttributeNames()) {
-            FieldType fieldType = this.inputSchema.getAttribute(fieldName).getFieldType();   
+        for (String attributeName : this.predicate.getAttributeNames()) {
+            AttributeType attributeType = this.inputSchema.getAttribute(attributeName).getAttributeType();
             
             // types other than TEXT and STRING: throw Exception for now
-            if (fieldType != FieldType.TEXT && fieldType != FieldType.STRING) {
+            if (attributeType != AttributeType.TEXT && attributeType != AttributeType.STRING) {
                 throw new DataFlowException("FuzzyTokenMatcher: Fields other than TEXT or STRING are not supported");
             }
             
             List<Span> fieldSpans = 
                     relevantSpans.stream()
-                    .filter(span -> span.getFieldName().equals(fieldName))
+                    .filter(span -> span.getAttributeName().equals(attributeName))
                     .filter(span -> queryTokens.contains(span.getKey()))
                     .collect(Collectors.toList());
             
@@ -110,7 +113,8 @@ public class FuzzyTokenMatcher extends AbstractSingleInputOperator {
             return null;
         }
 
-        List<Span> spanList = (List<Span>) inputTuple.getField(SchemaConstants.SPAN_LIST).getValue();
+        ListField<Span> spanListField = inputTuple.getField(SchemaConstants.SPAN_LIST);
+        List<Span> spanList = spanListField.getValue();
         spanList.addAll(matchResults);
 
         return inputTuple;

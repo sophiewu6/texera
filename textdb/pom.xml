@@ -58,12 +58,12 @@
 
     <modules>
         <module>textdb-api</module>
-        <module>textdb-common</module>
         <module>textdb-storage</module>
         <module>textdb-dataflow</module>
         <module>textdb-perftest</module>
         <module>textdb-sandbox</module>
         <module>textdb-textql</module>
         <module>textdb-web</module>
+        <module>textdb-exp</module>
     </modules>
 </project>

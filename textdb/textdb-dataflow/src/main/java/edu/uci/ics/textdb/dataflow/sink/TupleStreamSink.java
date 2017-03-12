@@ -3,13 +3,14 @@ package edu.uci.ics.textdb.dataflow.sink;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
 import edu.uci.ics.textdb.api.dataflow.IOperator;
 import edu.uci.ics.textdb.api.dataflow.ISink;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.utils.Utils;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.Utils;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 
 /**
  * TupleStreamSink is a sink that can be used by the caller to get tuples one by one.
@@ -67,8 +68,8 @@ public class TupleStreamSink implements ISink {
     }
     
     @Override
-    public ITuple getNextTuple() throws TextDBException {
-        ITuple tuple = inputOperator.getNextTuple();
+    public Tuple getNextTuple() throws TextDBException {
+        Tuple tuple = inputOperator.getNextTuple();
         if (tuple == null) {
             return null;
         }
@@ -89,9 +90,9 @@ public class TupleStreamSink implements ISink {
      * @return a list of tuples
      * @throws TextDBException
      */
-    public List<ITuple> collectAllTuples() throws TextDBException {
-        ArrayList<ITuple> results = new ArrayList<>();
-        ITuple tuple;
+    public List<Tuple> collectAllTuples() throws TextDBException {
+        ArrayList<Tuple> results = new ArrayList<>();
+        Tuple tuple;
         while ((tuple = inputOperator.getNextTuple()) != null) {
             results.add(Utils.removeFields(tuple, SchemaConstants._ID, SchemaConstants.PAYLOAD));
         }

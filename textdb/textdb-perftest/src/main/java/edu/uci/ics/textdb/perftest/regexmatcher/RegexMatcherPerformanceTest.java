@@ -6,21 +6,19 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+
 import org.apache.lucene.analysis.Analyzer;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.common.constants.LuceneAnalyzerConstants;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
+
 import edu.uci.ics.textdb.dataflow.common.RegexPredicate;
-import edu.uci.ics.textdb.dataflow.regexmatch.RegexMatcher;
 import edu.uci.ics.textdb.dataflow.regexmatch.RegexMatcherSourceOperator;
-import edu.uci.ics.textdb.dataflow.source.IndexBasedSourceOperator;
 import edu.uci.ics.textdb.perftest.medline.MedlineIndexWriter;
 import edu.uci.ics.textdb.perftest.utils.PerfTestUtils;
-import edu.uci.ics.textdb.storage.DataReaderPredicate;
-import edu.uci.ics.textdb.storage.DataStore;
+import edu.uci.ics.textdb.storage.constants.LuceneAnalyzerConstants;
 
 /*
  * 
@@ -71,7 +69,7 @@ public class RegexMatcherPerformanceTest {
             if (file.getName().startsWith(".")) {
                 continue;
             }
-            String tableName = file.getName().replace(".txt", "");
+            String tableName = file.getName().replace(".txt", "") + "_trigram";
 
             PerfTestUtils.createFile(PerfTestUtils.getResultPath(csvFile), HEADER);
             fileWriter = new FileWriter(PerfTestUtils.getResultPath(csvFile),true);
@@ -106,9 +104,10 @@ public class RegexMatcherPerformanceTest {
 	        long startMatchTime = System.currentTimeMillis();
 	        regexSource.open();
 	        int counter = 0;
-	        ITuple nextTuple = null;
+	        Tuple nextTuple = null;
 	        while ((nextTuple = regexSource.getNextTuple()) != null) {
-	            List<Span> spanList = ((ListField<Span>) nextTuple.getField(SchemaConstants.SPAN_LIST)).getValue();
+	            ListField<Span> spanListField = nextTuple.getField(SchemaConstants.SPAN_LIST);
+	            List<Span> spanList = spanListField.getValue();
 	            counter += spanList.size();
 	        }
 	        regexSource.close();

@@ -1,7 +1,9 @@
 package edu.uci.ics.textdb.web.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.uci.ics.textdb.common.exception.PlanGenException;
+
+import edu.uci.ics.textdb.api.exception.PlanGenException;
 import edu.uci.ics.textdb.plangen.LogicalPlan;
 import edu.uci.ics.textdb.web.request.beans.*;
 
@@ -22,11 +24,14 @@ public class QueryPlanRequest {
     private ArrayList<OperatorBean> operatorBeans;
     @JsonProperty("links")
     private ArrayList<OperatorLinkBean> operatorLinkBeans;
+    @JsonIgnore
     private HashMap<String, HashMap<String, String>> operatorProperties;
+    @JsonIgnore
     private LogicalPlan logicalPlan;
 
     public static final String GET_PROPERTIES_FUNCTION_NAME = "getOperatorProperties";
-    public static final HashMap<String, Class> OPERATOR_BEAN_MAP = new HashMap<String, Class>() {{
+    public static final HashMap<String, Class<? extends OperatorBean>> OPERATOR_BEAN_MAP = 
+            new HashMap<String, Class<? extends OperatorBean>>() {{
         put("DictionaryMatcher", DictionaryMatcherBean.class);
         put("DictionarySource", DictionarySourceBean.class);
         put("FileSink", FileSinkBean.class);
@@ -71,10 +76,12 @@ public class QueryPlanRequest {
         this.operatorLinkBeans = operatorLinkBeans;
     }
 
+    @JsonIgnore
     public HashMap<String, HashMap<String, String>> getOperatorProperties() {
         return operatorProperties;
     }
 
+    @JsonIgnore
     public LogicalPlan getLogicalPlan() {
         return logicalPlan;
     }
@@ -88,7 +95,7 @@ public class QueryPlanRequest {
         this.operatorProperties = new HashMap<>();
         for(Iterator<OperatorBean> iter = operatorBeans.iterator(); iter.hasNext(); ) {
             OperatorBean operatorBean = iter.next();
-            Class operatorBeanClassName =  OPERATOR_BEAN_MAP.get(operatorBean.getOperatorType());
+            Class<? extends OperatorBean> operatorBeanClassName =  OPERATOR_BEAN_MAP.get(operatorBean.getOperatorType());
             try {
                 Method method = operatorBeanClassName.getMethod(GET_PROPERTIES_FUNCTION_NAME);
                 HashMap<String, String> currentOperatorProperty = (HashMap<String, String>) method.invoke(operatorBean);

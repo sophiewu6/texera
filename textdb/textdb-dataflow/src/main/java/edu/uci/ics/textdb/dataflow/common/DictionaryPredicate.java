@@ -3,24 +3,13 @@ package edu.uci.ics.textdb.dataflow.common;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Query;
 
-import edu.uci.ics.textdb.api.common.IDictionary;
-import edu.uci.ics.textdb.api.common.IPredicate;
-import edu.uci.ics.textdb.api.storage.IDataReader;
-import edu.uci.ics.textdb.api.storage.IDataStore;
-import edu.uci.ics.textdb.common.constants.DataConstants;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
-import edu.uci.ics.textdb.dataflow.source.ScanBasedSourceOperator;
-import edu.uci.ics.textdb.storage.DataReaderPredicate;
-import edu.uci.ics.textdb.storage.reader.DataReader;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
+import edu.uci.ics.textdb.api.dataflow.IPredicate;
 
 public class DictionaryPredicate implements IPredicate {
 
-    private IDictionary dictionary;
+    private Dictionary dictionary;
     private Analyzer luceneAnalyzer;
     private List<String> attributeNames;
     private KeywordMatchingType keywordMatchingType;
@@ -31,7 +20,7 @@ public class DictionaryPredicate implements IPredicate {
      * searched in String field we search for Exact string.
      */
 
-    public DictionaryPredicate(IDictionary dictionary, List<String> attributeNames, Analyzer luceneAnalyzer,
+    public DictionaryPredicate(Dictionary dictionary, List<String> attributeNames, Analyzer luceneAnalyzer,
             KeywordMatchingType keywordMatchingType) {
 
         this.dictionary = dictionary;

@@ -6,21 +6,23 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.uci.ics.textdb.api.common.FieldType;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
+import edu.uci.ics.textdb.api.constants.DataConstants;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
 import edu.uci.ics.textdb.api.dataflow.ISourceOperator;
-import edu.uci.ics.textdb.common.constants.DataConstants;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.utils.Utils;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.schema.AttributeType;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.Utils;
 import edu.uci.ics.textdb.dataflow.common.DictionaryPredicate;
 import edu.uci.ics.textdb.dataflow.common.KeywordPredicate;
 import edu.uci.ics.textdb.dataflow.keywordmatch.KeywordMatcherSourceOperator;
 import edu.uci.ics.textdb.dataflow.source.ScanBasedSourceOperator;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 
 /**
  * @author Sudeep (inkudo)
@@ -36,7 +38,7 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
     private Schema inputSchema;
     private Schema outputSchema;
 
-    private ITuple sourceTuple;
+    private Tuple sourceTuple;
     private String currentDictionaryEntry;
 
     private final DictionaryPredicate predicate;
@@ -135,7 +137,7 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
      * 
      */
     @Override
-    public ITuple getNextTuple() throws TextDBException {
+    public Tuple getNextTuple() throws TextDBException {
         if (resultCursor >= limit + offset - 1) {
             return null;
         }
@@ -180,11 +182,11 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
         }
         // Substring matching (based on scan)
         else {
-            ITuple sourceTuple;
-            ITuple resultTuple = null;
+            Tuple sourceTuple;
+            Tuple resultTuple = null;
             while ((sourceTuple = indexSource.getNextTuple()) != null) {
                 if (!inputSchema.containsField(SchemaConstants.SPAN_LIST)) {
-                    sourceTuple = Utils.getSpanTuple(sourceTuple.getFields(), new ArrayList<Span>(), outputSchema);
+                    sourceTuple = DataflowUtils.getSpanTuple(sourceTuple.getFields(), new ArrayList<Span>(), outputSchema);
                 }
                 resultTuple = computeMatchingResult(currentDictionaryEntry, sourceTuple);
                 if (resultTuple != null) {
@@ -227,24 +229,24 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
     }
 
     /*
-     * Match the key against the dataTuple. if there's no match, returns the
-     * original dataTuple object, if there's a match, return a new dataTuple
+     * Match the key against the Tuple. if there's no match, returns the
+     * original Tuple object, if there's a match, return a new Tuple
      * with span list added
      */
-    private ITuple computeMatchingResult(String key, ITuple sourceTuple) throws TextDBException {
+    private Tuple computeMatchingResult(String key, Tuple sourceTuple) throws TextDBException {
 
         List<String> attributeNames = predicate.getAttributeNames();
         List<Span> matchingResults = new ArrayList<>();
 
-        for (String fieldName : attributeNames) {
-            String fieldValue = sourceTuple.getField(fieldName).getValue().toString();
-            FieldType fieldType = inputSchema.getAttribute(fieldName).getFieldType();
+        for (String attributeName : attributeNames) {
+            String fieldValue = sourceTuple.getField(attributeName).getValue().toString();
+            AttributeType attributeType = inputSchema.getAttribute(attributeName).getAttributeType();
 
             // if attribute type is not TEXT, then key needs to match the
             // fieldValue exactly
-            if (fieldType != FieldType.TEXT) {
+            if (attributeType != AttributeType.TEXT) {
                 if (fieldValue.equals(key)) {
-                    matchingResults.add(new Span(fieldName, 0, fieldValue.length(), key, fieldValue));
+                    matchingResults.add(new Span(attributeName, 0, fieldValue.length(), key, fieldValue));
                 }
             }
             // if attribute type is TEXT, then key can match a substring of
@@ -257,7 +259,7 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
                     int start = matcher.start();
                     int end = matcher.end();
 
-                    matchingResults.add(new Span(fieldName, start, end, key, fieldValue.substring(start, end)));
+                    matchingResults.add(new Span(attributeName, start, end, key, fieldValue.substring(start, end)));
                 }
             }
         }
@@ -268,7 +270,8 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
             return null;
         }
 
-        List<Span> spanList = (List<Span>) sourceTuple.getField(SchemaConstants.SPAN_LIST).getValue();
+        ListField<Span> spanListField = sourceTuple.getField(SchemaConstants.SPAN_LIST);
+        List<Span> spanList = spanListField.getValue();
         spanList.addAll(matchingResults);
 
         return sourceTuple;

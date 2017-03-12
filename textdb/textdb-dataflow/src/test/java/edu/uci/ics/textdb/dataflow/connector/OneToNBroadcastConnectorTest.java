@@ -5,23 +5,24 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.field.TextField;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
+import edu.uci.ics.textdb.api.constants.TestConstants;
 import edu.uci.ics.textdb.api.dataflow.IOperator;
-import edu.uci.ics.textdb.common.constants.LuceneAnalyzerConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.TextField;
 import edu.uci.ics.textdb.dataflow.projection.ProjectionOperator;
 import edu.uci.ics.textdb.dataflow.projection.ProjectionPredicate;
 import edu.uci.ics.textdb.dataflow.source.ScanBasedSourceOperator;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
-import edu.uci.ics.textdb.storage.relation.RelationManager;
+import edu.uci.ics.textdb.storage.DataWriter;
+import edu.uci.ics.textdb.storage.RelationManager;
+import edu.uci.ics.textdb.storage.constants.LuceneAnalyzerConstants;
 import junit.framework.Assert;
 
 public class OneToNBroadcastConnectorTest {
@@ -34,10 +35,14 @@ public class OneToNBroadcastConnectorTest {
         
         // create the people table and write tuples
         relationManager.createTable(PEOPLE_TABLE, "../index/test_tables/" + PEOPLE_TABLE, 
-                TestConstants.SCHEMA_PEOPLE, LuceneAnalyzerConstants.standardAnalyzerString());        
-        for (ITuple tuple : TestConstants.getSamplePeopleTuples()) {
-            relationManager.insertTuple(PEOPLE_TABLE, tuple);
+                TestConstants.SCHEMA_PEOPLE, LuceneAnalyzerConstants.standardAnalyzerString());
+        
+        DataWriter peopleDataWriter = relationManager.getTableDataWriter(PEOPLE_TABLE);
+        peopleDataWriter.open();
+        for (Tuple tuple : TestConstants.getSamplePeopleTuples()) {
+            peopleDataWriter.insertTuple(tuple);
         }
+        peopleDataWriter.close();
     }
     
     @AfterClass
@@ -64,14 +69,14 @@ public class OneToNBroadcastConnectorTest {
         IField[] fields5 = { new TextField("Tall Fair") };
         IField[] fields6 = { new TextField("Short angry") };
 
-        ITuple tuple1 = new DataTuple(projectionSchema, fields1);
-        ITuple tuple2 = new DataTuple(projectionSchema, fields2);
-        ITuple tuple3 = new DataTuple(projectionSchema, fields3);
-        ITuple tuple4 = new DataTuple(projectionSchema, fields4);
-        ITuple tuple5 = new DataTuple(projectionSchema, fields5);
-        ITuple tuple6 = new DataTuple(projectionSchema, fields6);
+        Tuple tuple1 = new Tuple(projectionSchema, fields1);
+        Tuple tuple2 = new Tuple(projectionSchema, fields2);
+        Tuple tuple3 = new Tuple(projectionSchema, fields3);
+        Tuple tuple4 = new Tuple(projectionSchema, fields4);
+        Tuple tuple5 = new Tuple(projectionSchema, fields5);
+        Tuple tuple6 = new Tuple(projectionSchema, fields6);
         
-        List<ITuple> expectedResults = Arrays.asList(tuple1, tuple2, tuple3, tuple4, tuple5, tuple6);
+        List<Tuple> expectedResults = Arrays.asList(tuple1, tuple2, tuple3, tuple4, tuple5, tuple6);
         
         
         ProjectionPredicate projectionPredicate = new ProjectionPredicate(projectionFields);
@@ -85,8 +90,8 @@ public class OneToNBroadcastConnectorTest {
         
         projection1.open();    
         
-        List<ITuple> projection1Results = new ArrayList<>();
-        ITuple nextTuple = null;
+        List<Tuple> projection1Results = new ArrayList<>();
+        Tuple nextTuple = null;
         while ((nextTuple = projection1.getNextTuple()) != null) {
             projection1Results.add(nextTuple);
         }
@@ -94,7 +99,7 @@ public class OneToNBroadcastConnectorTest {
         
         projection2.open();
 
-        List<ITuple> projection2Results = new ArrayList<>();
+        List<Tuple> projection2Results = new ArrayList<>();
         nextTuple = null;
         while ((nextTuple = projection2.getNextTuple()) != null) {
             projection2Results.add(nextTuple);
@@ -125,19 +130,19 @@ public class OneToNBroadcastConnectorTest {
         output2.open();
         output3.open();
  
-        List<ITuple> output1Results = new ArrayList<>();
-        ITuple nextTuple = null;
+        List<Tuple> output1Results = new ArrayList<>();
+        Tuple nextTuple = null;
         while ((nextTuple = output1.getNextTuple()) != null) {
             output1Results.add(nextTuple);
         }
         
-        List<ITuple> output2Results = new ArrayList<>();
+        List<Tuple> output2Results = new ArrayList<>();
         nextTuple = null;
         while ((nextTuple = output2.getNextTuple()) != null) {
             output2Results.add(nextTuple);
         }
         
-        List<ITuple> output3Results = new ArrayList<>();
+        List<Tuple> output3Results = new ArrayList<>();
         nextTuple = null;
         while ((nextTuple = output3.getNextTuple()) != null) {
             output3Results.add(nextTuple);
@@ -147,7 +152,7 @@ public class OneToNBroadcastConnectorTest {
         output2.close();
         output3.close();
         
-        List<ITuple> expectedResults = TestConstants.getSamplePeopleTuples();
+        List<Tuple> expectedResults = TestConstants.getSamplePeopleTuples();
         
 
         Assert.assertTrue(TestUtils.equals(expectedResults, output1Results));

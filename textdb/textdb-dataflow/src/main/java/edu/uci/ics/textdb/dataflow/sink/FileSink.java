@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
-import edu.uci.ics.textdb.api.common.ITuple;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 
 /**
  * Created by chenli on 5/11/16.
@@ -16,7 +16,7 @@ public class FileSink extends AbstractSink {
     
     @FunctionalInterface
     public static interface TupleToString {
-        String convertToString(ITuple tuple);
+        String convertToString(Tuple tuple);
     }
 
     private PrintWriter printWriter;
@@ -50,7 +50,7 @@ public class FileSink extends AbstractSink {
     }
 
     @Override
-    protected void processOneTuple(ITuple nextTuple) {
+    protected void processOneTuple(Tuple nextTuple) {
         printWriter.write(toStringFunction.convertToString(nextTuple));
     }
     

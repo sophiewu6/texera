@@ -4,39 +4,44 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.TestConstants;
+import edu.uci.ics.textdb.api.constants.TestConstantsChinese;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.field.DateField;
+import edu.uci.ics.textdb.api.field.DoubleField;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.field.IntegerField;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.field.StringField;
+import edu.uci.ics.textdb.api.field.TextField;
+import edu.uci.ics.textdb.api.schema.Attribute;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
+import edu.uci.ics.textdb.api.utils.Utils;
+
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.textdb.api.common.Attribute;
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.DateField;
-import edu.uci.ics.textdb.common.field.DoubleField;
-import edu.uci.ics.textdb.common.field.IntegerField;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.field.StringField;
-import edu.uci.ics.textdb.common.field.TextField;
-import edu.uci.ics.textdb.common.utils.Utils;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 
 /**
  * @author Prakul
+ * 
+ * @author Qinhua Huang
  *
  */
 public class KeywordConjunctionTest {
 
     public static final String PEOPLE_TABLE = KeywordTestHelper.PEOPLE_TABLE;
     public static final String MEDLINE_TABLE = KeywordTestHelper.MEDLINE_TABLE;
+    public static final String CHINESE_TABLE = KeywordTestHelper.CHINESE_TABLE;
     
     public static final KeywordMatchingType conjunction = KeywordMatchingType.CONJUNCTION_INDEXBASED;
     
@@ -67,7 +72,7 @@ public class KeywordConjunctionTest {
         attributeNames.add(TestConstants.DESCRIPTION);
 
         // Perform the query
-        List<ITuple> results = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> results = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // check the results
         Assert.assertEquals(0, results.size());
@@ -101,12 +106,12 @@ public class KeywordConjunctionTest {
         IField[] fields1 = { new StringField("bruce"), new StringField("john Lee"), new IntegerField(46),
                 new DoubleField(5.50), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-14-1970")),
                 new TextField("Tall Angry"), new ListField<>(list) };
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform the query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // check the results
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -148,15 +153,15 @@ public class KeywordConjunctionTest {
                 new IntegerField(42), new DoubleField(5.99),
                 new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1974")), new TextField("Tall Fair"),
                 new ListField<>(list) };
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        ITuple tuple2 = new DataTuple(new Schema(schemaAttributes), fields2);
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        Tuple tuple2 = new Tuple(new Schema(schemaAttributes), fields2);
 
-        List<ITuple> expectedResultList = new ArrayList<>();
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
         expectedResultList.add(tuple2);
 
         // Perform the query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // check the results
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -193,12 +198,12 @@ public class KeywordConjunctionTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform the query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // check the results
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -243,12 +248,12 @@ public class KeywordConjunctionTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform the query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // check the results
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -281,7 +286,7 @@ public class KeywordConjunctionTest {
         attributeNames.add(TestConstants.DESCRIPTION);
 
         // Perform the query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction);
 
         // Check the results
         Assert.assertEquals(0, resultList.size());
@@ -302,8 +307,8 @@ public class KeywordConjunctionTest {
         }
         schemaAttributes[schemaAttributes.length - 1] = SchemaConstants.SPAN_LIST_ATTRIBUTE;
 
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction, 3, 0);
-        List<ITuple> expectedList = new ArrayList<>();
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction, 3, 0);
+        List<Tuple> expectedList = new ArrayList<>();
 
         Span span1 = new Span("description", 5, 10, "angry", "Angry", 1);
         Span span2 = new Span("description", 6, 11, "angry", "Angry", 1);
@@ -333,10 +338,10 @@ public class KeywordConjunctionTest {
                 new DoubleField(5.99), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1974")),
                 new TextField("Short angry"), new ListField<>(list4) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        ITuple tuple2 = new DataTuple(new Schema(schemaAttributes), fields2);
-        ITuple tuple3 = new DataTuple(new Schema(schemaAttributes), fields3);
-        ITuple tuple4 = new DataTuple(new Schema(schemaAttributes), fields4);
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        Tuple tuple2 = new Tuple(new Schema(schemaAttributes), fields2);
+        Tuple tuple3 = new Tuple(new Schema(schemaAttributes), fields3);
+        Tuple tuple4 = new Tuple(new Schema(schemaAttributes), fields4);
 
         expectedList.add(tuple1);
         expectedList.add(tuple2);
@@ -364,8 +369,8 @@ public class KeywordConjunctionTest {
         }
         schemaAttributes[schemaAttributes.length - 1] = SchemaConstants.SPAN_LIST_ATTRIBUTE;
 
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction, 3, 2);
-        List<ITuple> expectedList = new ArrayList<>();
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, conjunction, 3, 2);
+        List<Tuple> expectedList = new ArrayList<>();
 
         Span span1 = new Span("description", 5, 10, "angry", "Angry", 1);
         Span span2 = new Span("description", 6, 11, "angry", "Angry", 1);
@@ -395,10 +400,10 @@ public class KeywordConjunctionTest {
                 new DoubleField(5.99), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1974")),
                 new TextField("Short angry"), new ListField<>(list4) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        ITuple tuple2 = new DataTuple(new Schema(schemaAttributes), fields2);
-        ITuple tuple3 = new DataTuple(new Schema(schemaAttributes), fields3);
-        ITuple tuple4 = new DataTuple(new Schema(schemaAttributes), fields4);
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        Tuple tuple2 = new Tuple(new Schema(schemaAttributes), fields2);
+        Tuple tuple3 = new Tuple(new Schema(schemaAttributes), fields3);
+        Tuple tuple4 = new Tuple(new Schema(schemaAttributes), fields4);
 
         expectedList.add(tuple1);
         expectedList.add(tuple2);
@@ -411,4 +416,105 @@ public class KeywordConjunctionTest {
         Assert.assertEquals(resultList.size(), 2);
         Assert.assertTrue(TestUtils.containsAll(expectedList, resultList));
     }
+    
+    
+    /**
+     * Verifies GetNextTuple of Keyword Matcher and single word queries in Text
+     * Field using Chinese.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testSingleWordQueryInTextFieldChinese() throws Exception {
+        // Prepare the query
+        String query = "北京大学";
+        ArrayList<String> attributeNames = new ArrayList<>();
+        attributeNames.add(TestConstantsChinese.FIRST_NAME);
+        attributeNames.add(TestConstantsChinese.LAST_NAME);
+        attributeNames.add(TestConstantsChinese.DESCRIPTION);
+        
+     // Prepare the expected result list
+        List<Span> list = new ArrayList<>();
+        Span span = new Span("description", 0, 4, "北京大学", "北京大学", 0);
+        list.add(span);
+        Attribute[] schemaAttributes = new Attribute[TestConstantsChinese.ATTRIBUTES_PEOPLE.length + 1];
+
+        for (int count = 0; count < schemaAttributes.length - 1; count++) {
+            schemaAttributes[count] = TestConstantsChinese.ATTRIBUTES_PEOPLE[count];
+        }
+
+        schemaAttributes[schemaAttributes.length - 1] = SchemaConstants.SPAN_LIST_ATTRIBUTE;
+
+        IField[] fields1 = { new StringField("无忌"), new StringField("长孙"), new IntegerField(46),
+                new DoubleField(5.50), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-14-1970")),
+                new TextField("北京大学电气工程学院"), new ListField<>(list) };
+
+        IField[] fields2 = { new StringField("孔明"), new StringField("洛克贝尔"),
+                new IntegerField(42), new DoubleField(5.99),
+                new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1974")), new TextField("北京大学计算机学院"),
+                new ListField<>(list) };
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        Tuple tuple2 = new Tuple(new Schema(schemaAttributes), fields2);
+
+        List<Tuple> expectedResultList = new ArrayList<>();
+        expectedResultList.add(tuple1);
+        expectedResultList.add(tuple2);
+
+        // Perform the query
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(CHINESE_TABLE, query, attributeNames, 
+                conjunction, Integer.MAX_VALUE, 0);
+        
+        // check the results
+        boolean contains = TestUtils.equals(expectedResultList, resultList);
+        Assert.assertTrue(contains);
+    }
+    
+    
+    /**
+     * Verifies: data source has multiple attributes, and an entity can appear
+     * in all the fields and multiple times.
+     * Test for Chinese data.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testWordInMultipleFieldsQueryChinese() throws Exception {
+        // Prepare the query
+        String query = "建筑";
+        ArrayList<String> attributeNames = new ArrayList<>();
+        attributeNames.add(TestConstantsChinese.FIRST_NAME);
+        attributeNames.add(TestConstantsChinese.LAST_NAME);
+        attributeNames.add(TestConstantsChinese.DESCRIPTION);
+
+        // Prepare the expected result list
+        List<Span> list = new ArrayList<>();
+        Span span1 = new Span("lastName", 0, 2, "建筑", "建筑");
+        Span span2 = new Span("description", 3, 5, "建筑", "建筑", 2);
+        list.add(span1);
+        list.add(span2);
+
+        Attribute[] schemaAttributes = new Attribute[TestConstants.ATTRIBUTES_PEOPLE.length + 1];
+        for (int count = 0; count < schemaAttributes.length - 1; count++) {
+            schemaAttributes[count] = TestConstants.ATTRIBUTES_PEOPLE[count];
+        }
+        schemaAttributes[schemaAttributes.length - 1] = SchemaConstants.SPAN_LIST_ATTRIBUTE;
+
+        IField[] fields1 = { new StringField("宋江"), new StringField("建筑"),
+                new IntegerField(42), new DoubleField(5.99),
+                new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1974")), 
+                new TextField("伟大的建筑是历史的坐标，具有传承的价值。"), new ListField<>(list)};
+        
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
+        expectedResultList.add(tuple1);
+
+        // Perform the query
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(CHINESE_TABLE, query, attributeNames, 
+                conjunction, Integer.MAX_VALUE, 0);
+
+        // check the results
+        boolean contains = TestUtils.equals(expectedResultList, resultList);
+        Assert.assertTrue(contains);
+    }
+
 }

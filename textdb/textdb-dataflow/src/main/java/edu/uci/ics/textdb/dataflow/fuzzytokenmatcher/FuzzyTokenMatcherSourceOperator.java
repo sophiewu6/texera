@@ -6,22 +6,19 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanClause.Occur;
 
-import edu.uci.ics.textdb.api.common.ITuple;
 import edu.uci.ics.textdb.api.dataflow.ISourceOperator;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
+import edu.uci.ics.textdb.api.exception.StorageException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.api.storage.IDataStore;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
-import edu.uci.ics.textdb.common.exception.StorageException;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.textdb.dataflow.common.FuzzyTokenPredicate;
-import edu.uci.ics.textdb.storage.DataReaderPredicate;
-import edu.uci.ics.textdb.storage.reader.DataReader;
-import edu.uci.ics.textdb.storage.relation.RelationManager;
+import edu.uci.ics.textdb.storage.DataReader;
+import edu.uci.ics.textdb.storage.RelationManager;
 
 public class FuzzyTokenMatcherSourceOperator extends AbstractSingleInputOperator implements ISourceOperator {
     
     private FuzzyTokenPredicate predicate;
-    private IDataStore dataStore;
 
     private DataReader dataReader;
     private FuzzyTokenMatcher fuzzyTokenMatcher;
@@ -29,16 +26,11 @@ public class FuzzyTokenMatcherSourceOperator extends AbstractSingleInputOperator
     public FuzzyTokenMatcherSourceOperator(FuzzyTokenPredicate predicate, String tableName) 
             throws DataFlowException, StorageException {
         this.predicate = predicate;
-        
-        RelationManager relationManager = RelationManager.getRelationManager();
-        this.dataStore = relationManager.getTableDataStore(tableName);
 
         // generate dataReader
-        Query luceneQuery = createLuceneQueryObject(this.predicate);
-        DataReaderPredicate dataReaderPredicate = new DataReaderPredicate(
-                luceneQuery, dataStore);
-        dataReaderPredicate.setIsPayloadAdded(true);
-        dataReader = new DataReader(dataReaderPredicate);
+        Query luceneQuery = createLuceneQueryObject(this.predicate);   
+        this.dataReader = RelationManager.getRelationManager().getTableDataReader(tableName, luceneQuery);
+        this.dataReader.setPayloadAdded(true);
         
         // generate FuzzyTokenMatcher
         fuzzyTokenMatcher = new FuzzyTokenMatcher(predicate);
@@ -53,12 +45,12 @@ public class FuzzyTokenMatcherSourceOperator extends AbstractSingleInputOperator
     }
 
     @Override
-    protected ITuple computeNextMatchingTuple() throws TextDBException {
+    protected Tuple computeNextMatchingTuple() throws TextDBException {
         return this.fuzzyTokenMatcher.getNextTuple();
     }
 
     @Override
-    public ITuple processOneInputTuple(ITuple inputTuple) throws TextDBException {
+    public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
         return this.fuzzyTokenMatcher.processOneInputTuple(inputTuple);
     }
 

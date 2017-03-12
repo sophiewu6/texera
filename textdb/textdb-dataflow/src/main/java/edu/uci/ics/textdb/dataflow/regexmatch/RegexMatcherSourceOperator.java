@@ -8,16 +8,16 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 
-import edu.uci.ics.textdb.api.common.ITuple;
+import edu.uci.ics.textdb.api.constants.DataConstants;
 import edu.uci.ics.textdb.api.dataflow.ISourceOperator;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
+import edu.uci.ics.textdb.api.exception.StorageException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.constants.DataConstants;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
-import edu.uci.ics.textdb.common.exception.StorageException;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.textdb.dataflow.common.RegexPredicate;
-import edu.uci.ics.textdb.storage.reader.DataReader;
-import edu.uci.ics.textdb.storage.relation.RelationManager;
+import edu.uci.ics.textdb.storage.DataReader;
+import edu.uci.ics.textdb.storage.RelationManager;
 
 public class RegexMatcherSourceOperator extends AbstractSingleInputOperator implements ISourceOperator {
     
@@ -31,7 +31,7 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         this.predicate = predicate;
         this.tableName = tableName;
         
-        this.dataReader = RelationManager.getRelationManager().getTuples(this.tableName, 
+        this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.tableName, 
                 createLuceneQuery(this.predicate));
         
         regexMatcher = new RegexMatcher(this.predicate);
@@ -46,12 +46,12 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
     }
 
     @Override
-    protected ITuple computeNextMatchingTuple() throws TextDBException {
+    protected Tuple computeNextMatchingTuple() throws TextDBException {
         return this.regexMatcher.getNextTuple();
     }
 
     @Override
-    public ITuple processOneInputTuple(ITuple inputTuple) throws TextDBException {
+    public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
         return this.regexMatcher.processOneInputTuple(inputTuple);
     }
 

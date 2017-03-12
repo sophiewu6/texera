@@ -1,7 +1,7 @@
 package edu.uci.ics.textdb.api.dataflow;
 
-import edu.uci.ics.textdb.api.common.ITuple;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 
 /**
  * Created by chenli on 5/11/16.
@@ -17,7 +17,7 @@ public interface ISink extends IOperator {
 
     void close() throws TextDBException;
     
-    default ITuple getNextTuple() throws TextDBException {
+    default Tuple getNextTuple() throws TextDBException {
         throw new TextDBException("temp", new UnsupportedOperationException());
     }
     

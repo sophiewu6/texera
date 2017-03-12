@@ -3,16 +3,16 @@ package edu.uci.ics.textdb.dataflow.regexmatch;
 import java.util.ArrayList;
 import java.util.List;
 
-
-import edu.uci.ics.textdb.api.common.ITuple;
+import edu.uci.ics.textdb.api.constants.TestConstants;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.constants.LuceneAnalyzerConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
 import edu.uci.ics.textdb.dataflow.common.RegexPredicate;
 import edu.uci.ics.textdb.dataflow.source.ScanBasedSourceOperator;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
-import edu.uci.ics.textdb.storage.relation.RelationManager;
+import edu.uci.ics.textdb.storage.DataWriter;
+import edu.uci.ics.textdb.storage.RelationManager;
+import edu.uci.ics.textdb.storage.constants.LuceneAnalyzerConstants;
 
 /**
  * @author zuozhi
@@ -32,31 +32,47 @@ public class RegexMatcherTestHelper {
         
         // create the people table and write tuples
         relationManager.createTable(PEOPLE_TABLE, "../index/test_tables/" + PEOPLE_TABLE, 
-                TestConstants.SCHEMA_PEOPLE, LuceneAnalyzerConstants.nGramAnalyzerString(3));        
-        for (ITuple tuple : TestConstants.getSamplePeopleTuples()) {
-            relationManager.insertTuple(PEOPLE_TABLE, tuple);
+                TestConstants.SCHEMA_PEOPLE, LuceneAnalyzerConstants.nGramAnalyzerString(3));
+
+        DataWriter peopleDataWriter = relationManager.getTableDataWriter(PEOPLE_TABLE);
+        peopleDataWriter.open();
+        for (Tuple tuple : TestConstants.getSamplePeopleTuples()) {
+            peopleDataWriter.insertTuple(tuple);
         }
+        peopleDataWriter.close();
         
         // create the corporation table and write tuples
         relationManager.createTable(CORP_TABLE, "../index/test_tables/" + CORP_TABLE,
-                RegexTestConstantsCorp.SCHEMA_CORP, LuceneAnalyzerConstants.nGramAnalyzerString(3));       
-        for (ITuple tuple : RegexTestConstantsCorp.getSampleCorpTuples()) {
-            relationManager.insertTuple(CORP_TABLE, tuple);
+                RegexTestConstantsCorp.SCHEMA_CORP, LuceneAnalyzerConstants.nGramAnalyzerString(3));
+
+        DataWriter corpDataWriter = relationManager.getTableDataWriter(CORP_TABLE);
+        corpDataWriter.open();
+        for (Tuple tuple : RegexTestConstantsCorp.getSampleCorpTuples()) {
+            corpDataWriter.insertTuple(tuple);
         }
+        corpDataWriter.close();
         
         // create the staff table
         relationManager.createTable(STAFF_TABLE, "../index/tests/" + STAFF_TABLE,
-                RegexTestConstantStaff.SCHEMA_STAFF, LuceneAnalyzerConstants.nGramAnalyzerString(3));       
-        for (ITuple tuple : RegexTestConstantStaff.getSampleStaffTuples()) {
-            relationManager.insertTuple(STAFF_TABLE, tuple);
+                RegexTestConstantStaff.SCHEMA_STAFF, LuceneAnalyzerConstants.nGramAnalyzerString(3));
+
+        DataWriter staffDataWriter = relationManager.getTableDataWriter(STAFF_TABLE);
+        staffDataWriter.open();
+        for (Tuple tuple : RegexTestConstantStaff.getSampleStaffTuples()) {
+            staffDataWriter.insertTuple(tuple);
         }
+        staffDataWriter.close();
         
         // create the text table
         relationManager.createTable(TEXT_TABLE, "../index/tests/" + TEXT_TABLE,
-                RegexTestConstantsText.SCHEMA_TEXT, LuceneAnalyzerConstants.nGramAnalyzerString(3));       
-        for (ITuple tuple : RegexTestConstantsText.getSampleTextTuples()) {
-            relationManager.insertTuple(TEXT_TABLE, tuple);
+                RegexTestConstantsText.SCHEMA_TEXT, LuceneAnalyzerConstants.nGramAnalyzerString(3));
+
+        DataWriter textDataWriter = relationManager.getTableDataWriter(TEXT_TABLE);
+        textDataWriter.open();
+        for (Tuple tuple : RegexTestConstantsText.getSampleTextTuples()) {
+            textDataWriter.insertTuple(tuple);
         }
+        textDataWriter.close();
     }
     
     public static void deleteTestTables() throws TextDBException {
@@ -68,26 +84,26 @@ public class RegexMatcherTestHelper {
         relationManager.deleteTable(TEXT_TABLE);
     }
 
-    public static List<ITuple> getQueryResults(String tableName, String regex, List<String> attributeNames) throws Exception {
+    public static List<Tuple> getQueryResults(String tableName, String regex, List<String> attributeNames) throws Exception {
         return getQueryResults(tableName, regex, attributeNames, true);
     }
 
-    public static List<ITuple> getQueryResults(String tableName, String regex,  List<String> attributeNames, boolean useTranslator) throws Exception {
+    public static List<Tuple> getQueryResults(String tableName, String regex,  List<String> attributeNames, boolean useTranslator) throws Exception {
         return getQueryResults(tableName, regex, attributeNames, useTranslator, Integer.MAX_VALUE, 0);
     }
 
-    public static List<ITuple> getQueryResults(String tableName, String regex,  List<String> attributeNames, boolean useTranslator, 
+    public static List<Tuple> getQueryResults(String tableName, String regex,  List<String> attributeNames, boolean useTranslator, 
             int limit, int offset) throws Exception {
         
         // if the translator is not used, then use a scan source operator
         if (! useTranslator) {
             // results from a scan on the table followed by a regex match
-            List<ITuple> scanSourceResults = getScanSourceResults(tableName, regex, attributeNames, limit, offset);
+            List<Tuple> scanSourceResults = getScanSourceResults(tableName, regex, attributeNames, limit, offset);
             return scanSourceResults;
         // if the translator is used, compare the results from scan source and regex source
         } else {
-            List<ITuple> scanSourceResults = getScanSourceResults(tableName, regex, attributeNames, limit, offset);
-            List<ITuple> regexSourceResults = getRegexSourceResults(tableName, regex, attributeNames, limit, offset);
+            List<Tuple> scanSourceResults = getScanSourceResults(tableName, regex, attributeNames, limit, offset);
+            List<Tuple> regexSourceResults = getRegexSourceResults(tableName, regex, attributeNames, limit, offset);
 
             // if limit and offset are not relevant, the results from scan source and keyword source must be the same
             if (limit == Integer.MAX_VALUE && offset == 0) {
@@ -99,7 +115,7 @@ public class RegexMatcherTestHelper {
             } else {
                 // if limit and offset are relevant, then the results can be different (since the order doesn't matter)
                 // in this case, we get all the results and test if the whole result set contains both results
-                List<ITuple> allResults = getScanSourceResults(tableName, regex, attributeNames, Integer.MAX_VALUE, 0);
+                List<Tuple> allResults = getScanSourceResults(tableName, regex, attributeNames, Integer.MAX_VALUE, 0);
                 
                 if (scanSourceResults.size() == regexSourceResults.size() &&
                         TestUtils.containsAll(allResults, scanSourceResults) && 
@@ -112,7 +128,7 @@ public class RegexMatcherTestHelper {
         }        
     }
     
-    public static List<ITuple> getScanSourceResults(String tableName, String regex, List<String> attributeNames,
+    public static List<Tuple> getScanSourceResults(String tableName, String regex, List<String> attributeNames,
             int limit, int offset) throws TextDBException {
         ScanBasedSourceOperator scanSource = new ScanBasedSourceOperator(tableName);
         
@@ -125,8 +141,8 @@ public class RegexMatcherTestHelper {
         
         regexMatcher.setInputOperator(scanSource);
         
-        ITuple tuple;
-        List<ITuple> results = new ArrayList<>();
+        Tuple tuple;
+        List<Tuple> results = new ArrayList<>();
         
         regexMatcher.open();
         while ((tuple = regexMatcher.getNextTuple()) != null) {
@@ -137,7 +153,7 @@ public class RegexMatcherTestHelper {
         return results;
     }
     
-    public static List<ITuple> getRegexSourceResults(String tableName, String regex, List<String> attributeNames,
+    public static List<Tuple> getRegexSourceResults(String tableName, String regex, List<String> attributeNames,
             int limit, int offset) throws TextDBException {
         RegexPredicate regexPredicate = new RegexPredicate(regex, attributeNames, 
                 RelationManager.getRelationManager().getTableAnalyzer(tableName));
@@ -146,8 +162,8 @@ public class RegexMatcherTestHelper {
         regexSource.setLimit(limit);
         regexSource.setOffset(offset);
         
-        ITuple tuple;
-        List<ITuple> results = new ArrayList<>();
+        Tuple tuple;
+        List<Tuple> results = new ArrayList<>();
         
         regexSource.open();
         while ((tuple = regexSource.getNextTuple()) != null) {

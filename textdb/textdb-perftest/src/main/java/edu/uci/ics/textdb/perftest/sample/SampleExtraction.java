@@ -1,25 +1,12 @@
 package edu.uci.ics.textdb.perftest.sample;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Scanner;
-
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.plan.Plan;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.constants.LuceneAnalyzerConstants;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.StringField;
-import edu.uci.ics.textdb.common.field.TextField;
-import edu.uci.ics.textdb.common.utils.Utils;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
+import edu.uci.ics.textdb.api.engine.Engine;
+import edu.uci.ics.textdb.api.engine.Plan;
+import edu.uci.ics.textdb.api.field.StringField;
+import edu.uci.ics.textdb.api.field.TextField;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.dataflow.common.IJoinPredicate;
 import edu.uci.ics.textdb.dataflow.common.JoinDistancePredicate;
 import edu.uci.ics.textdb.dataflow.common.KeywordPredicate;
@@ -32,33 +19,75 @@ import edu.uci.ics.textdb.dataflow.projection.ProjectionOperator;
 import edu.uci.ics.textdb.dataflow.projection.ProjectionPredicate;
 import edu.uci.ics.textdb.dataflow.regexmatch.RegexMatcher;
 import edu.uci.ics.textdb.dataflow.sink.FileSink;
-import edu.uci.ics.textdb.engine.Engine;
+import edu.uci.ics.textdb.dataflow.utils.DataflowUtils;
 import edu.uci.ics.textdb.perftest.promed.PromedSchema;
-import edu.uci.ics.textdb.storage.relation.RelationManager;
+import edu.uci.ics.textdb.storage.DataWriter;
+import edu.uci.ics.textdb.storage.RelationManager;
+import edu.uci.ics.textdb.storage.constants.LuceneAnalyzerConstants;
+
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Scanner;
 
 public class SampleExtraction {
     
     public static final String PROMED_SAMPLE_TABLE = "promed";
         
-    public static final String promedFilesDirectory = "../textdb-perftest/sample-data-files/promed/";
-    public static final String promedIndexDirectory = "../textdb-perftest/index/standard/promed/";
-    
-    
+    public static String promedFilesDirectory;
+    public static String promedIndexDirectory;
+    public static String sampleDataFilesDirectory;
+
+    static {
+        try {
+            // Finding the absolute path to the sample data files directory and index directory
+
+            // Checking if the resource is in a jar
+            String referencePath = SampleExtraction.class.getResource("").toURI().toString();
+            if(referencePath.substring(0, 3).equals("jar")) {
+                promedFilesDirectory = "../textdb-perftest/src/main/resources/sample-data-files/promed/";
+                promedIndexDirectory = "../textdb-perftest/src/main/resources/index/standard/promed/";
+                sampleDataFilesDirectory = "../textdb-perftest/src/main/resources/sample-data-files/";
+            }
+            else {
+                promedFilesDirectory = Paths.get(SampleExtraction.class.getResource("/sample-data-files/promed")
+                        .toURI())
+                        .toString();
+                promedIndexDirectory = Paths.get(SampleExtraction.class.getResource("/index/standard")
+                        .toURI())
+                        .toString() + "/promed";
+                sampleDataFilesDirectory = Paths.get(SampleExtraction.class.getResource("/sample-data-files")
+                        .toURI())
+                        .toString();
+            }
+        }
+        catch(URISyntaxException | FileSystemNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String[] args) throws Exception {
-        
         // write the index of data files
         // index only needs to be written once, after the first run, this function can be commented out
         writeSampleIndex();
-        
+
         // perform the extraction task
         extractPersonLocation();
     }
-    
-    public static ITuple parsePromedHTML(String fileName, String content) {
+
+    public static Tuple parsePromedHTML(String fileName, String content) {
         try {
             Document parsedDocument = Jsoup.parse(content);
             String mainText = parsedDocument.getElementById("preview").text();
-            ITuple tuple = new DataTuple(PromedSchema.PROMED_SCHEMA, new StringField(fileName), new TextField(mainText));
+            Tuple tuple = new Tuple(PromedSchema.PROMED_SCHEMA, new StringField(fileName), new TextField(mainText));
             return tuple;
         } catch (Exception e) {
             return null;
@@ -68,7 +97,7 @@ public class SampleExtraction {
     public static void writeSampleIndex() throws Exception {
         // parse the original file
         File sourceFileFolder = new File(promedFilesDirectory);
-        ArrayList<ITuple> fileTuples = new ArrayList<>();
+        ArrayList<Tuple> fileTuples = new ArrayList<>();
         for (File htmlFile : sourceFileFolder.listFiles()) {
             StringBuilder sb = new StringBuilder();
             Scanner scanner = new Scanner(htmlFile);
@@ -76,7 +105,7 @@ public class SampleExtraction {
                 sb.append(scanner.nextLine());
             }
             scanner.close();
-            ITuple tuple = parsePromedHTML(htmlFile.getName(), sb.toString());
+            Tuple tuple = parsePromedHTML(htmlFile.getName(), sb.toString());
             if (tuple != null) {
                 fileTuples.add(tuple);
             }
@@ -89,10 +118,12 @@ public class SampleExtraction {
         relationManager.createTable(PROMED_SAMPLE_TABLE, promedIndexDirectory, 
                 PromedSchema.PROMED_SCHEMA, LuceneAnalyzerConstants.standardAnalyzerString());
         
-        for (ITuple tuple : fileTuples) {
-            relationManager.insertTuple(PROMED_SAMPLE_TABLE, tuple);
+        DataWriter dataWriter = relationManager.getTableDataWriter(PROMED_SAMPLE_TABLE);
+        dataWriter.open();
+        for (Tuple tuple : fileTuples) {
+            dataWriter.insertTuple(tuple);
         }
-        
+        dataWriter.close();
     }
 
     /*
@@ -122,7 +153,7 @@ public class SampleExtraction {
                 keywordPredicateZika, PROMED_SAMPLE_TABLE);
         
         ProjectionPredicate projectionPredicateIdAndContent = new ProjectionPredicate(
-                Arrays.asList(PromedSchema.ID, PromedSchema.CONTENT));
+                Arrays.asList(SchemaConstants._ID, PromedSchema.ID, PromedSchema.CONTENT));
         
         ProjectionOperator projectionOperatorIdAndContent1 = new ProjectionOperator(projectionPredicateIdAndContent);
         ProjectionOperator projectionOperatorIdAndContent2 = new ProjectionOperator(projectionPredicateIdAndContent);
@@ -135,34 +166,34 @@ public class SampleExtraction {
         NlpPredicate nlpPredicateLocation = new NlpPredicate(NlpPredicate.NlpTokenType.Location, Arrays.asList(PromedSchema.CONTENT));
         NlpExtractor nlpExtractorLocation = new NlpExtractor(nlpPredicateLocation);
 
-        IJoinPredicate joinPredicatePersonLocation = new JoinDistancePredicate(PromedSchema.ID, PromedSchema.CONTENT, 100);
+        IJoinPredicate joinPredicatePersonLocation = new JoinDistancePredicate(PromedSchema.CONTENT, 100);
         Join joinPersonLocation = new Join(joinPredicatePersonLocation);
         
         ProjectionPredicate projectionPredicateIdAndSpan = new ProjectionPredicate(
-                Arrays.asList(PromedSchema.ID, SchemaConstants.SPAN_LIST));
+                Arrays.asList(SchemaConstants._ID, PromedSchema.ID, SchemaConstants.SPAN_LIST));
         ProjectionOperator projectionOperatorIdAndSpan = new ProjectionOperator(projectionPredicateIdAndSpan);
          
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy-HH-mm-ss");
         FileSink fileSink = new FileSink( 
-                new File("./sample-data-files/person-location-result-" 
+                new File(sampleDataFilesDirectory + "/person-location-result-"
                 		+ sdf.format(new Date(System.currentTimeMillis())).toString() + ".txt"));
 
-        fileSink.setToStringFunction((tuple -> Utils.getTupleString(tuple)));
-        
-        
+        fileSink.setToStringFunction((tuple -> DataflowUtils.getTupleString(tuple)));
+
+
         projectionOperatorIdAndContent1.setInputOperator(keywordSource);
-        
+
         regexMatcherPerson.setInputOperator(projectionOperatorIdAndContent1);
-        
+
         projectionOperatorIdAndContent2.setInputOperator(regexMatcherPerson);
         nlpExtractorLocation.setInputOperator(projectionOperatorIdAndContent2);
-        
+
         joinPersonLocation.setInnerInputOperator(regexMatcherPerson);
         joinPersonLocation.setOuterInputOperator(nlpExtractorLocation);
                       
         projectionOperatorIdAndSpan.setInputOperator(joinPersonLocation);
         fileSink.setInputOperator(projectionOperatorIdAndSpan);
-        
+
         Plan extractPersonPlan = new Plan(fileSink);
         Engine.getEngine().evaluate(extractPersonPlan);
     }

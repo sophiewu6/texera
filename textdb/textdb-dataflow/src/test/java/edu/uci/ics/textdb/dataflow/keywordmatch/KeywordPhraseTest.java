@@ -4,31 +4,26 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.uci.ics.textdb.api.common.Attribute;
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
-import edu.uci.ics.textdb.common.constants.SchemaConstants;
-import edu.uci.ics.textdb.common.constants.TestConstants;
-import edu.uci.ics.textdb.common.constants.DataConstants.KeywordMatchingType;
-import edu.uci.ics.textdb.common.field.DataTuple;
-import edu.uci.ics.textdb.common.field.DateField;
-import edu.uci.ics.textdb.common.field.DoubleField;
-import edu.uci.ics.textdb.common.field.IntegerField;
-import edu.uci.ics.textdb.common.field.ListField;
-import edu.uci.ics.textdb.common.field.Span;
-import edu.uci.ics.textdb.common.field.StringField;
-import edu.uci.ics.textdb.common.field.TextField;
-import edu.uci.ics.textdb.dataflow.utils.TestUtils;
-import edu.uci.ics.textdb.storage.DataStore;
-import edu.uci.ics.textdb.storage.writer.DataWriter;
+import edu.uci.ics.textdb.api.constants.SchemaConstants;
+import edu.uci.ics.textdb.api.constants.TestConstants;
+import edu.uci.ics.textdb.api.constants.DataConstants.KeywordMatchingType;
+import edu.uci.ics.textdb.api.field.DateField;
+import edu.uci.ics.textdb.api.field.DoubleField;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.field.IntegerField;
+import edu.uci.ics.textdb.api.field.ListField;
+import edu.uci.ics.textdb.api.field.StringField;
+import edu.uci.ics.textdb.api.field.TextField;
+import edu.uci.ics.textdb.api.schema.Attribute;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.span.Span;
+import edu.uci.ics.textdb.api.tuple.Tuple;
+import edu.uci.ics.textdb.api.utils.TestUtils;
 
 /**
  * @author Prakul
@@ -67,7 +62,7 @@ public class KeywordPhraseTest {
         attributeNames.add(TestConstants.DESCRIPTION);
 
         // Perform Query
-        List<ITuple> results = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
+        List<Tuple> results = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
         Assert.assertEquals(0, results.size());
@@ -103,12 +98,12 @@ public class KeywordPhraseTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -149,12 +144,12 @@ public class KeywordPhraseTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -192,12 +187,12 @@ public class KeywordPhraseTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -235,12 +230,12 @@ public class KeywordPhraseTest {
                 new DoubleField(6.06), new DateField(new SimpleDateFormat("MM-dd-yyyy").parse("01-13-1973")),
                 new TextField("Lin Clooney is Short and lin clooney is Angry"), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
         // Perform Query
-        List<ITuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
+        List<Tuple> resultList = KeywordTestHelper.getQueryResults(PEOPLE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
         boolean contains = TestUtils.equals(expectedResultList, resultList);
@@ -256,15 +251,6 @@ public class KeywordPhraseTest {
      */
     @Test
     public void testWordInMultipleFieldsQueryWithStopWords3() throws Exception {
-        DataStore medDataStore = new DataStore("../index/test", keywordTestConstants.SCHEMA_MEDLINE);
-        Analyzer MedAnalyzer = new StandardAnalyzer();
-        DataWriter MedDataWriter = new DataWriter(medDataStore, MedAnalyzer);
-        MedDataWriter.clearData();
-        MedDataWriter.open();
-        for (ITuple tuple : keywordTestConstants.getSampleMedlineRecord()) {
-            MedDataWriter.insertTuple(tuple);
-        }
-        MedDataWriter.close();
         // Prepare Query
         String query = "skin rash";
         ArrayList<String> attributeNames = new ArrayList<>();
@@ -295,11 +281,11 @@ public class KeywordPhraseTest {
                                 + "initiate treatment with large doses of a sulfonamide and penicillin in combination."),
                 new DoubleField(0.664347980), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields1);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields1);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
         
-        List<ITuple> results = KeywordTestHelper.getQueryResults(
+        List<Tuple> results = KeywordTestHelper.getQueryResults(
                 MEDLINE_TABLE, query, attributeNames, phrase);
 
         // Perform Check
@@ -317,15 +303,6 @@ public class KeywordPhraseTest {
      */
     @Test
     public void testWordInMultipleFieldsQueryWithStopWords4() throws Exception {
-        DataStore medDataStore = new DataStore("../index/test", keywordTestConstants.SCHEMA_MEDLINE);
-        Analyzer MedAnalyzer = new StandardAnalyzer();
-        DataWriter MedDataWriter = new DataWriter(medDataStore, MedAnalyzer);
-        MedDataWriter.clearData();
-        MedDataWriter.open();
-        for (ITuple tuple : keywordTestConstants.getSampleMedlineRecord()) {
-            MedDataWriter.insertTuple(tuple);
-        }
-        MedDataWriter.close();
         // Prepare Query
         String query = "x-ray";
         ArrayList<String> attributeNames = new ArrayList<>();
@@ -351,11 +328,11 @@ public class KeywordPhraseTest {
                                 + "from Ophiuchus, may coincide with Kepler's 1604 supernova. All the x-ray sources are fairly close to the galactic plane."),
                 new DoubleField(0.667832788), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
-        List<ITuple> results = KeywordTestHelper.getQueryResults(
+        List<Tuple> results = KeywordTestHelper.getQueryResults(
                 MEDLINE_TABLE, query, attributeNames, phrase);
         
         // Perform Check
@@ -373,15 +350,6 @@ public class KeywordPhraseTest {
      */
     @Test
     public void testWordInMultipleFieldsQueryWithStopWords5() throws Exception {
-        DataStore medDataStore = new DataStore("../index/test", keywordTestConstants.SCHEMA_MEDLINE);
-        Analyzer MedAnalyzer = new StandardAnalyzer();
-        DataWriter MedDataWriter = new DataWriter(medDataStore, MedAnalyzer);
-        MedDataWriter.clearData();
-        MedDataWriter.open();
-        for (ITuple tuple : keywordTestConstants.getSampleMedlineRecord()) {
-            MedDataWriter.insertTuple(tuple);
-        }
-        MedDataWriter.close();
         // Prepare Query
         String query = "gain weight";
         ArrayList<String> attributeNames = new ArrayList<>();
@@ -417,11 +385,11 @@ public class KeywordPhraseTest {
                                 + "be given for the addition of sodium bicarbonate to milks containing a higher content of sodium."),
                 new DoubleField(0.667832788), new ListField<>(list) };
 
-        ITuple tuple1 = new DataTuple(new Schema(schemaAttributes), fields);
-        List<ITuple> expectedResultList = new ArrayList<>();
+        Tuple tuple1 = new Tuple(new Schema(schemaAttributes), fields);
+        List<Tuple> expectedResultList = new ArrayList<>();
         expectedResultList.add(tuple1);
 
-        List<ITuple> results = KeywordTestHelper.getQueryResults(
+        List<Tuple> results = KeywordTestHelper.getQueryResults(
                 MEDLINE_TABLE, query, attributeNames, phrase);
         
         // Perform Check

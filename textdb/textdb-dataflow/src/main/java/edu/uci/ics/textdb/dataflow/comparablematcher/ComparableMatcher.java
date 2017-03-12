@@ -1,9 +1,11 @@
 package edu.uci.ics.textdb.dataflow.comparablematcher;
 
-import edu.uci.ics.textdb.api.common.*;
-import edu.uci.ics.textdb.common.constants.DataConstants;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
+import edu.uci.ics.textdb.api.constants.DataConstants;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
+import edu.uci.ics.textdb.api.schema.Attribute;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.tuple.*;
 import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
 
 /**
@@ -11,7 +13,7 @@ import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
  *
  * @author Adrian Seungjin Lee
  */
-public class ComparableMatcher<T extends Comparable> extends AbstractSingleInputOperator {
+public class ComparableMatcher<T extends Comparable<T>> extends AbstractSingleInputOperator {
     private ComparablePredicate<T> predicate;
 
     private Schema inputSchema;
@@ -27,9 +29,9 @@ public class ComparableMatcher<T extends Comparable> extends AbstractSingleInput
     }
 
     @Override
-    protected ITuple computeNextMatchingTuple() throws TextDBException {
-        ITuple inputTuple = null;
-        ITuple resultTuple = null;
+    protected Tuple computeNextMatchingTuple() throws TextDBException {
+        Tuple inputTuple = null;
+        Tuple resultTuple = null;
 
         while ((inputTuple = inputOperator.getNextTuple()) != null) {
             resultTuple = processOneInputTuple(inputTuple);
@@ -42,19 +44,18 @@ public class ComparableMatcher<T extends Comparable> extends AbstractSingleInput
     }
 
     @Override
-    public ITuple processOneInputTuple(ITuple inputTuple) throws TextDBException {
-        ITuple resultTuple = null;
+    public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
+        Tuple resultTuple = null;
 
         Attribute attribute = predicate.getAttribute();
         DataConstants.NumberMatchingType operatorType = predicate.getMatchingType();
 
-        FieldType fieldType = attribute.getFieldType();
-        String fieldName = attribute.getFieldName();
+        String attributeName = attribute.getAttributeName();
 
         T value;
         T threshold;
         try {
-            value = (T) inputTuple.getField(fieldName).getValue();
+            value = (T) inputTuple.getField(attributeName).getValue();
             threshold = (T) predicate.getThreshold();
         } catch (ClassCastException e) {
             return null;

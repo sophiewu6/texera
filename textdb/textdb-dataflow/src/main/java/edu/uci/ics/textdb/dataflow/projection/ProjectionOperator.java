@@ -3,13 +3,12 @@ package edu.uci.ics.textdb.dataflow.projection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import edu.uci.ics.textdb.api.common.Attribute;
-import edu.uci.ics.textdb.api.common.IField;
-import edu.uci.ics.textdb.api.common.ITuple;
-import edu.uci.ics.textdb.api.common.Schema;
-import edu.uci.ics.textdb.common.exception.DataFlowException;
+import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
-import edu.uci.ics.textdb.common.field.DataTuple;
+import edu.uci.ics.textdb.api.field.IField;
+import edu.uci.ics.textdb.api.schema.Attribute;
+import edu.uci.ics.textdb.api.schema.Schema;
+import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.dataflow.common.AbstractSingleInputOperator;
 
 public class ProjectionOperator extends AbstractSingleInputOperator {
@@ -28,7 +27,7 @@ public class ProjectionOperator extends AbstractSingleInputOperator {
         List<Attribute> outputAttributes = 
                 inputSchema.getAttributes()
                 .stream()
-                .filter(attr -> predicate.getProjectionFields().contains(attr.getFieldName().toLowerCase()))
+                .filter(attr -> predicate.getProjectionFields().contains(attr.getAttributeName().toLowerCase()))
                 .collect(Collectors.toList());
         
         if (outputAttributes.size() != predicate.getProjectionFields().size()) {
@@ -38,8 +37,8 @@ public class ProjectionOperator extends AbstractSingleInputOperator {
     }
 
     @Override
-    protected ITuple computeNextMatchingTuple() throws TextDBException {
-        ITuple inputTuple = inputOperator.getNextTuple();
+    protected Tuple computeNextMatchingTuple() throws TextDBException {
+        Tuple inputTuple = inputOperator.getNextTuple();
         if (inputTuple == null) {
             return null;
         }
@@ -48,14 +47,14 @@ public class ProjectionOperator extends AbstractSingleInputOperator {
     }
 
     @Override
-    public ITuple processOneInputTuple(ITuple inputTuple) throws TextDBException {
+    public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
         IField[] outputFields =
                 outputSchema.getAttributes()
                         .stream()
-                        .map(attr -> inputTuple.getField(attr.getFieldName()))
+                        .map(attr -> inputTuple.getField(attr.getAttributeName()))
                         .toArray(IField[]::new);
 
-        return new DataTuple(outputSchema, outputFields);
+        return new Tuple(outputSchema, outputFields);
     }
 
     @Override

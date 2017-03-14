@@ -55,8 +55,8 @@ public class GramBooleanQuery {
      *            a list of strings to be combined with the query tree
      * @return new query tree
      */
-    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list) {
-        return computeConjunction(query, listNode(list));
+    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list, boolean fromExact) {
+        return computeConjunction(query, listNode(list, fromExact));
     }
 
     /*
@@ -67,14 +67,14 @@ public class GramBooleanQuery {
      * 
      * The relation of strings in a list is OR. <br>
      */
-    private static GramBooleanQuery listNode(List<String> literalList) {
+    private static GramBooleanQuery listNode(List<String> literalList, boolean fromExact) {
         if (TranslatorUtils.minLenOfString(literalList) < TranslatorUtils.GRAM_LENGTH) {
             return new GramBooleanQuery(QueryOp.ANY);
         }
 
         GramBooleanQuery listNode = new GramBooleanQuery(QueryOp.OR);
         for (String literal : literalList) {
-            listNode.subQuerySet.add(literalNode(literal));
+            listNode.subQuerySet.add(literalNode(literal, fromExact));
         }
         return listNode;
     }
@@ -87,11 +87,17 @@ public class GramBooleanQuery {
      * 
      * The relation of grams in a string is AND. <br>
      */
-    private static GramBooleanQuery literalNode(String literal) {
+    private static GramBooleanQuery literalNode(String literal, boolean putGramOffset) {
         GramBooleanQuery literalNode = new GramBooleanQuery(QueryOp.AND);
-        int gramOffset = 0;
-        for (String gram : literalToNGram(literal)) {
-            literalNode.subQuerySet.add(newLeafNode(gram, gramOffset++));
+        if(putGramOffset){
+        	int gramOffset = 0;
+        	for (String gram : literalToNGram(literal)) {
+        		literalNode.subQuerySet.add(newLeafNode(gram, gramOffset++));
+        	}
+        }else{
+        	for (String gram : literalToNGram(literal)) {
+        		literalNode.subQuerySet.add(newLeafNode(gram, -1));
+        	}
         }
         return literalNode;
     }

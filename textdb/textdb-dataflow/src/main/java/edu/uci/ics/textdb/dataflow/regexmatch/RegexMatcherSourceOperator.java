@@ -97,6 +97,9 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
             PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
             for(GramBooleanQuery leaf : queryTree.subQuerySet){
+            	if(leaf.gramOffset < 0){
+            		continue;
+            	}
                 phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.gramOffset);
             }
             return phraseQueryBuilder.build();
@@ -105,6 +108,9 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
             for(GramBooleanQuery orChild : queryTree.subQuerySet){
                 PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
                 for(GramBooleanQuery leaf: orChild.subQuerySet){
+                	if(leaf.gramOffset < 0){
+                		continue;
+                	}
                     phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.gramOffset);
                 }
                 booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.SHOULD);

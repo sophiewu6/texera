@@ -214,11 +214,11 @@ public class RegexToGramQueryTranslator {
         } else if (!xInfo.exact.isEmpty()) {
             xyInfo.prefix = TranslatorUtils.union(xInfo.exact, yInfo.prefix, false);
             xyInfo.suffix = TranslatorUtils.union(xInfo.exact, yInfo.suffix, true);
-            xInfo.match = GramBooleanQuery.combine(xInfo.match, xInfo.exact);
+            xInfo.match = GramBooleanQuery.combine(xInfo.match, xInfo.exact, true);
         } else if (!yInfo.exact.isEmpty()) {
             xyInfo.prefix = TranslatorUtils.union(xInfo.prefix, yInfo.exact, false);
             xyInfo.suffix = TranslatorUtils.union(xInfo.suffix, yInfo.exact, true);
-            yInfo.match = GramBooleanQuery.combine(yInfo.match, yInfo.exact);
+            yInfo.match = GramBooleanQuery.combine(yInfo.match, yInfo.exact, true);
         } else {
             xyInfo.prefix = TranslatorUtils.union(xInfo.prefix, yInfo.prefix, false);
             xyInfo.suffix = TranslatorUtils.union(xInfo.suffix, yInfo.suffix, true);
@@ -272,7 +272,7 @@ public class RegexToGramQueryTranslator {
                         + TranslatorUtils.minLenOfString(yInfo.prefix) >= TranslatorUtils.GRAM_LENGTH) {
 
             xyInfo.match = GramBooleanQuery.combine(xyInfo.match,
-                    TranslatorUtils.cartesianProduct(xInfo.suffix, yInfo.prefix, false));
+                    TranslatorUtils.cartesianProduct(xInfo.suffix, yInfo.prefix, false), false);
         }
 
         xyInfo.simplify(false);

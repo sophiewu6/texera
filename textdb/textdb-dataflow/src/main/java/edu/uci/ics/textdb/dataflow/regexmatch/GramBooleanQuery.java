@@ -10,6 +10,7 @@ import edu.uci.ics.textdb.api.constants.DataConstants;
 
 public class GramBooleanQuery {
 
+	static int groupIdSource = 0;
     enum QueryOp {
         NONE, // doesn't match any string
         ANY, // matches any string
@@ -24,6 +25,7 @@ public class GramBooleanQuery {
     // leaf is useful only when operator == LEAF
     String leaf;
     int gramOffset;
+    int groupId;
     // subQuerySet is useful only when (operator == AND || operator == OR)
     Set<GramBooleanQuery> subQuerySet;
 
@@ -31,13 +33,15 @@ public class GramBooleanQuery {
         this.operator = operator;
         leaf = "";
         gramOffset = 0;
+        groupId = 0;
         subQuerySet = new HashSet<GramBooleanQuery>();
     }
 
-    static GramBooleanQuery newLeafNode(String literal, int gramOffset) {
+    static GramBooleanQuery newLeafNode(String literal, int gramOffset, int groupId) {
         GramBooleanQuery leafNode = new GramBooleanQuery(QueryOp.LEAF);
         leafNode.leaf = literal;
         leafNode.gramOffset = gramOffset;
+        leafNode.groupId = groupId;
         return leafNode;
     }
 
@@ -55,8 +59,8 @@ public class GramBooleanQuery {
      *            a list of strings to be combined with the query tree
      * @return new query tree
      */
-    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list, boolean fromExact) {
-        return computeConjunction(query, listNode(list, fromExact));
+    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list) {
+        return computeConjunction(query, listNode(list));
     }
 
     /*
@@ -67,14 +71,14 @@ public class GramBooleanQuery {
      * 
      * The relation of strings in a list is OR. <br>
      */
-    private static GramBooleanQuery listNode(List<String> literalList, boolean fromExact) {
+    private static GramBooleanQuery listNode(List<String> literalList) {
         if (TranslatorUtils.minLenOfString(literalList) < TranslatorUtils.GRAM_LENGTH) {
             return new GramBooleanQuery(QueryOp.ANY);
         }
 
         GramBooleanQuery listNode = new GramBooleanQuery(QueryOp.OR);
         for (String literal : literalList) {
-            listNode.subQuerySet.add(literalNode(literal, fromExact));
+            listNode.subQuerySet.add(literalNode(literal));
         }
         return listNode;
     }
@@ -87,18 +91,13 @@ public class GramBooleanQuery {
      * 
      * The relation of grams in a string is AND. <br>
      */
-    private static GramBooleanQuery literalNode(String literal, boolean putGramOffset) {
+    private static GramBooleanQuery literalNode(String literal) {
         GramBooleanQuery literalNode = new GramBooleanQuery(QueryOp.AND);
-        if(putGramOffset){
-        	int gramOffset = 0;
-        	for (String gram : literalToNGram(literal)) {
-        		literalNode.subQuerySet.add(newLeafNode(gram, gramOffset++));
-        	}
-        }else{
-        	for (String gram : literalToNGram(literal)) {
-        		literalNode.subQuerySet.add(newLeafNode(gram, -1));
-        	}
-        }
+    	int gramOffset = 0;
+    	int groupId = GramBooleanQuery.groupIdSource ++;
+    	for (String gram : literalToNGram(literal)) {
+    		literalNode.subQuerySet.add(newLeafNode(gram, gramOffset++, groupId));
+    	}
         return literalNode;
     }
 
@@ -381,7 +380,7 @@ public class GramBooleanQuery {
         if (query.operator == QueryOp.ANY || query.operator == QueryOp.NONE) {
             return new GramBooleanQuery(query.operator);
         } else if (query.operator == QueryOp.LEAF) {
-            return newLeafNode(query.leaf, query.gramOffset);
+            return newLeafNode(query.leaf, query.gramOffset, query.groupId);
         } else {
             GramBooleanQuery toReturn = new GramBooleanQuery(query.operator);
             for (GramBooleanQuery subQuery : query.subQuerySet) {
@@ -401,7 +400,9 @@ public class GramBooleanQuery {
     public int hashCode() {
         int hashCode = this.operator.toString().hashCode();
         if (operator == QueryOp.LEAF) {
-            hashCode = hashCode ^ (this.leaf.hashCode() + ((Integer)(this.gramOffset)).hashCode());
+            hashCode = hashCode ^ (this.leaf.hashCode() + 
+            		((Integer)(this.gramOffset)).hashCode() + 
+            		((Integer)(this.groupId)).hashCode());
         }
         // this hashCode() function requires the query object to be immutable
         // otherwise, it will cause errors equals() in hash based collections
@@ -435,7 +436,9 @@ public class GramBooleanQuery {
             return true;
         }
         if (this.operator == QueryOp.LEAF) {
-            return this.leaf.equals(that.leaf) && (this.gramOffset == that.gramOffset);
+            return this.leaf.equals(that.leaf) && 
+            		(this.gramOffset == that.gramOffset) && 
+            		(this.groupId == that.groupId);
         }
         if (!this.subQuerySet.equals(that.subQuerySet)) {
             return false;
@@ -496,7 +499,7 @@ public class GramBooleanQuery {
             return "";
         }
         if (query.operator == QueryOp.LEAF) {
-            return query.leaf + ":" + query.gramOffset;
+            return query.leaf + ":(" + query.gramOffset + "," + query.groupId + ")";
         }
 
         StringJoiner joiner = new StringJoiner((query.operator == QueryOp.AND) ? " AND " : " OR ");

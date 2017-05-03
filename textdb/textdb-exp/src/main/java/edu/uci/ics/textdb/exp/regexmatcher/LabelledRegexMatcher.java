@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.HashSet;
 
 import edu.uci.ics.textdb.api.constants.SchemaConstants;
 import edu.uci.ics.textdb.api.exception.DataFlowException;
@@ -22,6 +23,7 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     private final RegexPredicate predicate;
     private static final String labelSyntax = "<[^<>]*>";
     
+    
     // two available regex engines, RegexMatcher will try RE2J first
     private enum RegexEngine {
         JavaRegex, RE2J
@@ -30,6 +32,8 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     private RegexEngine regexEngine;
     private com.google.re2j.Pattern re2jPattern;
     private java.util.regex.Pattern javaPattern;
+    private HashMap<Integer, HashSet<String>> idLabelMapping;
+    private String regexMod;
     
     private Schema inputSchema;
 
@@ -39,9 +43,11 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     
     @Override
     protected void setUp() throws DataFlowException {
+    	System.out.println("******Hi Setup******");
         inputSchema = inputOperator.getOutputSchema();
         outputSchema = inputSchema;
-        
+        idLabelMapping = new HashMap<Integer, HashSet<String>>();
+        regexMod = extractLabels(predicate.getRegex(), idLabelMapping);
         if (!this.inputSchema.containsField(SchemaConstants.SPAN_LIST)) {
             outputSchema = Utils.createSpanSchema(inputSchema);
         }
@@ -50,6 +56,7 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     
     @Override
     protected Tuple computeNextMatchingTuple() throws TextDBException {
+    	System.out.println("******Hi computenext******");
         Tuple inputTuple = null;
         Tuple resultTuple = null;
         
@@ -80,42 +87,59 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
      * @throws DataFlowException
      */
     @Override
-    public Tuple processOneInputTuple(Tuple inputTuple) throws DataFlowException {
-        if (inputTuple == null) {
-            return null;
-        }
+    public Tuple processOneInputTuple(Tuple inputTuple) {
+    	System.out.println("******Hi processoneTUpel******");
 
-        List<Span> matchingResults = new ArrayList<>();
-
-        for (String attributeName : predicate.getAttributeNames()) {
-            AttributeType attributeType = inputSchema.getAttribute(attributeName).getAttributeType();
-            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-
-            // types other than TEXT and STRING: throw Exception for now
-            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-            }
-
-            switch (regexEngine) {
-            case JavaRegex:
-                matchingResults.addAll(javaRegexMatch(fieldValue, attributeName));
-                break;
-            case RE2J:
-                matchingResults.addAll(re2jRegexMatch(fieldValue, attributeName));
-                break;
-            }
-        }
-
-        if (matchingResults.isEmpty()) {
-            return null;
-        }
-
-        ListField<Span> spanListField = inputTuple.getField(SchemaConstants.SPAN_LIST);
-        List<Span> spanList = spanListField.getValue();
-        spanList.addAll(matchingResults);
-
+    	HashMap<Integer, HashSet<String>> labelSpanList = createLabelledSpanList(inputTuple, idLabelMapping);
+    	System.out.println(labelSpanList.toString());
+//    	ArrayList<String> allRegexCombincations = generateAllCombinationsOfRegex(regexMod, labelSpanList);
+//        ListField<Span> spanListField = inputTuple.getField(SchemaConstants.SPAN_LIST);
+//        List<Span> spanList = spanListField.getValue();
+//    	for(String regex : allRegexCombincations) {
+//    		compileRegexPattern(regex);
+//    		spanList.addAll(labelledRegexMatcher(inputTuple));
+//    	}
+    	
         return inputTuple;
+
     }
+
+//    public Tuple processOneInputTuple(Tuple inputTuple) throws DataFlowException {
+//        if (inputTuple == null) {
+//            return null;
+//        }
+//
+//        List<Span> matchingResults = new ArrayList<>();
+//
+//        for (String attributeName : predicate.getAttributeNames()) {
+//            AttributeType attributeType = inputSchema.getAttribute(attributeName).getAttributeType();
+//            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
+//
+//            // types other than TEXT and STRING: throw Exception for now
+//            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
+//                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+//            }
+//
+//            switch (regexEngine) {
+//            case JavaRegex:
+//                matchingResults.addAll(javaRegexMatch(fieldValue, attributeName));
+//                break;
+//            case RE2J:
+//                matchingResults.addAll(re2jRegexMatch(fieldValue, attributeName));
+//                break;
+//            }
+//        }
+//
+//        if (matchingResults.isEmpty()) {
+//            return null;
+//        }
+//
+//        ListField<Span> spanListField = inputTuple.getField(SchemaConstants.SPAN_LIST);
+//        List<Span> spanList = spanListField.getValue();
+//        spanList.addAll(matchingResults);
+//
+//        return inputTuple;
+//    }
 
     private List<Span> javaRegexMatch(String fieldValue, String attributeName) {
         List<Span> matchingResults = new ArrayList<>();
@@ -181,7 +205,7 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     }
 
     
-    private static String extractLabels(String generalRegexPattern, HashMap<Integer, HashSet<String>> idLabelMapping) {
+    private String extractLabels(String generalRegexPattern, HashMap<Integer, HashSet<String>> idLabelMapping) {
     	HashMap<String, Integer> labelIDMapping = new HashMap<String, Integer>();
     	
     	java.util.regex.Pattern patt = java.util.regex.Pattern.compile(labelSyntax, 
@@ -219,22 +243,8 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     	}
     	return regexMod;
     }
-
-    public Tuple processOneInputTuple(Tuple inputTuple, HashMap<Integer, HashSet<String>> idLabelMapping, String genericRegex) {
-    	HashMap<Integer, HashSet<String>> labelSpanList = createLabelledSpanList(inputTuple, idLabelMapping);
-    	ArrayList<String> allRegexCombincations = generateAllCombinationsOfRegex(genericRegex, labelSpanList);
-        ListField<Span> spanListField = inputTuple.getField(SchemaConstants.SPAN_LIST);
-        List<Span> spanList = spanListField.getValue();
-    	for(String regex : allRegexCombincations) {
-    		compileRegexPattern(regex);
-    		spanList.addAll(labelledRegexMatcher(inputTuple));
-    	}
-    	
-        return inputTuple;
-
-    }
     
-    public List<Span> labelledRegexMatcher(Tuple inputTuple) throws DataFlowException {
+    private List<Span> labelledRegexMatcher(Tuple inputTuple) throws DataFlowException {
         if (inputTuple == null) {
             return null;
         }
@@ -263,23 +273,34 @@ public class LabelledRegexMatcher extends AbstractSingleInputOperator {
     }
 
     
-    private static ArrayList<String> generateAllCombinationsOfRegex(String genericRegex, HashMap<Integer, HashSet<String>> labelSpanList) {
+    private ArrayList<String> generateAllCombinationsOfRegex(String genericRegex, HashMap<Integer, HashSet<String>> labelSpanList) {
     	ArrayList<String> allRegexCombinations = new ArrayList<String>();
     	//////// YASHASWINI /////////
     	return allRegexCombinations;
     }
     
-    private static HashMap<Integer, HashSet<String>> createLabelledSpanList(Tuple inputTuple, HashMap<Integer, HashSet<String>> idLabelMapping) {
+    private HashMap<Integer, HashSet<String>> createLabelledSpanList(Tuple inputTuple, HashMap<Integer, HashSet<String>> idLabelMapping) {
     	HashMap<Integer, HashSet<String>> labelSpanList = new HashMap<Integer, HashSet<String>>();
-    	/////// HARSHIN //////////
-    	return labelSpanList;
+        for (int id : idLabelMapping.keySet()) {
+            HashSet<String> labels = idLabelMapping.get(id);
+            HashSet<String> values = new HashSet<String>();
+            for (String oneField : labels) {
+                ListField<Span> spanListField = inputTuple.getField(oneField);
+                List<Span> spanList = spanListField.getValue();
+                for (Span span : spanList) {
+                    values.add(span.getValue());
+                }
+            }
+            labelSpanList.put(id, values);
+        }
+        return labelSpanList;
     }
     
-    public static void main(String[] args) {
-    	HashMap<Integer, HashSet<String>> idLabelMapping = new HashMap<Integer, HashSet<String>>();
-    	String regexMod = extractLabels("<val1|val2> is cured by <val3> and <  val1 |  val2  >", idLabelMapping);
-    	System.out.println("Regex modified:- "+regexMod);
-    	System.out.println(idLabelMapping.toString());
-	}
+//    public static void main(String[] args) {
+//    	HashMap<Integer, HashSet<String>> idLabelMapping = new HashMap<Integer, HashSet<String>>();
+//    	String regexMod = extractLabels("<val1|val2> is cured by <val3> and <  val1 |  val2  >", idLabelMapping);
+//    	System.out.println("Regex modified:- "+regexMod);
+//    	System.out.println(idLabelMapping.toString());
+//	}
     
 }

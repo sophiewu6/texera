@@ -49,7 +49,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     protected void setUp() throws DataFlowException {
         inputSchema = inputOperator.getOutputSchema();
         outputSchema = inputSchema;
-        idLabelMapping = new HashMap<Integer, HashSet<String>>();
+        idLabelMapping = new HashMap<>();
         regexMod = extractLabels(predicate.getRegex(), idLabelMapping);
         if(idLabelMapping.size()==0) {
         	// No labels in regex
@@ -343,8 +343,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 		return resultArray;
 		
 	}
-    
-    
+
     private HashMap<Integer, HashSet<String>> createLabelledSpanList(Tuple inputTuple, HashMap<Integer, HashSet<String>> idLabelMapping) {
     	HashMap<Integer, HashSet<String>> labelSpanList = new HashMap<Integer, HashSet<String>>();
         for (int id : idLabelMapping.keySet()) {

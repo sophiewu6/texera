@@ -1,8 +1,6 @@
 package edu.uci.ics.textdb.exp.regexmatcher;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -385,6 +383,13 @@ public class RegexMatcherTest {
         Assert.assertTrue(TestUtils.containsAll(expectedResults, exactResultsWithLimitOffset));
         Assert.assertEquals(expectedResults.size(), 3);
         Assert.assertEquals(exactResultsWithLimitOffset.size(), 2);
+    }
+
+    @Test
+    public void extractLabelsTest() throws Exception {
+        String regex = "This <drug> cure this <disease>";
+        Set<String> set = RegexMatcher.extractLabels(regex);
+
     }
 
     // @Test

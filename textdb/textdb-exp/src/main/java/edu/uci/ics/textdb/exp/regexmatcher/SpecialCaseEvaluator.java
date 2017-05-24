@@ -1,16 +1,13 @@
 package edu.uci.ics.textdb.exp.regexmatcher;
 
-import edu.uci.ics.textdb.api.constants.ErrorMessages;
 import edu.uci.ics.textdb.api.constants.SchemaConstants;
 import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
 import edu.uci.ics.textdb.api.field.ListField;
-import edu.uci.ics.textdb.api.schema.Attribute;
 import edu.uci.ics.textdb.api.schema.AttributeType;
 import edu.uci.ics.textdb.api.schema.Schema;
 import edu.uci.ics.textdb.api.span.Span;
 import edu.uci.ics.textdb.api.tuple.Tuple;
-import edu.uci.ics.textdb.api.utils.Utils;
 import edu.uci.ics.textdb.exp.common.AbstractSingleInputOperator;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -38,22 +35,25 @@ public class SpecialCaseEvaluator extends AbstractSingleInputOperator {
     }
 
     //This <drug> can <cure> this sea
-    public void evaluate(String content, String attributeName, String regex, List<String> labs, int index, Map<String, Set<Span>> labelSpan) {
+    public void evaluate(String content, Set<Integer> res, String attributeName, String regex, List<String> labs, int index, Map<String, Set<Span>> labelSpan) {
         if (index == labs.size()) {
             return;
         }
         String label = labs.get(index);
         int i = regex.indexOf(label);
         String head = regex.substring(0, i - 1);
-
+        int len = head.length();
         Set<Span> spens = labelSpan.get(label);
         for (Span span : spens) {
-            if(span.getAttributeName().equals(attributeName)){
-                int start = span.getStart();
-                //
+            int start = span.getStart();
+            if (start - len < 0) {
+                continue;
+            }
+            String temp = content.substring(start - len, start);
+            if (temp.equals(head)) {
+                res.add(start - len);
             }
         }
-        //final result
     }
 
     private List<String> labels(String regex) {

@@ -115,4 +115,32 @@ public class Span {
 
         return true;
     }
+
+    public void setAttributeName(String attributeName) {
+        this.attributeName = attributeName;
+    }
+
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public void setTokenOffset(int tokenOffset) {
+        this.tokenOffset = tokenOffset;
+    }
+
+    public static void setInvalidTokenOffset(int invalidTokenOffset) {
+        INVALID_TOKEN_OFFSET = invalidTokenOffset;
+    }
 }

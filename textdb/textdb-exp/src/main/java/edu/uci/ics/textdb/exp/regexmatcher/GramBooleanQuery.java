@@ -23,6 +23,10 @@ public class GramBooleanQuery {
 
     // leaf is useful only when operator == LEAF
     String leaf;
+    
+    //TODO: Add a member to save the position index of a field.
+    
+    
     // subQuerySet is useful only when (operator == AND || operator == OR)
     Set<GramBooleanQuery> subQuerySet;
 
@@ -53,6 +57,7 @@ public class GramBooleanQuery {
      * @return new query tree
      */
     static GramBooleanQuery combine(GramBooleanQuery query, List<String> list) {
+    	// TODO: pass the flag to save (or not to save) the positions.
         return computeConjunction(query, listNode(list));
     }
 
@@ -69,6 +74,7 @@ public class GramBooleanQuery {
             return new GramBooleanQuery(QueryOp.ANY);
         }
 
+        // TODO: modify to save the position index of every gram.
         GramBooleanQuery listNode = new GramBooleanQuery(QueryOp.OR);
         for (String literal : literalList) {
             listNode.subQuerySet.add(literalNode(literal));

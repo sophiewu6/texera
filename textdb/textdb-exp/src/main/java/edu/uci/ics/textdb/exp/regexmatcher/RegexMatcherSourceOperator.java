@@ -81,5 +81,15 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         
         return luceneQuery;
     }
+    
+    
+    // TODO
+    public static Query createLucenePositionalQuery(RegexSourcePredicate predicate, String attributeName) throws StorageException {
+    	// TODO:
+    	/*
+    	 * 1. Call RegexToGramQueryTranslator.translate to obtain the GramBooleanQuery translation of the predicate.
+    	 * 2. Construct a Lucene positional query based on the result of translation.
+    	 */
+    }
 
 }

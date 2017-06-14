@@ -1,8 +1,19 @@
 package edu.uci.ics.textdb.exp.regexmatcher;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 
 import edu.uci.ics.textdb.api.constants.DataConstants;
@@ -83,13 +94,69 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
     }
     
     
-    // TODO
-    public static Query createLucenePositionalQuery(RegexSourcePredicate predicate, String attributeName) throws StorageException {
-    	// TODO:
-    	/*
-    	 * 1. Call RegexToGramQueryTranslator.translate to obtain the GramBooleanQuery translation of the predicate.
-    	 * 2. Construct a Lucene positional query based on the result of translation.
-    	 */
+    public static Query createLucenePhraseQuery(RegexPredicate predicate, String fieldName) throws DataFlowException {
+    	Query luceneQuery;
+        String queryString;
+        GramBooleanQuery queryTree;
+        // Try to apply translator. If it fails, use scan query.
+        try {
+            queryTree = RegexToGramQueryTranslator.translate(predicate.getRegex());
+        } catch (com.google.re2j.PatternSyntaxException e) {
+            queryTree = null;
+        }
+
+        // If top operator is AND, create a flat AND query
+        if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
+        	// 1. Partitioning the grams into groups with same groupId
+        	Map<Integer, List<GramBooleanQuery> > gramGroups = new HashMap<Integer,  List<GramBooleanQuery> >();
+            for(GramBooleanQuery leaf : queryTree.subQuerySet){
+            	if(! gramGroups.containsKey(leaf.groupId)){
+            		gramGroups.put(leaf.groupId, new LinkedList<GramBooleanQuery>());
+            	}
+            	gramGroups.get(leaf.groupId).add(leaf);
+            }
+            // 2. Creating a phrase query for each group and then AND on the phrases
+            BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+            for(Integer groupId: gramGroups.keySet()){
+            	PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
+            	for(GramBooleanQuery leaf: gramGroups.get(groupId)){
+                	if(leaf.positionIndex < 0){
+                		continue;
+                	}
+                    phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+            	}
+            	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
+            }
+            
+            
+            return booleanQueryBuilder.build();
+        }else if (queryTree.operator == GramBooleanQuery.QueryOp.OR){
+            BooleanQuery.Builder booleanQueryBuilderOr = new BooleanQuery.Builder();
+            for(GramBooleanQuery andSubtree : queryTree.subQuerySet){
+            	Map<Integer, List<GramBooleanQuery> > gramGroups = new HashMap<Integer,  List<GramBooleanQuery> >();
+                for(GramBooleanQuery leaf : andSubtree.subQuerySet){
+                	if(! gramGroups.containsKey(leaf.groupId)){
+                		gramGroups.put(leaf.groupId, new LinkedList<GramBooleanQuery>());
+                	}
+                	gramGroups.get(leaf.groupId).add(leaf);
+                }
+                BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+                for(Integer groupId: gramGroups.keySet()){
+                	PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
+                	for(GramBooleanQuery leaf: gramGroups.get(groupId)){
+                    	if(leaf.positionIndex < 0){
+                    		continue;
+                    	}
+                        phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+                	}
+                	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
+                }
+                booleanQueryBuilderOr.add(booleanQueryBuilder.build(), Occur.SHOULD);
+            }
+            return booleanQueryBuilderOr.build();
+        }
+        
+        return null;
     }
 
 }

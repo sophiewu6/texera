@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.itextpdf.text.log.SysoCounter;
+
 /**
  * @author Shuying Lai
  * @author Zuozhi Wang
@@ -59,7 +61,7 @@ public class RegexToGramQueryTranslatorTest {
 
     // Helper function to transform a list of strings to a list of Leaf Node
     private List<GramBooleanQuery> getLeafNodeList(String... leafStringArray) {
-        return Arrays.asList(leafStringArray).stream().map(x -> GramBooleanQuery.newLeafNode(x))
+        return Arrays.asList(leafStringArray).stream().map(x -> GramBooleanQuery.newLeafNode(x, 0, 0))
                 .collect(Collectors.toList());
     }
 
@@ -97,7 +99,7 @@ public class RegexToGramQueryTranslatorTest {
 
         GramBooleanQuery exactQuery = RegexToGramQueryTranslator.translate(regex);
 
-        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc");
+        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc", 0, 0);
 
         printTranslatorResult(regex);
 
@@ -229,7 +231,7 @@ public class RegexToGramQueryTranslatorTest {
 
         GramBooleanQuery exactQuery = RegexToGramQueryTranslator.translate(regex);
 
-        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc");
+        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc", 0, 0);
 
         printTranslatorResult(regex);
 
@@ -297,7 +299,7 @@ public class RegexToGramQueryTranslatorTest {
 
         GramBooleanQuery exactQuery = RegexToGramQueryTranslator.translate(regex);
 
-        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc");
+        GramBooleanQuery expectedQuery = GramBooleanQuery.newLeafNode("abc", 0, 0);
 
         printTranslatorResult(regex);
 

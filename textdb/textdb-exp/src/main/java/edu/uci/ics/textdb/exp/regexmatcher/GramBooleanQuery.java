@@ -27,7 +27,7 @@ public class GramBooleanQuery {
     //the position index and group id of a gram
     int positionIndex;
     int groupId;
-    public static int groupIdCounter;
+    static int groupIdCounter;
     static {
     	groupIdCounter = 0;
     }
@@ -65,9 +65,9 @@ public class GramBooleanQuery {
      *            a list of strings to be combined with the query tree
      * @return new query tree
      */
-    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list) {
+    static GramBooleanQuery combine(GramBooleanQuery query, List<String> list, boolean usePosition) {
     	// TODO: pass the flag to save (or not to save) the positions.
-        return computeConjunction(query, listNode(list));
+        return computeConjunction(query, listNode(list, usePosition));
     }
 
     /*
@@ -78,7 +78,7 @@ public class GramBooleanQuery {
      * 
      * The relation of strings in a list is OR. <br>
      */
-    private static GramBooleanQuery listNode(List<String> literalList) {
+    private static GramBooleanQuery listNode(List<String> literalList, boolean usePosition) {
         if (TranslatorUtils.minLenOfString(literalList) < TranslatorUtils.GRAM_LENGTH) {
             return new GramBooleanQuery(QueryOp.ANY);
         }
@@ -86,7 +86,7 @@ public class GramBooleanQuery {
         // TODO: modify to save the position index of every gram.
         GramBooleanQuery listNode = new GramBooleanQuery(QueryOp.OR);
         for (String literal : literalList) {
-            listNode.subQuerySet.add(literalNode(literal));
+            listNode.subQuerySet.add(literalNode(literal, usePosition));
         }
         return listNode;
     }
@@ -99,12 +99,16 @@ public class GramBooleanQuery {
      * 
      * The relation of grams in a string is AND. <br>
      */
-    private static GramBooleanQuery literalNode(String literal) {
+    private static GramBooleanQuery literalNode(String literal, boolean usePosition) {
         GramBooleanQuery literalNode = new GramBooleanQuery(QueryOp.AND);
-        int groupId = groupIdCounter++;
         int posIndex = 0;
+        int groupId = groupIdCounter++;
         for (String gram : literalToNGram(literal)) {
-            literalNode.subQuerySet.add(newLeafNode(gram, posIndex++, groupId));
+        	if(usePosition){
+        		literalNode.subQuerySet.add(newLeafNode(gram, posIndex++, groupId));
+        	}else{
+        		literalNode.subQuerySet.add(newLeafNode(gram, -1, -1));
+        	}
         }
         return literalNode;
     }
@@ -408,7 +412,7 @@ public class GramBooleanQuery {
     public int hashCode() {
         int hashCode = this.operator.toString().hashCode();
         if (operator == QueryOp.LEAF) {
-            hashCode = hashCode ^ this.leaf.hashCode();
+            hashCode = hashCode ^ this.leaf.hashCode() ^ this.positionIndex ^ this.groupId;
         }
         // this hashCode() function requires the query object to be immutable
         // otherwise, it will cause errors equals() in hash based collections
@@ -503,7 +507,7 @@ public class GramBooleanQuery {
             return "";
         }
         if (query.operator == QueryOp.LEAF) {
-            return query.leaf + "(" + query.groupId + "," + query.positionIndex + ")";
+            return query.leaf ;
             
         }
 
@@ -536,7 +540,7 @@ public class GramBooleanQuery {
         }
 
         if (query.operator == QueryOp.LEAF) {
-            s += query.leaf;
+            s += query.leaf + "(" + query.groupId + "," + query.positionIndex + ")";
             s += "\n";
             return s;
         }

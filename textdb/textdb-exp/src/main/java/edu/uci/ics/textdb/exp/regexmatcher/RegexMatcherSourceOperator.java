@@ -38,7 +38,9 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         
         if (this.predicate.isUseIndex()) {
             this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.predicate.getTableName(), 
-                    createLuceneQuery(this.predicate));
+//                    createLuceneQuery(this.predicate));
+            		createLucenePhraseQuery(this.predicate, "abstract"));
+            
         } else {
             this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.predicate.getTableName(), 
                     new MatchAllDocsQuery());
@@ -89,14 +91,11 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         } catch (ParseException e) {
             throw new StorageException (e);
         }
-        
         return luceneQuery;
     }
     
     
     public static Query createLucenePhraseQuery(RegexPredicate predicate, String fieldName) throws DataFlowException {
-    	Query luceneQuery;
-        String queryString;
         GramBooleanQuery queryTree;
         // Try to apply translator. If it fails, use scan query.
         try {
@@ -104,7 +103,7 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         } catch (com.google.re2j.PatternSyntaxException e) {
             queryTree = null;
         }
-
+//        System.out.println(queryTree.printQueryTree());
         // If top operator is AND, create a flat AND query
         if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
         	// 1. Partitioning the grams into groups with same groupId
@@ -118,17 +117,21 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
             // 2. Creating a phrase query for each group and then AND on the phrases
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
             for(Integer groupId: gramGroups.keySet()){
+            	if(groupId == -1) continue;
             	PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
-            	for(GramBooleanQuery leaf: gramGroups.get(groupId)){
-                	if(leaf.positionIndex < 0){
-                		continue;
-                	}
-                    phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+            	for(int i=0; i < 100; i++){
+	            	for(GramBooleanQuery leaf: gramGroups.get(groupId)){
+	                	if(leaf.positionIndex != i){
+	                		continue;
+	                	}
+	                    phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+	            	}
             	}
             	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
             }
             
-            
+//                return phraseQueryBuilder.build();   
+//            System.out.println(booleanQueryBuilder.build().toString());
             return booleanQueryBuilder.build();
         }else if (queryTree.operator == GramBooleanQuery.QueryOp.OR){
             BooleanQuery.Builder booleanQueryBuilderOr = new BooleanQuery.Builder();
@@ -142,17 +145,21 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
                 }
                 BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
                 for(Integer groupId: gramGroups.keySet()){
+                	if(groupId == -1) continue;
                 	PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
-                	for(GramBooleanQuery leaf: gramGroups.get(groupId)){
-                    	if(leaf.positionIndex < 0){
-                    		continue;
-                    	}
-                        phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+                	for(int i=0; i < 100; i++){
+                		for(GramBooleanQuery leaf: gramGroups.get(groupId)){
+                			if(leaf.positionIndex != i){
+                				continue;
+                			}
+                			phraseQueryBuilder.add(new Term(fieldName, leaf.leaf), leaf.positionIndex);
+                		}
                 	}
                 	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
                 }
                 booleanQueryBuilderOr.add(booleanQueryBuilder.build(), Occur.SHOULD);
             }
+//            System.out.println(booleanQueryBuilderOr.build().toString());
             return booleanQueryBuilderOr.build();
         }
         

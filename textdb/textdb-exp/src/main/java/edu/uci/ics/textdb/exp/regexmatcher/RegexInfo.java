@@ -113,7 +113,7 @@ class RegexInfo {
             // Add exact to match (query tree)
             // Transfer information from exact to prefix and suffix
         	// TODO: pass a flag to remember to save the positions.
-            match = GramBooleanQuery.combine(match, exact);
+            match = GramBooleanQuery.combine(match, exact, true);
             for (String str : exact) {
                 if (str.length() < gramLength) {
                     prefix.add(str);
@@ -156,7 +156,7 @@ class RegexInfo {
         
         // TODO: pass a flag so we don't save the positions.
         // Add the current prefix/suffix set to "match" query.
-        match = GramBooleanQuery.combine(match, strList);
+        match = GramBooleanQuery.combine(match, strList, false);
 
         // This loop reduces the length of prefix/suffix. It cuts all
         // strings longer than {@code gramLength}, and continues to cut strings

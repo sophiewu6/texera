@@ -25,8 +25,8 @@ public class GramBooleanQueryTest {
     public void testSameAnd() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.AND);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.AND);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -36,8 +36,8 @@ public class GramBooleanQueryTest {
     public void testSameOr() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcdef")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abcdef")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcdef")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abcdef")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -47,8 +47,8 @@ public class GramBooleanQueryTest {
     public void testDifferentAnd() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.AND);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.AND);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr")), true);
 
         Assert.assertFalse(query1.equals(query2));
         Assert.assertFalse(query2.equals(query1));
@@ -58,10 +58,10 @@ public class GramBooleanQueryTest {
     public void testSameMultiple() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")));
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("pqr")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc")), true);
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("pqr")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -71,10 +71,10 @@ public class GramBooleanQueryTest {
     public void testDifferentMultiple() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("qwe")));
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("asd")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("zxc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("vbn")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("qwe")), true);
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("asd")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("zxc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("vbn")), true);
 
         Assert.assertFalse(query1.equals(query2));
         Assert.assertFalse(query2.equals(query1));
@@ -84,8 +84,8 @@ public class GramBooleanQueryTest {
     public void testSameDifferentOrder() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc", "pqr")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr", "abc")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abc", "pqr")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("pqr", "abc")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -95,8 +95,8 @@ public class GramBooleanQueryTest {
     public void testSameDifferentOrder2() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("asdfg", "poiuy")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("poiuy", "asdfg")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("asdfg", "poiuy")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("poiuy", "asdfg")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -106,8 +106,8 @@ public class GramBooleanQueryTest {
     public void testSameDifferentOrder3() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcd", "qwer", "zxc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("zxc", "qwer", "abcd")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcd", "qwer", "zxc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("zxc", "qwer", "abcd")), true);
 
         Assert.assertEquals(query1, query2);
         Assert.assertEquals(query2, query1);
@@ -117,8 +117,8 @@ public class GramBooleanQueryTest {
     public void testDifferentDifferentOrder() {
         GramBooleanQuery query1 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
         GramBooleanQuery query2 = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
-        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcd", "qwer", "zxc")));
-        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc", "qwe", "zxcv")));
+        query1 = GramBooleanQuery.combine(query1, (Arrays.asList("abcd", "qwer", "zxc")), true);
+        query2 = GramBooleanQuery.combine(query2, (Arrays.asList("abc", "qwe", "zxcv")), true);
 
         Assert.assertFalse(query1.equals(query2));
         Assert.assertFalse(query2.equals(query1));

@@ -93,9 +93,12 @@ public class RegexMatcherPerformanceTest {
         for(String regex: regexes){
 	        // analyzer should generate grams all in lower case to build a lower
 	        // case index.
-	        RegexSourcePredicate predicate = new RegexSourcePredicate(regex, attributeNames, tableName, null);
+        	long startTranslationTime = System.currentTimeMillis();
+	        RegexSourcePredicate predicate = new RegexSourcePredicate(regex, attributeNames, tableName, SchemaConstants.SPAN_LIST);
 	        RegexMatcherSourceOperator regexSource = new RegexMatcherSourceOperator(predicate);
-	
+	        long endTranslationTime = System.currentTimeMillis();
+	        double translationTime = (endTranslationTime - startTranslationTime) / 1000.0;
+	        System.out.print(translationTime + "\t");
 	        long startMatchTime = System.currentTimeMillis();
 	        regexSource.open();
 	        int counter = 0;
@@ -108,6 +111,7 @@ public class RegexMatcherPerformanceTest {
 	        regexSource.close();
 	        long endMatchTime = System.currentTimeMillis();
 	        double matchTime = (endMatchTime - startMatchTime) / 1000.0;
+	        System.out.println(matchTime + "\t" + counter);
 	        totalMatchingTime += matchTime;
 	        totalRegexResultCount += counter;
         }

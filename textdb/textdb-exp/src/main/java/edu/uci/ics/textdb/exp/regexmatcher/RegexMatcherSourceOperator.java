@@ -15,6 +15,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 
 import edu.uci.ics.textdb.api.constants.DataConstants;
 import edu.uci.ics.textdb.api.dataflow.ISourceOperator;
@@ -129,6 +130,14 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
             	}
             	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
             }
+//            if(gramGroups.containsKey(-1)){
+//        		BooleanQuery.Builder affixBooleanQueryBuilder = new BooleanQuery.Builder();
+//        		for(GramBooleanQuery leaf: gramGroups.get(-1)){
+//        			affixBooleanQueryBuilder.add(new TermQuery(new Term(fieldName, leaf.leaf)), 
+//        					Occur.MUST);
+//        		}
+//        		booleanQueryBuilder.add(affixBooleanQueryBuilder.build(), Occur.MUST);
+//        	}
             
 //                return phraseQueryBuilder.build();   
 //            System.out.println(booleanQueryBuilder.build().toString());
@@ -157,6 +166,15 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
                 	}
                 	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
                 }
+//                if(gramGroups.containsKey(-1)){
+//            		BooleanQuery.Builder affixBooleanQueryBuilder = new BooleanQuery.Builder();
+//            		for(GramBooleanQuery leaf: gramGroups.get(-1)){
+//            			affixBooleanQueryBuilder.add(new TermQuery(new Term(fieldName, leaf.leaf)), 
+//            					Occur.MUST);
+//            		}
+//            		booleanQueryBuilder.add(affixBooleanQueryBuilder.build(), Occur.MUST);
+//            	}
+                
                 booleanQueryBuilderOr.add(booleanQueryBuilder.build(), Occur.SHOULD);
             }
 //            System.out.println(booleanQueryBuilderOr.build().toString());

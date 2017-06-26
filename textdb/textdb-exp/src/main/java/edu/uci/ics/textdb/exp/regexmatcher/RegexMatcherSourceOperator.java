@@ -140,7 +140,7 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
 //        	}
             
 //                return phraseQueryBuilder.build();   
-//            System.out.println(booleanQueryBuilder.build().toString());
+            System.out.println(booleanQueryBuilder.build().toString());
             return booleanQueryBuilder.build();
         }else if (queryTree.operator == GramBooleanQuery.QueryOp.OR){
             BooleanQuery.Builder booleanQueryBuilderOr = new BooleanQuery.Builder();
@@ -177,7 +177,7 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
                 
                 booleanQueryBuilderOr.add(booleanQueryBuilder.build(), Occur.SHOULD);
             }
-//            System.out.println(booleanQueryBuilderOr.build().toString());
+            System.out.println(booleanQueryBuilderOr.build().toString());
             return booleanQueryBuilderOr.build();
         }
         

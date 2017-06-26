@@ -36,7 +36,19 @@ public class LabledRegexNoQualifierProcessor {
     
     private ArrayList<String> labelList = new ArrayList<>();
     private ArrayList<String> affixList = new ArrayList<>();
-    private ArrayList<String> sortedAffixList = new ArrayList<>(); // sort the affixList by length in decreasing order to short-cut the filter tuple operation.
+    
+    class ScoredString{
+    	public String value;
+    	public int score;
+    	ScoredString(String value_){
+    		this.value = value_;
+    		this.score = 0;
+    	}
+    }
+    
+    private ArrayList<ScoredString> scoredAffixList = new ArrayList<>(); // sort the affixList by length in decreasing order to short-cut the filter tuple operation.
+    private int tupleStatsUsed = 0;
+    private final static int TOTAL_USED_FOR_STATS = 1000;
     
     public LabledRegexNoQualifierProcessor(RegexPredicate predicate) {
         this.predicate = predicate;
@@ -64,8 +76,8 @@ public class LabledRegexNoQualifierProcessor {
             pre = end;
         }
         affixList.add(predicate.getRegex().substring(pre));
-        sortedAffixList = new ArrayList<>(affixList);
-        sortedAffixList.sort((o1, o2) -> (o2.length()-o1.length()));
+        
+        scoredAffixList = new ArrayList<>(affixList.stream().map(a -> new ScoredString(a)).collect(Collectors.toList()));
     }
 
     /**
@@ -74,13 +86,30 @@ public class LabledRegexNoQualifierProcessor {
      * @param attribute
      * @return
      */
-    private boolean filterTuple(Tuple tuple, String attribute) {
-        for (String affix : sortedAffixList) {
-            if (! tuple.getField(attribute).getValue().toString().contains(affix)) {
-                return false;
-            }
-        }
-        return true;
+    private boolean filterTuple(Tuple tuple, String attribute, int tupleNumber) {
+    	if(tupleNumber <= TOTAL_USED_FOR_STATS){
+    		boolean isValid = false;
+    		for (ScoredString affix : scoredAffixList) {
+    			if (! tuple.getField(attribute).getValue().toString().contains(affix.value)) {
+    				isValid = false;
+    			}else{
+    				affix.score ++;
+    			}
+    		}
+    		
+    		if(tupleNumber == TOTAL_USED_FOR_STATS){
+    			scoredAffixList = new ArrayList<>(scoredAffixList.stream().sorted((a1, a2) -> a2.score - a1.score).collect(Collectors.toList()));
+    		}
+    		
+    		return isValid;
+    	}else{
+    		for (ScoredString affix : scoredAffixList) {
+    			if (! tuple.getField(attribute).getValue().toString().contains(affix.value)) {
+    				return false;
+    			}
+    		}
+    		return true;
+    	}
     }
 
     /***
@@ -97,7 +126,7 @@ public class LabledRegexNoQualifierProcessor {
         
         List<Span> allAttrsMatchSpans = new ArrayList<>();
         for (String attribute : predicate.getAttributeNames()) {
-            boolean isValidTuple = filterTuple(tuple, attribute);
+            boolean isValidTuple = filterTuple(tuple, attribute, tupleStatsUsed++);
 
             if (! isValidTuple) {
                 continue;

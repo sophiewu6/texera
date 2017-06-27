@@ -48,14 +48,31 @@ public class RunPerftests {
 
         try {
             List<Double> thresholds = Arrays.asList(0.8, 0.65, 0.5, 0.35);
-            List<String> regexQueries = Arrays.asList("mosquitos?", "v[ir]{2}[us]{2}", "market(ing)?",
-                    "medic(ine|al|ation|are|aid)?", "[A-Z][aeiou|AEIOU][A-Za-z]*");
+            List<String> regexQueries = Arrays.asList(
+            		"(cures|helps|treats) ([A-Za-z'-]+\\s*){1,2} (disorder|condition|illness|syndrome)", 
+            		"(cases?) (of) ([A-Za-z'-]+\\s*){1,2} (transplantation)",
+            		"[A-Za-z]+ (treatment)",
+            		"[A-Za-z]+ (injections?) (of) [A-Za-z]+ (drug)",
+            		"(the) [A-Za-z]* (test|experiment) (show(s|ed))",
+            		"(severe) (cases?) (of) [A-Za-z']+ (syndrome)",
+            		"(considerably|very|much|so) ([A-Za-z]*er) (than)",
+            		"(advanced|severe|intense) ([A-Za-z'-]+\\s*){1,2} (disorders?|syndromes?|conditions?|diseases?)",
+            		"\\d{1,2}% (of) (cases|patients|recipients)",
+            		"[A-Za-z]+therapy",
+            		"(caused) (by) ([A-Za-z'-]+\\s*){1,3} (virus) (infection)");
+            List<String> dictionary1 = Arrays.asList(
+            		"phrase num1","phrase num2",
+            		"phrase num3");
+            List<String> dictionary2 = Arrays.asList(
+            		"phrase num1","phrase num2",
+            		"phrase num3");
 
-            KeywordMatcherPerformanceTest.runTest("sample_queries.txt");
-            DictionaryMatcherPerformanceTest.runTest("sample_queries.txt");
-            FuzzyTokenMatcherPerformanceTest.runTest("sample_queries.txt", thresholds);
-            RegexMatcherPerformanceTest.runTest(regexQueries);
-            NlpExtractorPerformanceTest.runTest();
+//            KeywordMatcherPerformanceTest.runTest("sample_queries.txt");
+//            DictionaryMatcherPerformanceTest.runTest("sample_queries.txt");
+//            FuzzyTokenMatcherPerformanceTest.runTest("sample_queries.txt", thresholds);
+//            RegexMatcherPerformanceTest.runTest(regexQueries);
+            RegexMatcherPerformanceTest.runSelectivityTest(regexQueries, dictionary1, dictionary2);
+//            NlpExtractorPerformanceTest.runTest();
 
         } catch (StorageException | DataFlowException | IOException e) {
             e.printStackTrace();

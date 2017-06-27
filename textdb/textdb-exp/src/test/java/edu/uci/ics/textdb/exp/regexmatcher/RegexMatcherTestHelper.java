@@ -8,6 +8,9 @@ import edu.uci.ics.textdb.api.exception.DataFlowException;
 import edu.uci.ics.textdb.api.exception.TextDBException;
 import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.api.utils.TestUtils;
+import edu.uci.ics.textdb.exp.dictionarymatcher.Dictionary;
+import edu.uci.ics.textdb.exp.dictionarymatcher.DictionaryMatcher;
+import edu.uci.ics.textdb.exp.dictionarymatcher.DictionaryPredicate;
 import edu.uci.ics.textdb.exp.keywordmatcher.*;
 import edu.uci.ics.textdb.exp.source.scan.ScanBasedSourceOperator;
 import edu.uci.ics.textdb.exp.source.scan.ScanSourcePredicate;
@@ -368,6 +371,43 @@ public class RegexMatcherTestHelper {
         }
         regexMatcher.close();
 
+        return results;
+    }
+    
+    /*
+     * Plan 1:
+     * ScanBasedSourceOperator s1 ==> DictionaryMatcher d1 ==> DictionaryMatcher d2
+     */
+    public static List<Tuple> getPlan1EvalResults(String tableName, Dictionary dictionary, Dictionary dictionary2, List<String> attributeNames,
+            KeywordMatchingType matchingType, int limit, int offset) throws TextDBException {
+        RelationManager relationManager = RelationManager.getRelationManager();
+        String luceneAnalyzerStr = relationManager.getTableAnalyzerString(tableName);
+        
+        ScanBasedSourceOperator scanSource = new ScanBasedSourceOperator(new ScanSourcePredicate(tableName));
+        
+        DictionaryPredicate dictiaonryPredicate = new DictionaryPredicate(
+                dictionary, attributeNames, luceneAnalyzerStr, matchingType, RESULTS);
+        DictionaryMatcher dictionaryMatcher = new DictionaryMatcher(dictiaonryPredicate);
+        dictionaryMatcher.setLimit(limit);
+        dictionaryMatcher.setOffset(offset);
+        dictionaryMatcher.setInputOperator(scanSource);
+
+        DictionaryPredicate dictiaonryPredicate2 = new DictionaryPredicate(
+                dictionary2, attributeNames, luceneAnalyzerStr, matchingType, RESULTS);
+        DictionaryMatcher dictionaryMatcher2 = new DictionaryMatcher(dictiaonryPredicate2);
+        dictionaryMatcher2.setLimit(limit);
+        dictionaryMatcher2.setOffset(offset);
+        dictionaryMatcher2.setInputOperator(dictionaryMatcher);
+        
+        Tuple tuple;
+        List<Tuple> results = new ArrayList<>();
+        
+        dictionaryMatcher2.open();
+        while ((tuple = dictionaryMatcher2.getNextTuple()) != null) {
+            results.add(tuple);
+        }  
+        dictionaryMatcher2.close();
+        
         return results;
     }
 

@@ -21,36 +21,36 @@ import edu.uci.ics.textdb.exp.utils.DataflowUtils;
 
 /**
  * Created by chenli on 3/25/16.
- * 
+ *
  * @author Shuying Lai (laisycs)
  * @author Zuozhi Wang (zuozhiw)
  */
 public class RegexMatcher extends AbstractSingleInputOperator {
-    
+
     public enum RegexType {
-        NO_LABELS, LABELED_WITHOUT_QUALIFIER, LABELED_WITH_QUALIFIERS
+        NO_LABELS, LABELED_QUALIFIERS_AFFIX, LABELED_WITH_QUALIFIERS, Labeled_WITHOUT_QUALIFIERS
     }
-    
+
     /*
      * Regex pattern for determining if the regex has labels.
      * Match "<" in the beginning, and ">" in the end.
      * Between the brackets "<>", there are one or more number of characters,
      *   but cannot be "<" or ">", or the "\" escape character.
-     *   
-     * For example: 
+     *
+     * For example:
      *   "<drug1>": is a label
      *   "<drug\>1": is not a label because the closing bracket is escaped.
      *   "<a <drug> b>" : only the inner <drug> is treated as a label
-     * 
+     *
      * TODO:
      * this regex can't handle escape inside a bracket pair:
      * <a\>b>: the semantic of this regex is, the label itself can be "a>b"
      */
     public static final String CHECK_REGEX_LABEL = "<[^<>\\\\]*>";
-    
+
     /*
      * Regex pattern for determining if the regex has qualifiers.
-     * 
+     *
      * TODO:
      * this regex doesn't handle qualifiers correct.
      * It only allows alphabets, digits, and backets.
@@ -58,13 +58,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
      *   and shouldn't be treated as qualifiers.
      */
     public static final String CHECK_REGEX_QUALIFIER = "[^a-zA-Z0-9<> ]";
-    
-    
+    public static final String CHECK_LABEl_QUALIFIER = "<[ a-zA-Z0-9]*[^<>a-zA-Z0-9]+";
+    public static final String CHECK_AFFIX_QUALIFIER = ">[^a-zA-Z0-9<>]*<";
+
     private final RegexPredicate predicate;
     private RegexType regexType;
-    
+
     private Schema inputSchema;
-    
+
     private Pattern regexPattern;
     LabeledRegexProcessor labeledRegexProcessor;
     LabledRegexNoQualifierProcessor labledRegexNoQualifierProcessor;
@@ -72,31 +73,31 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     public RegexMatcher(RegexPredicate predicate) {
         this.predicate = predicate;
     }
-    
+
     @Override
     protected void setUp() throws DataFlowException {
         inputSchema = inputOperator.getOutputSchema();
         outputSchema = inputSchema;
-        
+
         if (this.inputSchema.containsField(predicate.getSpanListName())) {
             throw new DataFlowException(ErrorMessages.DUPLICATE_ATTRIBUTE(predicate.getSpanListName(), inputSchema));
         }
-        outputSchema = Utils.addAttributeToSchema(inputSchema, 
+        outputSchema = Utils.addAttributeToSchema(inputSchema,
                 new Attribute(predicate.getSpanListName(), AttributeType.LIST));
 
         findRegexType();
         // Check if labeled or unlabeled
         if (this.regexType == RegexType.NO_LABELS) {
-            regexPattern = predicate.isIgnoreCase() ? 
+            regexPattern = predicate.isIgnoreCase() ?
                     Pattern.compile(predicate.getRegex(), Pattern.CASE_INSENSITIVE)
                     : Pattern.compile(predicate.getRegex());
         } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
             labeledRegexProcessor = new LabeledRegexProcessor(predicate);
         } else {
-            labledRegexNoQualifierProcessor = new LabledRegexNoQualifierProcessor(predicate);
+            labledRegexNoQualifierProcessor = new LabledRegexNoQualifierProcessor(predicate, regexType);
         }
     }
-    
+
     /*
      * Determines the type of the regex: no_label / labeled_with_qualifier / labeled_without_qualifier
      */
@@ -108,25 +109,32 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         }
         Matcher qualifierMatcher = Pattern.compile(CHECK_REGEX_QUALIFIER).matcher(predicate.getRegex());
         if (qualifierMatcher.find()) {
-            regexType = RegexType.LABELED_WITH_QUALIFIERS;
+            Matcher qualifierLabel = Pattern.compile(CHECK_LABEl_QUALIFIER).matcher(predicate.getRegex());
+            Matcher qualifierAffix = Pattern.compile(CHECK_AFFIX_QUALIFIER).matcher(predicate.getRegex());
+            if(qualifierAffix.find() || qualifierLabel.find()){
+                regexType = RegexType.LABELED_WITH_QUALIFIERS;
+            }else{
+                regexType = RegexType.LABELED_QUALIFIERS_AFFIX;
+            }
+
         } else {
-            regexType = RegexType.LABELED_WITHOUT_QUALIFIER;
+            regexType = RegexType.Labeled_WITHOUT_QUALIFIERS;
         }
     }
-    
+
     @Override
     protected Tuple computeNextMatchingTuple() throws TextDBException {
         Tuple inputTuple = null;
         Tuple resultTuple = null;
-        
+
         while ((inputTuple = inputOperator.getNextTuple()) != null) {
-            inputTuple = DataflowUtils.getSpanTuple(inputTuple.getFields(), new ArrayList<Span>(), outputSchema);         
+            inputTuple = DataflowUtils.getSpanTuple(inputTuple.getFields(), new ArrayList<Span>(), outputSchema);
             resultTuple = processOneInputTuple(inputTuple);
             if (resultTuple != null) {
                 break;
             }
         }
-        
+
         return resultTuple;
     }
 
@@ -136,7 +144,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
      * "(949)888-8888") and regex "g[^\s]*", this function will return
      * [Span(name, 0, 6, "g[^\s]*", "george watson"), Span(position, 0, 8,
      * "g[^\s]*", "graduate student")]
-     * 
+     *
      * @param inputTuple
      *            document in which search is performed
      * @return a list of spans describing the occurrence of a matching sequence
@@ -157,15 +165,15 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         } else {
             matchingResults = labledRegexNoQualifierProcessor.computeMatchingResults(inputTuple);
         }
-        
+
         if (matchingResults.isEmpty()) {
             return null;
         }
-        
+
         ListField<Span> spanListField = inputTuple.getField(predicate.getSpanListName());
         List<Span> spanList = spanListField.getValue();
         spanList.addAll(matchingResults);
-        
+
         return inputTuple;
     }
 
@@ -180,7 +188,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
                 throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
             }
-            
+
             Matcher javaMatcher = pattern.matcher(fieldValue);
             while (javaMatcher.find()) {
                 int start = javaMatcher.start();
@@ -189,16 +197,16 @@ public class RegexMatcher extends AbstractSingleInputOperator {
                         new Span(attributeName, start, end, predicate.getRegex(), fieldValue.substring(start, end)));
             }
         }
-        
+
         return matchingResults;
     }
-    
+
     @Override
-    protected void cleanUp() throws DataFlowException {        
+    protected void cleanUp() throws DataFlowException {
     }
 
     public RegexPredicate getPredicate() {
         return this.predicate;
     }
-    
+
 }

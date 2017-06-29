@@ -29,7 +29,8 @@ public class RegexToGramQueryTranslator {
      */
     public static GramBooleanQuery translate(String regex) throws com.google.re2j.PatternSyntaxException {
 
-        return translate(regex, TranslatorUtils.DEFAULT_GRAM_LENGTH);
+        GramBooleanQuery.groupIdCounter = 0;
+    	return translate(regex, TranslatorUtils.DEFAULT_GRAM_LENGTH);
     }
 
     /**

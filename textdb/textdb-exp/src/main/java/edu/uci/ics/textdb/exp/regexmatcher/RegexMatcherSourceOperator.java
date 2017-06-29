@@ -40,7 +40,7 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         if (this.predicate.isUseIndex()) {
             this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.predicate.getTableName(), 
 //                    createLuceneQuery(this.predicate));
-            		createLucenePhraseQuery(this.predicate, "abstract"));
+            		createLucenePhraseQuery(this.predicate));
             
         } else {
             this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.predicate.getTableName(), 
@@ -96,7 +96,10 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
     }
     
     
-    public static Query createLucenePhraseQuery(RegexPredicate predicate, String fieldName) throws DataFlowException {
+    public static Query createLucenePhraseQuery(RegexSourcePredicate predicate) throws DataFlowException {
+    	
+    	String fieldName = predicate.getAttributeNames().get(0);
+    	
         GramBooleanQuery queryTree;
         // Try to apply translator. If it fails, use scan query.
         try {
@@ -104,6 +107,16 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         } catch (com.google.re2j.PatternSyntaxException e) {
             queryTree = null;
         }
+    	if(queryTree == null || queryTree.subQuerySet.isEmpty()){
+    		try {
+    			return new MultiFieldQueryParser(
+    					predicate.getAttributeNames().stream().toArray(String[]::new), 
+    					RelationManager.getRelationManager().getTableAnalyzer(predicate.getTableName()))
+    					.parse(DataConstants.SCAN_QUERY);
+            } catch (ParseException e) {
+                throw new StorageException (e);
+            }
+    	}
 //        System.out.println(queryTree.printQueryTree());
         // If top operator is AND, create a flat AND query
         if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
@@ -130,17 +143,6 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
             	}
             	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
             }
-//            if(gramGroups.containsKey(-1)){
-//        		BooleanQuery.Builder affixBooleanQueryBuilder = new BooleanQuery.Builder();
-//        		for(GramBooleanQuery leaf: gramGroups.get(-1)){
-//        			affixBooleanQueryBuilder.add(new TermQuery(new Term(fieldName, leaf.leaf)), 
-//        					Occur.MUST);
-//        		}
-//        		booleanQueryBuilder.add(affixBooleanQueryBuilder.build(), Occur.MUST);
-//        	}
-            
-//                return phraseQueryBuilder.build();   
-            System.out.println(booleanQueryBuilder.build().toString());
             return booleanQueryBuilder.build();
         }else if (queryTree.operator == GramBooleanQuery.QueryOp.OR){
             BooleanQuery.Builder booleanQueryBuilderOr = new BooleanQuery.Builder();
@@ -166,18 +168,8 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
                 	}
                 	booleanQueryBuilder.add(phraseQueryBuilder.build(), Occur.MUST);
                 }
-//                if(gramGroups.containsKey(-1)){
-//            		BooleanQuery.Builder affixBooleanQueryBuilder = new BooleanQuery.Builder();
-//            		for(GramBooleanQuery leaf: gramGroups.get(-1)){
-//            			affixBooleanQueryBuilder.add(new TermQuery(new Term(fieldName, leaf.leaf)), 
-//            					Occur.MUST);
-//            		}
-//            		booleanQueryBuilder.add(affixBooleanQueryBuilder.build(), Occur.MUST);
-//            	}
-                
                 booleanQueryBuilderOr.add(booleanQueryBuilder.build(), Occur.SHOULD);
             }
-            System.out.println(booleanQueryBuilderOr.build().toString());
             return booleanQueryBuilderOr.build();
         }
         

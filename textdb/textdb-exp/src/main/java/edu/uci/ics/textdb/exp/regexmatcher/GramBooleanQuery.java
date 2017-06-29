@@ -102,7 +102,10 @@ public class GramBooleanQuery {
     private static GramBooleanQuery literalNode(String literal, boolean usePosition) {
         GramBooleanQuery literalNode = new GramBooleanQuery(QueryOp.AND);
         int posIndex = 0;
-        int groupId = groupIdCounter++;
+        int groupId = 0;
+        if(usePosition){
+        	groupId = groupIdCounter++;
+        }
         for (String gram : literalToNGram(literal)) {
         	if(usePosition){
         		literalNode.subQuerySet.add(newLeafNode(gram, posIndex++, groupId));
@@ -412,7 +415,9 @@ public class GramBooleanQuery {
     public int hashCode() {
         int hashCode = this.operator.toString().hashCode();
         if (operator == QueryOp.LEAF) {
-            hashCode = hashCode ^ this.leaf.hashCode() ^ this.positionIndex ^ this.groupId;
+            hashCode = hashCode ^ this.leaf.hashCode() ^ 
+            		((Integer)this.positionIndex).hashCode() ^ 
+            		((Integer)this.groupId).hashCode();
         }
         // this hashCode() function requires the query object to be immutable
         // otherwise, it will cause errors equals() in hash based collections

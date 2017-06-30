@@ -112,7 +112,6 @@ class RegexInfo {
                 || TranslatorUtils.minLenOfString(exact) >= gramLength + 1) {
             // Add exact to match (query tree)
             // Transfer information from exact to prefix and suffix
-        	// TODO: pass a flag to remember to save the positions.
             match = GramBooleanQuery.combine(match, exact, true);
             for (String str : exact) {
                 if (str.length() < gramLength) {
@@ -154,7 +153,6 @@ class RegexInfo {
         int gramLength = TranslatorUtils.GRAM_LENGTH;
 
         
-        // TODO: pass a flag so we don't save the positions.
         // Add the current prefix/suffix set to "match" query.
         match = GramBooleanQuery.combine(match, strList, false);
 

@@ -72,11 +72,11 @@ public class RunPerftests {
 //            		"the(\\s+[A-Za-z']+\\s*){1,2} (war|battle|((military) (conflict))|conflict) (in) ([A-Za-z']+\\s*){1,2}",
 //            		"([A-Za-z']+\\s*){1,2} (processing) (unit|plant|factory|machine|device) ([A-Za-z']+\\s*){1,2}");
 
-//            KeywordMatcherPerformanceTest.runTest("sample_queries.txt");
-//            DictionaryMatcherPerformanceTest.runTest("sample_queries.txt");
-//            FuzzyTokenMatcherPerformanceTest.runTest("sample_queries.txt", thresholds);
+            KeywordMatcherPerformanceTest.runTest("sample_queries.txt");
+            DictionaryMatcherPerformanceTest.runTest("sample_queries.txt");
+            FuzzyTokenMatcherPerformanceTest.runTest("sample_queries.txt", thresholds);
             RegexMatcherPerformanceTest.runTest(regexQueries);
-//            NlpExtractorPerformanceTest.runTest();
+            NlpExtractorPerformanceTest.runTest();
 
         } catch (StorageException | DataFlowException | IOException e) {
             e.printStackTrace();

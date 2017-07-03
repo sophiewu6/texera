@@ -109,8 +109,8 @@ public class GramBooleanQuery {
         for (String gram : literalToNGram(literal)) {
         	if(usePosition){
         		literalNode.subQuerySet.add(newLeafNode(gram, posIndex++, groupId));
-        	}else{
-        		literalNode.subQuerySet.add(newLeafNode(gram, -1, -1));
+//        	}else{
+//        		literalNode.subQuerySet.add(newLeafNode(gram, -1, -1));
         	}
         }
         return literalNode;

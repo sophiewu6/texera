@@ -37,20 +37,30 @@ public class LabledRegexNoQualifierProcessor {
 
     private ArrayList<String> labelList = new ArrayList<>();
     private ArrayList<String> affixList = new ArrayList<>();
-    // to sort the affixList by length in decreasing order to short-cut the filter tuple operation.
-    private ArrayList<String> sortedAffixList = new ArrayList<>();
+    
+    // to save the regex patterns so we compile only once.
+    private Map<String, Pattern> affixRegexPatterns = new HashMap<String, Pattern>();
     // to save the map between label and corresponding list of spans.
     private Map<String, List<Span>> labelValues = new HashMap<String, List<Span>>();
-
+    
+    class ScoredString{
+    	public String value;
+    	public int score;
+    	ScoredString(String value_){
+    		this.value = value_;
+    		this.score = 0;
+    	}
+    }
+    
+    private ArrayList<ScoredString> scoredAffixList = new ArrayList<>(); // sort the affixList by length in decreasing order to short-cut the filter tuple operation.
+    private int tupleStatsUsed = 0;
+    private final static int TOTAL_USED_FOR_STATS = 1000;
+    
     public LabledRegexNoQualifierProcessor(RegexPredicate predicate, RegexMatcher.RegexType regexType) {
         this.predicate = predicate;
         this.regexType = regexType;
         // populate labelList and affixList
         preprocessRegex();
-        if(this.regexType== RegexMatcher.RegexType.Labeled_WITHOUT_QUALIFIERS) {
-            sortedAffixList = new ArrayList<>(affixList);
-            sortedAffixList.sort((o1, o2) -> (o2.length()-o1.length()));
-        }
 
     }
 
@@ -74,6 +84,16 @@ public class LabledRegexNoQualifierProcessor {
             pre = end;
         }
         affixList.add(predicate.getRegex().substring(pre));
+        
+        scoredAffixList = new ArrayList<>(affixList.stream().map(a -> new ScoredString(a)).collect(Collectors.toList()));
+        
+        if(regexType == RegexMatcher.RegexType.LABELED_QUALIFIERS_AFFIX){
+            for(String affix: affixList){
+                affixRegexPatterns.put(affix, this.predicate.isIgnoreCase() ?
+                        Pattern.compile(affix, Pattern.CASE_INSENSITIVE)
+                        : Pattern.compile(affix) );
+            }
+        }
     }
 
     /**
@@ -82,13 +102,30 @@ public class LabledRegexNoQualifierProcessor {
      * @param attribute
      * @return
      */
-    private boolean filterTuple(Tuple tuple, String attribute) {
-        for (String affix : sortedAffixList) {
-            if (! tuple.getField(attribute).getValue().toString().contains(affix)) {
-                return false;
-            }
-        }
-        return true;
+    private boolean filterTuple(Tuple tuple, String attribute, int tupleNumber) {
+    	if(tupleNumber <= TOTAL_USED_FOR_STATS){
+    		boolean isValid = false;
+    		for (ScoredString affix : scoredAffixList) {
+    			if (! tuple.getField(attribute).getValue().toString().contains(affix.value)) {
+    				isValid = false;
+    			}else{
+    				affix.score ++;
+    			}
+    		}
+    		
+    		if(tupleNumber == TOTAL_USED_FOR_STATS){
+    			scoredAffixList = new ArrayList<>(scoredAffixList.stream().sorted((a1, a2) -> a2.score - a1.score).collect(Collectors.toList()));
+    		}
+    		
+    		return isValid;
+    	}else{
+    		for (ScoredString affix : scoredAffixList) {
+    			if (! tuple.getField(attribute).getValue().toString().contains(affix.value)) {
+    				return false;
+    			}
+    		}
+    		return true;
+    	}
     }
 
     /***
@@ -119,8 +156,9 @@ public class LabledRegexNoQualifierProcessor {
     public List<Span> affixQualifierMatchingResults(Tuple tuple) {
         List<Span> allAttrsMatchResults = new ArrayList<>();
         for(String attribute: predicate.getAttributeNames()){
-            Map<String, List<Span>> affixMap = generateAffixMap(attribute, tuple);
-            if(affixMap.isEmpty()) {
+        	// TODO TODO TODO TODO
+            List<List<Span> > affixMap = generateAffixMap(attribute, tuple);
+            if(affixMap.keySet().size() == ) {
                 continue;
             }
             List<List<Integer>> matchList = new ArrayList<>();
@@ -186,7 +224,7 @@ public class LabledRegexNoQualifierProcessor {
     public List<Span> noQualifierMatchingResults(Tuple tuple){
         List<Span> allAttrsMatchSpans = new ArrayList<>();
         for (String attribute : predicate.getAttributeNames()) {
-            boolean isValidTuple = filterTuple(tuple, attribute);
+            boolean isValidTuple = filterTuple(tuple, attribute, tupleStatsUsed++);
 
             if (! isValidTuple) {
                 continue;
@@ -270,27 +308,55 @@ public class LabledRegexNoQualifierProcessor {
      * @param tuple
      * @return
      */
-    private Map<String, List<Span>> generateAffixMap(String attribute, Tuple tuple){
-        Map<String, List<Span>> affixMap = new HashMap<>();
-        for(String affix: affixList){
-            Pattern affixPattern = this.predicate.isIgnoreCase() ?
-                    Pattern.compile(affix, Pattern.CASE_INSENSITIVE)
-                    : Pattern.compile(affix);
-            String fieldValue = tuple.getField(attribute).getValue().toString();
+    private boolean generateAffixMap(String attribute, Tuple tuple, int tupleNumber, Map<String, List<Span> > affixSpans){
+
+    	if(tupleNumber <= TOTAL_USED_FOR_STATS){
+    		boolean isValid = false;
+    		for (ScoredString affix : scoredAffixList) {
+    			List<Span> matchingResults = generateAffixSpanList(tuple.getField(attribute).getValue().toString(), 
+                		attribute, affix.value);
+                if(matchingResults.isEmpty()){
+                    isValid = false;
+                }else{
+    				affix.score ++;                	
+                }
+                affixSpans.put(affix.value, matchingResults);
+    		}
+    		
+    		if(tupleNumber == TOTAL_USED_FOR_STATS){
+    			scoredAffixList = new ArrayList<>(scoredAffixList.stream().sorted((a1, a2) -> a2.score - a1.score).collect(Collectors.toList()));
+    		}
+    		
+    		return isValid;
+    	}else{
+    		for (ScoredString affix : scoredAffixList) {
+    			List<Span> matchingResults = generateAffixSpanList(tuple.getField(attribute).getValue().toString(), 
+                		attribute, affix.value);
+                if(matchingResults.isEmpty()){
+                    return false;
+                }
+                affixSpans.put(affix.value, matchingResults);
+    		}
+    		return true;
+    	}
+    }
+    
+    private List<Span> generateAffixSpanList(String fieldValue, String attributeName, String affixValue){
+    	List<Span> matchingResults = new ArrayList<>();
+    	if(regexType == RegexMatcher.RegexType.Labeled_WITHOUT_QUALIFIERS){
+    		
+    	}else if(regexType == RegexMatcher.RegexType.LABELED_QUALIFIERS_AFFIX){
+    		Pattern affixPattern = affixRegexPatterns.get(affixValue);
             Matcher affixMatcher =affixPattern.matcher(fieldValue);
-            List<Span> matchingResults = new ArrayList<>();
             while (affixMatcher.find()) {
                 int start = affixMatcher.start();
                 int end = affixMatcher.end();
                 matchingResults.add(
-                        new Span(attribute, start, end, affix, fieldValue.substring(start, end)));
+                        new Span(attributeName, start, end, affixValue, fieldValue.substring(start, end)));
             }
-            if(matchingResults.isEmpty()){
-                break;
-            }
-            affixMap.put(affix, matchingResults);
-        }
-        return affixMap;
+    	}
+    	return matchingResults;
     }
+    
 
 }

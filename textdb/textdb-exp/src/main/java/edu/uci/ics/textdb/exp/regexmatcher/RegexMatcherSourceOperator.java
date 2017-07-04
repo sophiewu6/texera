@@ -42,7 +42,6 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
         
         if (this.predicate.isUseIndex()) {
             this.dataReader = RelationManager.getRelationManager().getTableDataReader(this.predicate.getTableName(), 
-//                    createLuceneQuery(this.predicate));
             		createLucenePhraseQuery(this.predicate));
             
         } else {
@@ -114,7 +113,8 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
                 throw new StorageException (e);
             }
     	}
-//        System.out.println(queryTree.printQueryTree());
+
+    	// If the top operator is AND, add an OR on top of it to normalize it.
     	if(queryTree.operator == GramBooleanQuery.QueryOp.AND){
     		GramBooleanQuery newRoot = new GramBooleanQuery(GramBooleanQuery.QueryOp.OR);
     		newRoot.subQuerySet.add(queryTree);
@@ -133,6 +133,8 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
 	     *         )
          */
         for(GramBooleanQuery subtree : queryTree.subQuerySet){
+        	// If OR's child is not an AND, add an AND with a single child.
+        	// For example for the uci|ics case where two leaf nodes come directly under OR.
         	GramBooleanQuery andSubtree = subtree;
         	if(subtree.operator != GramBooleanQuery.QueryOp.AND){
         		andSubtree = new GramBooleanQuery(GramBooleanQuery.QueryOp.AND);

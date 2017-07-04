@@ -9,6 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.w3c.dom.UserDataHandler;
+
 import edu.uci.ics.textdb.api.field.ListField;
 import edu.uci.ics.textdb.api.span.Span;
 import edu.uci.ics.textdb.api.tuple.Tuple;
@@ -154,11 +156,12 @@ public class LabledRegexNoQualifierProcessor {
      * @return
      */
     public List<Span> affixQualifierMatchingResults(Tuple tuple) {
+    	tupleStatsUsed++;
         List<Span> allAttrsMatchResults = new ArrayList<>();
         for(String attribute: predicate.getAttributeNames()){
-        	// TODO TODO TODO TODO
-            List<List<Span> > affixMap = generateAffixMap(attribute, tuple);
-            if(affixMap.keySet().size() == ) {
+            Map<String, List<Span> > affixMap = new HashMap<String, List<Span>>();
+            boolean isTupleValid = generateAffixMap(attribute, tuple, tupleStatsUsed, affixMap);
+            if(! isTupleValid) {
                 continue;
             }
             List<List<Integer>> matchList = new ArrayList<>();

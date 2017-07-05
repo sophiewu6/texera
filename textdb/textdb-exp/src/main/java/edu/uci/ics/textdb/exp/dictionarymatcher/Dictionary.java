@@ -49,7 +49,10 @@ public class Dictionary {
         }
         return null;
     }
-    
+
+    public boolean isEmpty(){
+        return (dictionaryEntries == null || dictionaryEntries.isEmpty());
+    }
     /**
      * Reset the cursor to the start of the dictionary.
      */

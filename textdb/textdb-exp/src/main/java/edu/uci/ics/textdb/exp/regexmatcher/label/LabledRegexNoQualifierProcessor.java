@@ -52,6 +52,9 @@ public class LabledRegexNoQualifierProcessor {
     		this.value = value_;
     		this.score = 0;
     	}
+    	public String toString(){
+    		return value + "(" + score + ")\t";
+    	}
     }
     
     private ArrayList<ScoredString> scoredAffixList = new ArrayList<>(); // sort the affixList by length in decreasing order to short-cut the filter tuple operation.
@@ -171,7 +174,16 @@ public class LabledRegexNoQualifierProcessor {
                 String suffix = affixList.get(i+1);
                 List<Span> relevantSpans = labelValues.get(label).stream()
                         .filter(span -> span.getAttributeName().equals(attribute)).collect(Collectors.toList());
+                
+                System.out.println(label + "/" + attribute);
+                relevantSpans.stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+                System.out.println();
+                
                 if(i ==0){
+                	System.out.println(prefix);
+                	affixMap.get(prefix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+                	System.out.println();
+                	
                     List<Span> validSpans = new ArrayList<>();
                     for(Span span: relevantSpans){
                         List<Span> matchPrefix = affixMap.get(prefix).stream()
@@ -186,6 +198,10 @@ public class LabledRegexNoQualifierProcessor {
                     }
                     relevantSpans = validSpans;
                 }
+            	System.out.println(suffix);
+            	affixMap.get(suffix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+            	System.out.println();
+            	
                 List<List<Integer>> newMatchList = new ArrayList<>();
                 for(List<Integer> previousMatch : matchList){
                     for(Span span: relevantSpans){
@@ -241,10 +257,8 @@ public class LabledRegexNoQualifierProcessor {
                 String label = labelList.get(i);
                 String prefix = affixList.get(i);
                 String suffix = affixList.get(i+1);
-
                 List<Span> relevantSpans = labelValues.get(label).stream()
                         .filter(span -> span.getAttributeName().equals(attribute)).collect(Collectors.toList());
-
                 if (i == 0) {
                     List<Span> validSpans = relevantSpans.stream()
                             .filter(span -> span.getStart() >= prefix.length())
@@ -314,7 +328,7 @@ public class LabledRegexNoQualifierProcessor {
     private boolean generateAffixMap(String attribute, Tuple tuple, int tupleNumber, Map<String, List<Span> > affixSpans){
 
     	if(tupleNumber <= TOTAL_USED_FOR_STATS){
-    		boolean isValid = false;
+    		boolean isValid = true;
     		for (ScoredString affix : scoredAffixList) {
     			List<Span> matchingResults = generateAffixSpanList(tuple.getField(attribute).getValue().toString(), 
                 		attribute, affix.value);
@@ -322,12 +336,13 @@ public class LabledRegexNoQualifierProcessor {
                     isValid = false;
                 }else{
     				affix.score ++;                	
+    				affixSpans.put(affix.value, matchingResults);
                 }
-                affixSpans.put(affix.value, matchingResults);
     		}
     		
     		if(tupleNumber == TOTAL_USED_FOR_STATS){
-    			scoredAffixList = new ArrayList<>(scoredAffixList.stream().sorted((a1, a2) -> a2.score - a1.score).collect(Collectors.toList()));
+    			scoredAffixList = new ArrayList<>(scoredAffixList.stream().sorted((a1, a2) -> a1.score - a2.score).collect(Collectors.toList()));
+    			scoredAffixList.stream().forEach(a -> System.out.println(a));
     		}
     		
     		return isValid;
@@ -350,7 +365,7 @@ public class LabledRegexNoQualifierProcessor {
     		
     	}else if(regexType == RegexMatcher.RegexType.LABELED_QUALIFIERS_AFFIX){
     		Pattern affixPattern = affixRegexPatterns.get(affixValue);
-            Matcher affixMatcher =affixPattern.matcher(fieldValue);
+            Matcher affixMatcher =affixPattern.matcher(fieldValue.toLowerCase());
             while (affixMatcher.find()) {
                 int start = affixMatcher.start();
                 int end = affixMatcher.end();

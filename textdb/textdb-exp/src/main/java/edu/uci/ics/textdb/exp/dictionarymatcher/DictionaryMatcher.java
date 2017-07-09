@@ -81,7 +81,6 @@ public class DictionaryMatcher extends AbstractSingleInputOperator {
 
     @Override
     public Tuple processOneInputTuple(Tuple inputTuple) throws TextDBException {
-
         if (inputTuple == null) {
             return null;
         }
@@ -108,9 +107,7 @@ public class DictionaryMatcher extends AbstractSingleInputOperator {
             else if(predicate.getKeywordMatchingType() == KeywordMatchingType.CONJUNCTION_INDEXBASED){
                 DataflowUtils.appendConjunctionMatchingSpans(inputTuple, predicate.getAttributeNames(), currentDictionaryEntry, predicate.getAnalyzerString(), matchingResults);
             }
-
         }
-
         if (matchingResults.isEmpty()) {
             return null;
         }
@@ -118,7 +115,6 @@ public class DictionaryMatcher extends AbstractSingleInputOperator {
         ListField<Span> spanListField = inputTuple.getField(predicate.getSpanListName());
         List<Span> spanList = spanListField.getValue();
         spanList.addAll(matchingResults);
-
         return inputTuple;
 
     }

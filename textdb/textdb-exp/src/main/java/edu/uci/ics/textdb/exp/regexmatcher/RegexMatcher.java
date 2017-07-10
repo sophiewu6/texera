@@ -203,6 +203,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 
     @Override
     protected void cleanUp() throws DataFlowException {
+        if (this.regexType == RegexType.NO_LABELS) {
+        	System.out.println("No label regex operator closed.");
+        } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
+        	System.out.println("label regex operator closed.");
+        } else {
+            System.out.println("Total regex matching time is " + labledRegexNoQualifierProcessor.totalMatchingTime);
+        	System.out.println("label regex operator closed.");
+        }
     }
 
     public RegexPredicate getPredicate() {

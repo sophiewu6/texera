@@ -169,46 +169,57 @@ public class MedlineExtraction {
         
         dictionaryMatcher.setInputOperator(scanBasedSourceOperator);
         
-        DictionaryPredicate dictionaryPredicate1 = 
-        		new DictionaryPredicate(dic_disease, attributeNames, luceneAnalyzerStr, 
-        				KeywordMatchingType.SUBSTRING_SCANBASED, disease);
-        DictionaryMatcher dictionaryMatcher1 = new DictionaryMatcher(dictionaryPredicate1);
-        
-        dictionaryMatcher1.setInputOperator(dictionaryMatcher);
-        
+//        DictionaryPredicate dictionaryPredicate1 = 
+//        		new DictionaryPredicate(dic_disease, attributeNames, luceneAnalyzerStr, 
+//        				KeywordMatchingType.SUBSTRING_SCANBASED, disease);
+//        DictionaryMatcher dictionaryMatcher1 = new DictionaryMatcher(dictionaryPredicate1);
+//        
+//        dictionaryMatcher1.setInputOperator(dictionaryMatcher);
+
         RegexPredicate regexPredicate = 
         		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
         				+ "<drug>"
-        				+ "( )?(injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)?( )?(can|could|will|would|should)? (cures?|heals?|solves?|resolves?|improves?|reduces?|impacts?|helps?)( the)? "
-        				+ "<disease>"
-        				+ "( )?(syndrome|infection|sickness|deficiency|disorder|defects?|disease|problems?)? (successfully|partially|positively|negatively|completely|gradually|quickly|significantly|slowly)", 
+        				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
         				attributeNames, "report");
+//        RegexPredicate regexPredicate = 
+//        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
+//        				+ "<drug>"
+//        				+ "( )?(injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)?( )?(can|could|will|would|should)? (cures?|heals?|solves?|resolves?|improves?|reduces?|impacts?|helps?)( the)? "
+//        				+ "<disease>"
+//        				+ "( )?(syndrome|infection|sickness|deficiency|disorder|defects?|disease|problems?)? (successfully|partially|positively|negatively|completely|gradually|quickly|significantly|slowly)", 
+//        				attributeNames, "report");
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("(The )?surgeon (involved|involving|involves?) <drug> willing to <disease>( of)? their ovarian tissue.", 
 //        				attributeNames, "report");
         RegexMatcher regexMatcher = new RegexMatcher(regexPredicate);
-        regexMatcher.setInputOperator(dictionaryMatcher1);
+        regexMatcher.setInputOperator(dictionaryMatcher);
         
         
         TupleSink tupleSink = new TupleSink();
         tupleSink.setInputOperator(regexMatcher);
 //        tupleSink.setInputOperator(dictionaryMatcher1);
         
+        long startMatchTime = System.currentTimeMillis();
         tupleSink.open();
         List<Tuple> result = tupleSink.collectAllTuples();
+        tupleSink.close();
+        long endMatchTime = System.currentTimeMillis();
+        double matchTime = (endMatchTime - startMatchTime) / 1000.0;
+        
         for(Tuple t: result){
             System.out.println(t.getField(0).getValue().toString());
             System.out.println(t.getField("abstract").toString());
             for(Span span: (List<Span>) t.getField(drug).getValue()){
                 System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
             }
-           System.out.println("This is for another dictionary matcher");
-            for(Span span: (List<Span>) t.getField(disease).getValue()){
-                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
-            }
+//           System.out.println("This is for another dictionary matcher");
+//            for(Span span: (List<Span>) t.getField(disease).getValue()){
+//                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
+//            }
         }
         int count = result.size();
         System.out.println("Done_number of tuples" + count);
+        System.out.println("Total matching time: " + matchTime);
         
     }
     public static void extractPersonLocation() throws Exception {

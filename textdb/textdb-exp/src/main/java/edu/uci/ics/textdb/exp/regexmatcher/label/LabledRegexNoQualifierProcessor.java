@@ -34,6 +34,9 @@ import edu.uci.ics.textdb.exp.regexmatcher.RegexPredicate;
  */
 public class LabledRegexNoQualifierProcessor {
 
+	public static double totalMatchingTime = 0;
+	
+	
     private RegexPredicate predicate;
     private RegexMatcher.RegexType regexType;
 
@@ -140,14 +143,20 @@ public class LabledRegexNoQualifierProcessor {
      */
 
     public List<Span> computeMatchingResults(Tuple tuple) {
-
+    	long startMatchTime = System.currentTimeMillis();
+    	
+    	List<Span> results;
         labelValues = fetchLabelSpans(tuple);
         if(this.regexType == RegexMatcher.RegexType.Labeled_WITHOUT_QUALIFIERS){
-            return noQualifierMatchingResults(tuple);
+            results = noQualifierMatchingResults(tuple);
         }else{
-            return affixQualifierMatchingResults(tuple);
+            results = affixQualifierMatchingResults(tuple);
         }
 
+        long endMatchTime = System.currentTimeMillis();
+        totalMatchingTime += (endMatchTime - startMatchTime) / 1000.0;
+
+        return results;
     }
 
     /***
@@ -175,14 +184,14 @@ public class LabledRegexNoQualifierProcessor {
                 List<Span> relevantSpans = labelValues.get(label).stream()
                         .filter(span -> span.getAttributeName().equals(attribute)).collect(Collectors.toList());
                 
-                System.out.println(label + "/" + attribute);
-                relevantSpans.stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
-                System.out.println();
+//                System.out.println(label + "/" + attribute);
+//                relevantSpans.stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+//                System.out.println();
                 
                 if(i ==0){
-                	System.out.println(prefix);
-                	affixMap.get(prefix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
-                	System.out.println();
+//                	System.out.println(prefix);
+//                	affixMap.get(prefix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+//                	System.out.println();
                 	
                     List<Span> validSpans = new ArrayList<>();
                     for(Span span: relevantSpans){
@@ -198,9 +207,9 @@ public class LabledRegexNoQualifierProcessor {
                     }
                     relevantSpans = validSpans;
                 }
-            	System.out.println(suffix);
-            	affixMap.get(suffix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
-            	System.out.println();
+//            	System.out.println(suffix);
+//            	affixMap.get(suffix).stream().forEach(s -> System.out.print("(" + s.getStart() + "," + s.getEnd() + ") "));
+//            	System.out.println();
             	
                 List<List<Integer>> newMatchList = new ArrayList<>();
                 for(List<Integer> previousMatch : matchList){

@@ -196,8 +196,8 @@ public class MedlineExtraction {
         
         
         TupleSink tupleSink = new TupleSink();
-        tupleSink.setInputOperator(regexMatcher);
-//        tupleSink.setInputOperator(dictionaryMatcher1);
+//        tupleSink.setInputOperator(regexMatcher);
+        tupleSink.setInputOperator(dictionaryMatcher);
         
         long startMatchTime = System.currentTimeMillis();
         tupleSink.open();
@@ -206,17 +206,17 @@ public class MedlineExtraction {
         long endMatchTime = System.currentTimeMillis();
         double matchTime = (endMatchTime - startMatchTime) / 1000.0;
         
-        for(Tuple t: result){
-            System.out.println(t.getField(0).getValue().toString());
-            System.out.println(t.getField("abstract").toString());
-            for(Span span: (List<Span>) t.getField(drug).getValue()){
-                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
-            }
-//           System.out.println("This is for another dictionary matcher");
-//            for(Span span: (List<Span>) t.getField(disease).getValue()){
+//        for(Tuple t: result){
+//            System.out.println(t.getField(0).getValue().toString());
+//            System.out.println(t.getField("abstract").toString());
+//            for(Span span: (List<Span>) t.getField(drug).getValue()){
 //                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
 //            }
-        }
+////           System.out.println("This is for another dictionary matcher");
+////            for(Span span: (List<Span>) t.getField(disease).getValue()){
+////                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
+////            }
+//        }
         int count = result.size();
         System.out.println("Done_number of tuples" + count);
         System.out.println("Total matching time: " + matchTime);

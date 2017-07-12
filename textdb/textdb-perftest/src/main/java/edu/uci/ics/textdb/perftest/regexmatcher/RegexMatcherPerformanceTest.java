@@ -21,7 +21,6 @@ import edu.uci.ics.textdb.exp.dictionarymatcher.DictionaryPredicate;
 import edu.uci.ics.textdb.exp.keywordmatcher.KeywordMatchingType;
 import edu.uci.ics.textdb.exp.regexmatcher.RegexMatcher;
 import edu.uci.ics.textdb.exp.regexmatcher.RegexMatcherSourceOperator;
-import edu.uci.ics.textdb.exp.regexmatcher.RegexMatcherTestHelper;
 import edu.uci.ics.textdb.exp.regexmatcher.RegexSourcePredicate;
 import edu.uci.ics.textdb.exp.source.scan.ScanBasedSourceOperator;
 import edu.uci.ics.textdb.exp.source.scan.ScanSourcePredicate;

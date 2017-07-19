@@ -371,7 +371,7 @@ public class LabledRegexNoQualifierProcessor {
     private List<Span> generateAffixSpanList(String fieldValue, String attributeName, String affixValue){
     	List<Span> matchingResults = new ArrayList<>();
     	if(regexType == RegexMatcher.RegexType.Labeled_WITHOUT_QUALIFIERS){
-    		
+    		//TODO
     	}else if(regexType == RegexMatcher.RegexType.LABELED_QUALIFIERS_AFFIX){
     		Pattern affixPattern = affixRegexPatterns.get(affixValue);
             Matcher affixMatcher =affixPattern.matcher(fieldValue.toLowerCase());

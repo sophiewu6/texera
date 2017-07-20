@@ -148,7 +148,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 
     private final RegexPredicate predicate;
     private RegexType regexType;
-
+    private Pattern pattern;
+    
+    
     private Schema inputSchema;
     private static int inputTuplesCounter = 0;
 
@@ -177,6 +179,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         findRegexType();
         // Check if labeled or unlabeled
         if (this.regexType == RegexType.NO_LABELS) {
+//        	pattern = predicate.isIgnoreCase() ? Pattern.compile(predicate.getRegex(), Pattern.CASE_INSENSITIVE) : Pattern.compile(predicate.getRegex());
+
+        	
             // set up the needed data structures for optimization and dynamic 
             // evaluation
             // 1. break the regex into a number of sub-regexes that are called CoreSubRegexes or CSRs here.
@@ -186,7 +191,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             generateExpandedSubRegexes();
             
             // 3. This will continue with stats collecting in the time of stream processing.
-            
+        
         } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
             labeledRegexProcessor = new LabeledRegexProcessor(predicate);
         } else {
@@ -255,7 +260,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 
         List<Span> matchingResults;
         if (this.regexType == RegexType.NO_LABELS) {
-
+//        	matchingResults = computeMatchingResultsWithPattern(inputTuple, predicate, pattern);
         	if(inputTuplesCounter < MAX_TUPLES_FOR_STAT_COLLECTION){
         		inputTuplesCounter ++;
         		// all coreSubRegexes must have at least one match
@@ -274,7 +279,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         				long matchingTime = endMatchingTime - startMatchingTime;
         				int totalTupleTextSize = 1;
         				for(String attributeName : subRegex.regex.getAttributeNames()){
-        					AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
         		            totalTupleTextSize += inputTuple.getField(attributeName).getValue().toString().length();
         				}
         				double matchingCost = (matchingTime * 1.0) / totalTupleTextSize;
@@ -312,6 +316,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		// find a list of subRegexes that together as a plan minimize the expected cost.
         		selectedSubRegexes.clear();
         		findCheapestCoveringListOfSubRegexes();
+        		// move on the selected list of subRegexes and compute/save the matching spans.
+        		for(SubRegex subRegex : selectedSubRegexes){
+        			List<Span> subRegexSpans = computeMatchingResultsWithPattern(inputTuple, subRegex.regex, subRegex.regexPatern);
+        			if(subRegexSpans == null || subRegexSpans.isEmpty()){
+        				return null;
+        			}
+        			subRegex.resetMatchingSpanList(subRegexSpans);
+        		}
         	}else { // inputTuplesCounter > MAX_TUPLES_FOR_STAT_COLLECTION
         		inputTuplesCounter ++;
         		// move on the selected list of subRegexes and compute/save the matching spans.
@@ -335,24 +347,24 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         					newMatchingResults.add(new Span(s.getAttributeName(), 
         							s.getStart(), 
         							innerS.getEnd(), 
-        							selectedSubRegexes.get(i).regex.getRegex(), 
+        							s.getKey() + selectedSubRegexes.get(i).regex.getRegex(), 
         							s.getValue() + innerS.getValue()));
         				}
         			}
-        			matchingResults.clear();
-        			matchingResults.addAll(newMatchingResults);
         		}
-        		if(newMatchingResults.isEmpty()){
+        		matchingResults.clear();
+        		matchingResults.addAll(newMatchingResults);
+        		if(matchingResults.isEmpty()){
         			return null;
         		}
         	}
-        	// matchingResults is ready. Will save it in the tuple.
         } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
             matchingResults = labeledRegexProcessor.computeMatchingResults(inputTuple);
         } else {
             matchingResults = labledRegexNoQualifierProcessor.computeMatchingResults(inputTuple);
         }
 
+        // matchingResults is ready. Will save it in the tuple.
         if (matchingResults.isEmpty()) {
             return null;
         }
@@ -503,7 +515,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		subRegexIndexes.add(i);
     	}
     	// generate all the permutations
-    	iterateOnPermutations(subRegexIndexes, new ArrayList<Integer>(), permutations);
+    	generateAllPermutations(subRegexIndexes, new ArrayList<Integer>(), permutations);
     	
     	// for each permutation estimate the expected cost
     	for(List<Integer> permutation: permutations){
@@ -521,7 +533,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	return;
     }
     
-    private void iterateOnPermutations(Set<Integer> elements, List<Integer> currentPermutation, List<List<Integer>> permutations){
+    private void generateAllPermutations(Set<Integer> elements, List<Integer> currentPermutation, List<List<Integer>> permutations){
     	if(elements.isEmpty()){
     		permutations.add(new ArrayList<>(currentPermutation));
     		return;
@@ -531,7 +543,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		// if element is used next
     		currentPermutation.add(element);
     		elementsCopy.remove(element);
-    		iterateOnPermutations(elementsCopy, currentPermutation, permutations);
+    		generateAllPermutations(elementsCopy, currentPermutation, permutations);
     		currentPermutation.remove(currentPermutation.size() - 1);
     		elementsCopy.add(element);
     	}

@@ -176,11 +176,15 @@ public class MedlineExtraction {
 //        
 //        dictionaryMatcher1.setInputOperator(dictionaryMatcher);
 
+//        RegexPredicate regexPredicate = 
+//        		new RegexPredicate("(In )?\\d+ cases?(?: of)?(?: transplantation),? *(?:the recipient was made)", 
+//        				attributeNames, "report");
         RegexPredicate regexPredicate = 
         		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
-        				+ ".*"
+        				+ "(?:[A-Za-z0-9]+ *){1,3}"
         				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
         				attributeNames, "report");
+
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
 //        				+ "<drug>"

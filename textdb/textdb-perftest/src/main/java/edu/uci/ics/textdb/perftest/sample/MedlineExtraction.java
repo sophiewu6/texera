@@ -162,12 +162,12 @@ public class MedlineExtraction {
         System.out.println(" size of disease dictionary" + dic_disease.getDictionaryEntries().size());
         
         
-        DictionaryPredicate dictionaryPredicate = 
-        		new DictionaryPredicate(dic_drugs, attributeNames, luceneAnalyzerStr, 
-        				KeywordMatchingType.SUBSTRING_SCANBASED, drug);
-        DictionaryMatcher dictionaryMatcher = new DictionaryMatcher(dictionaryPredicate);
-        
-        dictionaryMatcher.setInputOperator(scanBasedSourceOperator);
+//        DictionaryPredicate dictionaryPredicate = 
+//        		new DictionaryPredicate(dic_drugs, attributeNames, luceneAnalyzerStr, 
+//        				KeywordMatchingType.SUBSTRING_SCANBASED, drug);
+//        DictionaryMatcher dictionaryMatcher = new DictionaryMatcher(dictionaryPredicate);
+//        
+//        dictionaryMatcher.setInputOperator(scanBasedSourceOperator);
         
 //        DictionaryPredicate dictionaryPredicate1 = 
 //        		new DictionaryPredicate(dic_disease, attributeNames, luceneAnalyzerStr, 
@@ -178,7 +178,7 @@ public class MedlineExtraction {
 
         RegexPredicate regexPredicate = 
         		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
-        				+ "<drug>"
+        				+ ".*"
         				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
         				attributeNames, "report");
 //        RegexPredicate regexPredicate = 
@@ -192,12 +192,13 @@ public class MedlineExtraction {
 //        		new RegexPredicate("(The )?surgeon (involved|involving|involves?) <drug> willing to <disease>( of)? their ovarian tissue.", 
 //        				attributeNames, "report");
         RegexMatcher regexMatcher = new RegexMatcher(regexPredicate);
-        regexMatcher.setInputOperator(dictionaryMatcher);
+//        regexMatcher.setInputOperator(dictionaryMatcher);
+        regexMatcher.setInputOperator(scanBasedSourceOperator);
         
         
         TupleSink tupleSink = new TupleSink();
 //        tupleSink.setInputOperator(regexMatcher);
-        tupleSink.setInputOperator(dictionaryMatcher);
+        tupleSink.setInputOperator(regexMatcher);
         
         long startMatchTime = System.currentTimeMillis();
         tupleSink.open();

@@ -20,10 +20,10 @@ import edu.uci.ics.textdb.exp.common.PropertyNameConstants;
  */
 public class RegexPredicate extends PredicateBase {
 
-    private final String regex;
-    private final List<String> attributeNames;
-    private final String spanListName;
-    private final Boolean ignoreCase;
+    private String regex;
+    private List<String> attributeNames;
+    private String spanListName;
+    private Boolean ignoreCase;
     
     /*
      * This constructor is only for internal use.
@@ -68,6 +68,9 @@ public class RegexPredicate extends PredicateBase {
     public String getRegex() {
         return this.regex;
     }
+    public void setRegex(String regex) {
+    	this.regex = regex;
+    }
 
     @JsonProperty(PropertyNameConstants.ATTRIBUTE_NAMES)
     public List<String> getAttributeNames() {
@@ -77,6 +80,9 @@ public class RegexPredicate extends PredicateBase {
     @JsonProperty(PropertyNameConstants.SPAN_LIST_NAME)
     public String getSpanListName() {
         return this.spanListName;
+    }
+    public void setSpanListName(String spanListName){
+    	this.spanListName = spanListName;
     }
     
     @JsonProperty(PropertyNameConstants.REGEX_IGNORE_CASE)

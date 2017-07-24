@@ -31,6 +31,10 @@ public class RegexPredicate extends PredicateBase {
     public RegexPredicate(String regex, List<String> attributeNames, String spanListName) {
         this(regex, attributeNames, null, spanListName);
     }
+    
+    public RegexPredicate(RegexPredicate that) {
+    	this(that.regex, that.attributeNames, that.ignoreCase, that.spanListName);
+    }
 
     /**
      * RegexPredicate is used to create a RegexMatcher.

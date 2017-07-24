@@ -35,6 +35,7 @@ import java.util.stream.Stream;
  *
  */
 public class PublicRegexp extends Regexp {
+	
     /*
      * // Fields originally declared in Regexp. // For detailed explanations
      * please see cooresponding getter methods
@@ -61,6 +62,11 @@ public class PublicRegexp extends Regexp {
     private PublicRegexp(Regexp that) {
         super(that);
     }
+    
+    private PublicRegexp(PublicRegexp that){
+    	super((Regexp)that);
+    	publicSubs = that.publicSubs;
+    }
 
     /**
      * This performs a deep copy of a Regexp object. Every Regexp Object in
@@ -78,6 +84,7 @@ public class PublicRegexp extends Regexp {
         if (re.subs != null) {
             // initialize publicSubs array
             publicRegexp.publicSubs = new PublicRegexp[re.subs.length];
+            publicRegexp.subs = publicRegexp.publicSubs;
             // map every Regexp sub-expression to a PublicRegexp sub-expression
             Stream<PublicRegexp> publicSubStream = Arrays.asList(re.subs).stream()
                     .map(sub -> PublicRegexp.deepCopy(sub));
@@ -87,6 +94,97 @@ public class PublicRegexp extends Regexp {
             publicRegexp.publicSubs = null;
         }
         return publicRegexp;
+    }
+    
+    public static PublicRegexp reverseDeepCopy(PublicRegexp re){
+        PublicRegexp publicRegexp = new PublicRegexp(re);
+        if (re.subs != null) {
+            // initialize publicSubs array
+            publicRegexp.publicSubs = new PublicRegexp[re.subs.length];
+            publicRegexp.subs = publicRegexp.publicSubs;
+    		for(int i =0; i < re.publicSubs.length ; i++){
+    			publicRegexp.publicSubs[i] = reverseDeepCopy(re.publicSubs[i]);
+    		}
+        } else {
+            publicRegexp.publicSubs = null;
+        }
+        // map every Regexp sub-expression to a PublicRegexp sub-expression
+        switch(publicRegexp.getOp()){
+    	case NO_MATCH: // Matches no strings.
+    	case EMPTY_MATCH: // Matches empty string.
+    	case CHAR_CLASS: // Matches Runes interpreted as range pair list
+    	case ANY_CHAR_NOT_NL: // Matches any character except '\n'
+    	case ANY_CHAR: // Matches any character
+    	case WORD_BOUNDARY: // Matches word boundary `\b`
+    	case NO_WORD_BOUNDARY: // Matches word non-boundary `\B`
+    	case CAPTURE: // Capturing subexpr with index cap, optional name name
+    	case STAR: // Matches subs[0] zero or more times.
+    	case PLUS: // Matches subs[0] one or more times.
+    	case QUEST: // Matches subs[0] zero or one times.
+    	case REPEAT: // Matches subs[0] [min, max] times; max=-1 => no limit.
+    	case ALTERNATE: // Matches union of subs[]
+    	{
+    		return publicRegexp;
+    	}
+    	case LITERAL: // Matches runes[] sequence
+    	{
+    		int[] runes = publicRegexp.getRunes();
+    		int[] runesReverseCopy = new int[runes.length];
+    		for(int i =0; i < runes.length; i ++){
+    			runesReverseCopy[runesReverseCopy.length - 1 - i] = runes[i];
+    		}
+    		publicRegexp.setRunes(runesReverseCopy);
+    		return publicRegexp;
+    	}
+    	case BEGIN_LINE: // Matches empty string at end of line
+    	{
+    		publicRegexp.setOp(PublicOp.END_LINE);
+    		return publicRegexp;
+    	}
+    	case END_LINE: // Matches empty string at end of line
+    	{
+    		publicRegexp.setOp(PublicOp.BEGIN_LINE);
+    		return publicRegexp;        		
+    	}
+    	case BEGIN_TEXT: // Matches empty string at beginning of text
+		{
+    		publicRegexp.setOp(PublicOp.BEGIN_TEXT);
+    		return publicRegexp;      			
+		}
+    	case END_TEXT: // Matches empty string at end of text
+    	{
+    		publicRegexp.setOp(PublicOp.END_TEXT);
+    		return publicRegexp;  
+    		
+    	}
+    	case CONCAT: // Matches concatenation of subs[]
+    	{
+    		PublicRegexp[] reversePubSubs = new PublicRegexp[publicRegexp.publicSubs.length];
+    		
+    		for(int i =0; i < publicRegexp.publicSubs.length ; i++){
+    			reversePubSubs[i] = publicRegexp.publicSubs[publicRegexp.publicSubs.length - 1 - i];
+    		}
+    		publicRegexp.publicSubs = reversePubSubs;
+    		for(int i =0; i < publicRegexp.subs.length ; i++){
+    			publicRegexp.subs[i] = publicRegexp.publicSubs[i];
+    		}
+    	}
+    	}
+    	return publicRegexp;
+    }
+    
+    public static boolean hasOp(PublicRegexp re, PublicOp op){
+    	if(re.getOp() == op){
+    		return true;
+    	}
+    	if(re.publicSubs != null){
+    		for(PublicRegexp sub: re.publicSubs){
+    			if(hasOp(sub, op)){
+    				return true;
+    			}
+    		}
+    	}
+    	return false;
     }
 
     /**
@@ -137,6 +235,10 @@ public class PublicRegexp extends Regexp {
         }
 
     }
+    
+    public void setOp(PublicOp op) {
+    	this.op = Op.valueOf(this.op.toString());
+    }
 
     /**
      * This returns a bitmap of parse flags. <br>
@@ -175,6 +277,10 @@ public class PublicRegexp extends Regexp {
      */
     public int[] getRunes() {
         return this.runes;
+    }
+    
+    public void setRunes(int [] runes) {
+    	this.runes = runes;
     }
 
     /**

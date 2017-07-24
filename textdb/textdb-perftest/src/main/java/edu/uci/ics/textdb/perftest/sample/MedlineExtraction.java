@@ -179,11 +179,18 @@ public class MedlineExtraction {
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("(In )?\\d+ cases?(?: of)?(?: transplantation),? *(?:the recipient was made)", 
 //        				attributeNames, "report");
+//        RegexPredicate regexPredicate = 
+//        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
+//        				+ "(?:[A-Za-z0-9]+ *){1,3}"
+//        				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
+//        				attributeNames, "report");
         RegexPredicate regexPredicate = 
-        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
-        				+ "(?:[A-Za-z0-9]+ *){1,3}"
-        				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
+        		new RegexPredicate("\\s*(abcd|pqrs)(word)?([A-Z]\\w){1,2}(?:[A-Za-z0-9]+ *){1,3}\\s*hello", 
         				attributeNames, "report");
+//        RegexPredicate regexPredicate = 
+//        		new RegexPredicate("a.*b",
+//        				attributeNames, "report");
+        
 
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
@@ -211,17 +218,17 @@ public class MedlineExtraction {
         long endMatchTime = System.currentTimeMillis();
         double matchTime = (endMatchTime - startMatchTime) / 1000.0;
         
-//        for(Tuple t: result){
-//            System.out.println(t.getField(0).getValue().toString());
-//            System.out.println(t.getField("abstract").toString());
-//            for(Span span: (List<Span>) t.getField(drug).getValue()){
+        for(Tuple t: result){
+            System.out.println(t.getField(0).getValue().toString());
+            System.out.println(t.getField("abstract").toString());
+            for(Span span: (List<Span>) t.getField("report").getValue()){
+                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
+            }
+//           System.out.println("This is for another dictionary matcher");
+//            for(Span span: (List<Span>) t.getField(disease).getValue()){
 //                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
 //            }
-////           System.out.println("This is for another dictionary matcher");
-////            for(Span span: (List<Span>) t.getField(disease).getValue()){
-////                System.out.println(span.getAttributeName() + " " + span.getStart() + " " + span.getEnd() + " " + span.getValue());
-////            }
-//        }
+        }
         int count = result.size();
         System.out.println("Done_number of tuples" + count);
         System.out.println("Total matching time: " + matchTime);

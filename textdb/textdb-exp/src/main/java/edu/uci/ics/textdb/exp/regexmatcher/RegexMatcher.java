@@ -1167,8 +1167,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     				}
     				
     			}else { // no left nor right are direct neighbors
+    				String fieldValueSubStr = fieldValue.substring(0, rightBoundSummary.startMax);
     				for(int i = leftBoundSummary.endMin; i < rightBoundSummary.startMax; ++i){
-    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue.substring(0, rightBoundSummary.startMax), i, subRegex, true);
+    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValueSubStr, i, subRegex, true);
     					matchingResults.addAll(spans);
     				}
     				

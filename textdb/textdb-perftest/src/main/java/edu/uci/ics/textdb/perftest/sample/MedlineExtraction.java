@@ -179,14 +179,14 @@ public class MedlineExtraction {
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("(In )?\\d+ cases?(?: of)?(?: transplantation),? *(?:the recipient was made)", 
 //        				attributeNames, "report");
-//        RegexPredicate regexPredicate = 
-//        		new RegexPredicate("(taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
-//        				+ "(?:[A-Za-z0-9]+ *){1,3}"
-//        				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)", 
-//        				attributeNames, "report");
         RegexPredicate regexPredicate = 
-        		new RegexPredicate("\\s*(abcd|pqrs)(word)?([A-Z]\\w){1,2}(?:[A-Za-z0-9]+ *){1,3}\\s*hello", 
+        		new RegexPredicate("((taking|injecting|injections?|usage|using|dose|dosage|prescriptions?|prescribing)( of)?( the)? "
+        				+ "(?:[A-Za-z0-9]+ *){1,3}"
+        				+ " (injection|tablets?|inhalation|vaccine|capsules?|inhibitors?|powder|gel|cream|oinment)).*,", 
         				attributeNames, "report");
+//        RegexPredicate regexPredicate = 
+//        		new RegexPredicate("\\s*(abcd|pqrs)(word)?([A-Z]\\w){1,2}(?:[A-Za-z0-9]+ *){1,3}\\s*hello", 
+//        				attributeNames, "report");
 //        RegexPredicate regexPredicate = 
 //        		new RegexPredicate("a.*b",
 //        				attributeNames, "report");

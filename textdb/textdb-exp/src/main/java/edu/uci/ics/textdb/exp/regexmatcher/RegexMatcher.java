@@ -162,6 +162,8 @@ class SubRegex{
 		Low
 	}
 	Pattern regexPatern;
+	Pattern startWithRegexPattern;
+	Pattern startToEndRegexPattern;
 	RegexPredicate regex;
 	ComplexityLevel complexity;
 	SubRegex reverseSubRegex;
@@ -183,13 +185,16 @@ class SubRegex{
 	
 	public SubRegex(){
 		regexPatern = null;
+		startWithRegexPattern = null;
+		startToEndRegexPattern = null;
 		startingCoreSubRegIndex = numberOfCoreSubRegexes = -1;
 		this.complexity = ComplexityLevel.Low;
 		reverseSubRegex = null;
 	}
 	public SubRegex(RegexPredicate predicate, int startingCSRIndex, int numberOfCSRs, ComplexityLevel complexity){
-		regexPatern = predicate.isIgnoreCase() ? 
-				new Pattern(predicate.getRegex().toLowerCase()) : new Pattern(predicate.getRegex());
+		regexPatern = new Pattern(predicate.getRegex());
+		startWithRegexPattern = new Pattern("^" + predicate.getRegex());
+		startToEndRegexPattern = new Pattern("^" + predicate.getRegex() + "$");
 		regex = predicate;
 		startingCoreSubRegIndex = startingCSRIndex;
 		numberOfCoreSubRegexes = numberOfCSRs;
@@ -272,7 +277,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     
     private Schema inputSchema;
     private static int inputTuplesCounter = 0;
-    private static float inputTupleAverageLength = 0;
 
     List<SubRegex> coreSubRegexes = new ArrayList<>();
     List<List<SubRegex>> subRegexContainer = new ArrayList<>();
@@ -289,7 +293,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 
     @Override
     protected void setUp() throws DataFlowException {
-    	
         inputSchema = inputOperator.getOutputSchema();
         outputSchema = inputSchema;
 
@@ -311,7 +314,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             breakIntoCoreSubregexes(predicate);
 
             // 2. Expanding the core sub regexes to make compound sub regexes.
-            if(coreSubRegexes.size() == 1){
+            if(coreSubRegexes.size() <= 1){
             	pattern = new Pattern(predicate.getRegex());
             }else{
             	generateExpandedSubRegexes();
@@ -640,6 +643,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         
         if(re.getOp() != PublicRegexp.PublicOp.CONCAT){
         	// non breakable
+        	return;
         }else{
         	int subIndex = 0;
         	for(PublicRegexp sub : re.getSubs()){
@@ -653,8 +657,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		coreSubRegex.setReverseSubRegex(new SubRegex(reverseSubRegexPredicate, subIndex, 1, level));
 
         		coreSubRegexes.add(coreSubRegex);
-        		System.out.println(sub.toString());
-        		System.out.println(reverseSub.toString());
+//        		System.out.println(sub.toString());
+//        		System.out.println(reverseSub.toString());
         		subIndex ++;
         	}
         }
@@ -677,20 +681,25 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     
     private void generateExpandedSubRegexes(){
     	for(int startingCSRIndex = 0 ; startingCSRIndex < coreSubRegexes.size(); ++startingCSRIndex){
-    		List<SubRegex> listOfSubRegexes = new ArrayList<>();
+    		subRegexContainer.add(new ArrayList<>());
     		
-    		RegexPredicate coreRegexPredicate = coreSubRegexes.get(startingCSRIndex).regex;
+    	}
+    	for(int startingCSRIndex = 0 ; startingCSRIndex < coreSubRegexes.size(); ++startingCSRIndex){
+    		
+    		SubRegex coreSubRegex = coreSubRegexes.get(startingCSRIndex);
+    		RegexPredicate coreRegexPredicate = coreSubRegex.regex;
     		RegexPredicate expandingPredicate = new RegexPredicate(coreRegexPredicate.getRegex(), 
     				coreRegexPredicate.getAttributeNames(),
     				coreRegexPredicate.isIgnoreCase(),
     				coreRegexPredicate.getSpanListName()+startingCSRIndex);
-    		SubRegex.ComplexityLevel expandingComplexityLevel = coreSubRegexes.get(startingCSRIndex).complexity;
-    		RegexPredicate reverseExpandingPredicate = new RegexPredicate(coreSubRegexes.get(startingCSRIndex).getReverseSubRegex().regex);
+    		SubRegex.ComplexityLevel expandingComplexityLevel = coreSubRegex.complexity;
+    		RegexPredicate reverseExpandingPredicate = new RegexPredicate(coreSubRegex.getReverseSubRegex().regex);
 
     		if(expandingComplexityLevel == SubRegex.ComplexityLevel.High){ // keep expanding with High complexities
     			int endingCSRIndex = startingCSRIndex;
     			// expandingPredicate => R1
         		for(; endingCSRIndex < coreSubRegexes.size() && coreSubRegexes.get(endingCSRIndex).complexity == SubRegex.ComplexityLevel.High; ++endingCSRIndex){
+        			
         			if(startingCSRIndex != endingCSRIndex){
         				// expandingPredicate => R1R2
         				expandingPredicate.setRegex(expandingPredicate.getRegex() + coreSubRegexes.get(endingCSRIndex).regex.getRegex());
@@ -706,8 +715,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		RegexPredicate newReverseSubRegexPredicate = new RegexPredicate(reverseExpandingPredicate);
         		SubRegex newReverseSubRegex = new SubRegex(newReverseSubRegexPredicate, startingCSRIndex, endingCSRIndex - startingCSRIndex, expandingComplexityLevel);
         		newSubRegex.setReverseSubRegex(newReverseSubRegex);
-        		listOfSubRegexes.add(newSubRegex);
-        		subRegexContainer.add(listOfSubRegexes);
+        		subRegexContainer.get(startingCSRIndex).add(newSubRegex);
         		startingCSRIndex = endingCSRIndex - 1;
     		}else{
     			int endingCSRIndex = startingCSRIndex;
@@ -732,9 +740,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     				// set the reverse sub regex
     				SubRegex newReverseSubRegex = new SubRegex(newReverseSubRegexPredicate, startingCSRIndex, numberOfCoreSubRegexes, expandingComplexityLevel);
     				newSubRegex.setReverseSubRegex(newReverseSubRegex);
-    				listOfSubRegexes.add(newSubRegex);
+    				subRegexContainer.get(startingCSRIndex).add(newSubRegex);
     			}
-    			subRegexContainer.add(listOfSubRegexes);
     		}
     	}
     }
@@ -925,33 +932,27 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	if(start < 0 || start >= src.length()){
     		return new ArrayList<>();
     	}
-    	Matcher matcher = subRegex.regexPatern.matcher(src.substring(start));
+    	Matcher matcher = subRegex.startWithRegexPattern.matcher(src.substring(start));
     	List<Span> matchingResults = new ArrayList<>();
-    	if(findAll){
-    		// Find all matches (overlapping and nested also)
-    		while(matcher.proceed()){
-    			if(matcher.start() > 0){
-    				break;
-    			}
-    			matchingResults.add(new Span(attributeName, 
-    					matcher.start() + start , 
-    					matcher.end() + start, 
-    					subRegex.regex.getRegex(), 
-    					src.substring(matcher.start() + start , matcher.end() + start)));
-    		}
-    	}else{
-    		while(matcher.find()){
-    			if(matcher.start() > 0){
-    				break;
-    			}
-    			matchingResults.add(new Span(attributeName, 
-    					matcher.start() + start , 
-    					matcher.end() + start, 
-    					subRegex.regex.getRegex(), 
-    					src.substring(matcher.start() + start , matcher.end() + start)));
-    		}
+    	boolean hasMore = findAll? matcher.proceed(): matcher.find();
+    	while(hasMore){
+    		matchingResults.add(new Span(attributeName, 
+    				matcher.start() + start , 
+    				matcher.end() + start, 
+    				subRegex.regex.getRegex(), 
+    				src.substring(matcher.start() + start , matcher.end() + start)));
+    		hasMore = findAll? matcher.proceed(): matcher.find();
     	}
     	return matchingResults;
+    }
+    
+    public static boolean doesMatchStartToEnd(String attributeName, String src, int start, int end, SubRegex subRegex){
+    	if(start < 0 || start >= src.length() || end < 0 || end >= src.length()){
+    		return false;
+    	}
+    	
+    	Matcher matcher = subRegex.startToEndRegexPattern.matcher(src.substring(start, end));
+    	return matcher.find();
     }
     
     public static boolean hasAnyMatches(Tuple inputTuple, SubRegex subRegex){
@@ -998,10 +999,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	            			reverseFieldValue, i, subRegex.getReverseSubRegex(), false);
     	            	for(Span s: reverseMatches){
     	            		matchingResults.add(new Span(attributeName, 
-    	            				fieldValue.length() - s.getStart() - 1, 
-    	            				fieldValue.length() - s.getEnd(), 
+    	            				fieldValue.length() - s.getEnd(),
+    	            				fieldValue.length() - s.getStart(), 
     	            				subRegex.regex.getRegex(), 
-    	            				fieldValue.substring(fieldValue.length() - s.getStart() - 1, fieldValue.length() - s.getEnd())));
+    	            				fieldValue.substring(fieldValue.length() - s.getEnd(), fieldValue.length() - s.getStart())));
     	            	}
     	            }
     	            
@@ -1042,10 +1043,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	            			fieldValue.length() - rightBoundSpan.getStart(), subRegex.getReverseSubRegex(), subRegex.getStart() != 0);
     	            	for(Span s: reverseMatches){
     	            		matchingResults.add(new Span(attributeName, 
-    	            				fieldValue.length() - s.getStart() - 1, 
     	            				fieldValue.length() - s.getEnd(), 
+    	            				fieldValue.length() - s.getStart(), 
     	            				subRegex.regex.getRegex(), 
-    	            				fieldValue.substring(fieldValue.length() - s.getStart() - 1, fieldValue.length() - s.getEnd())));
+    	            				fieldValue.substring(fieldValue.length() - s.getEnd(), fieldValue.length() - s.getStart())));
     	            	}
     	            }
     	        }
@@ -1065,10 +1066,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	            			i, subRegex.getReverseSubRegex(), subRegex.getStart() != 0);
     	            	for(Span s: reverseMatches){
     	            		matchingResults.add(new Span(attributeName, 
-    	            				fieldValue.length() - s.getStart() - 1, 
     	            				fieldValue.length() - s.getEnd(), 
+    	            				fieldValue.length() - s.getStart(), 
     	            				subRegex.regex.getRegex(), 
-    	            				fieldValue.substring(fieldValue.length() - s.getStart() - 1, fieldValue.length() - s.getEnd())));
+    	            				fieldValue.substring(fieldValue.length() - s.getEnd(), fieldValue.length() - s.getStart())));
     	            	}
     	            }
     	        }
@@ -1110,22 +1111,70 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	}else{ // rightBound != null && leftBound != null// two computed subRegexes on both sides
     		// start matching from the minimum end of the left bound spans to maximum start of the right bound spans
     		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftBoundSpans);
     		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-    		SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightBoundSpans);
-	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-	            // types other than TEXT and STRING: throw Exception for now
-	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-	            }
-	            for(int i = leftBoundSummary.endMin; i < rightBoundSummary.startMax; ++i){
-	            	List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue.substring(0, rightBoundSummary.startMax), 
-	            			i, subRegex, true);
-	            	matchingResults.addAll(spans);
-	            }
-	        }
+    		for (String attributeName : subRegex.regex.getAttributeNames()) {
+    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+    			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
+    			// types other than TEXT and STRING: throw Exception for now
+    			if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
+    				throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+    			}
+    			List<Span> leftSpans = leftBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
+    			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftSpans);
+    			List<Span> rightSpans = rightBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
+    			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
+    			if(leftBound.getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getStart()){ // left and right are both direct neighbors
+    				for(Span leftSpan: leftSpans){
+    					int start = leftSpan.getEnd();
+    					for(Span rightSpan: rightSpans){
+    						int end = rightSpan.getStart();
+    						if(end < start){
+    							continue;
+    						}
+    						if(doesMatchStartToEnd(attributeName, fieldValue, start, end, subRegex)){
+    							matchingResults.add(new Span(attributeName, start, end, subRegex.regex.getRegex(), fieldValue.substring(start, end)));
+    						}
+    					}
+    				}
+    			}else if(leftBound.getEnd() == subRegex.getStart()){ // only left is direct neighbor
+    				for(Span leftSpan: leftSpans){
+    					int start = leftSpan.getEnd();
+    					if(start >= rightBoundSummary.startMax){
+    						continue;
+    					}
+    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue.substring(0, rightBoundSummary.startMax), 
+    							start, subRegex, true);
+    					matchingResults.addAll(spans);    					
+    				}
+    			}else if(subRegex.getEnd() == rightBound.getStart()){ // only right is direct neighbor
+    				String reverseFieldValue = new StringBuffer(fieldValue).reverse().toString();
+    				for(Span rightSpan: rightSpans){
+    					int end = rightSpan.getStart();
+    					if(end <= leftBoundSummary.endMin){
+    						continue;
+    					}
+    					int reverseStart = fieldValue.length() - end;
+    					int reverseEndBound = fieldValue.length() - leftBoundSummary.endMin;
+    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, reverseFieldValue.substring(0, reverseEndBound), 
+    							reverseStart, subRegex.getReverseSubRegex(), true);
+    					for(Span reverseSpan: spans){
+    						matchingResults.add(new Span(attributeName, 
+    								fieldValue.length() - reverseSpan.getEnd(), 
+    								fieldValue.length() - reverseSpan.getStart(), 
+    								subRegex.regex.getRegex(), 
+    								fieldValue.substring(fieldValue.length() - reverseSpan.getEnd(), fieldValue.length() - reverseSpan.getStart())));
+    					}
+    				}
+    				
+    			}else { // no left nor right are direct neighbors
+    				for(int i = leftBoundSummary.endMin; i < rightBoundSummary.startMax; ++i){
+    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue.substring(0, rightBoundSummary.startMax), i, subRegex, true);
+    					matchingResults.addAll(spans);
+    				}
+    				
+    			}
+    		}
+	        
     		
     	}
     	

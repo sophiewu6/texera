@@ -124,7 +124,6 @@ public class TupleSink implements ISink {
         Tuple tuple;
         while ((tuple = this.getNextTuple()) != null) {
             results.add(tuple);
-            break;
         }
         this.close();
         return results;

@@ -71,7 +71,7 @@
             <version>5.5.11</version>
         </dependency>
         <dependency>
-            <groupId>com.jregex</groupId>
+            <groupId>jregex</groupId>
             <artifactId>jregex</artifactId>
             <version>1.2.01</version>
         </dependency>

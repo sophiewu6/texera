@@ -89,53 +89,201 @@ public class WikipediaExtraction {
 //       writeSampleIndex();
        System.out.println(number);
        String regex;
-       regex = "(\\{\\{Cite book\\| last = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| first = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
-       		+ "title = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| publisher = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
-       		+ "location = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| year = \\d{4} )(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )(\\|page=\\d+)(\\}\\})";
-       SCAN_REGEX_SINK("("+regex+")"); // 26s
-//       SCAN_REGEX_SINK(regex); // 27s
-       SCAN_REGEX_SINK("(\\{\\{Cite book\\| last = )");
-       SCAN_REGEX_SINK("(\\| first = )");
-       SCAN_REGEX_SINK("(\\| title = )");
-       SCAN_REGEX_SINK("(\\| publisher = )");
-       SCAN_REGEX_SINK("(\\| location = )");
-       SCAN_REGEX_SINK("(\\| year = \\d{4} )");
+//       regex = "(\\{\\{Cite book\\| last = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| first = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
+//       		+ "title = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| publisher = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
+//       		+ "location = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| year = \\d{4} )(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )(\\|page=\\d+)(\\}\\})";
+//       SCAN_REGEX_SINK("("+regex+")"); // 26s
+////       SCAN_REGEX_SINK(regex); // 27s
+//       SCAN_REGEX_SINK("(\\{\\{Cite book\\| last = )");
+//       SCAN_REGEX_SINK("(\\| first = )");
+//       SCAN_REGEX_SINK("(\\| title = )");
+//       SCAN_REGEX_SINK("(\\| publisher = )");
+//       SCAN_REGEX_SINK("(\\| location = )");
+//       SCAN_REGEX_SINK("(\\| year = \\d{4} )");
 //       
-       regex = "(\\{\\{Cite book\\|)([^\\{\\}]*)(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )(\\|page=\\d+)([^\\{\\}]*)(\\}\\})";
-          SCAN_REGEX_SINK("("+regex+")"); // 26s
-//          SCAN_REGEX_SINK(regex); // 
-       SCAN_REGEX_SINK("(\\{\\{Cite book\\|)");
-       SCAN_REGEX_SINK("(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )");
-       SCAN_REGEX_SINK("(\\}\\})");
+//       regex = "(\\{\\{Cite book\\|)([^\\{\\}]*)(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )(\\|page=\\d+)([^\\{\\}]*)(\\}\\})";
+//          SCAN_REGEX_SINK("("+regex+")"); // 26s
+////          SCAN_REGEX_SINK(regex); // 
+//       SCAN_REGEX_SINK("(\\{\\{Cite book\\|)");
+//       SCAN_REGEX_SINK("(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )");
+//       SCAN_REGEX_SINK("(\\}\\})");
 //
 //       regex = "\\{\\{[^\\{\\}]+\\}\\}";
 //       SCAN_REGEX_SINK("("+regex+")");
 //       SCAN_REGEX_SINK(regex);
        
-       regex = "<ref (name= ([A-Za-z0-9]|\\.|\\-|\\s)+)?(>\\{\\{cite journal )(\\| title = )([A-Za-z0-9]|\\.|\\-|\\s)+"
-         		+ "(\\| author = )(\\w|\\.|\\-|,|\\s)*(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
-         		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
-         		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
-         		+ "(\\w|\\.|\\-|,|\\s)*\\| [^\\{\\}]*(\\}\\}<\\/ref>)";
-       SCAN_REGEX_SINK("("+regex+")"); // 28s
-//       SCAN_REGEX_SINK(regex); // 32s
-       SCAN_REGEX_SINK("(<ref )");
-       SCAN_REGEX_SINK("(>\\{\\{cite journal )");
-       SCAN_REGEX_SINK("(\\| title = )");
-       SCAN_REGEX_SINK("(\\| author = )");
-       SCAN_REGEX_SINK("(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
-         		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
-         		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)");
-       SCAN_REGEX_SINK("(\\}\\}<\\/ref>)");
+//       regex = "<ref (name= ([A-Za-z0-9]|\\.|\\-|\\s)+)?(>\\{\\{cite journal )(\\| title = )([A-Za-z0-9]|\\.|\\-|\\s)+"
+//         		+ "(\\| author = )(\\w|\\.|\\-|,|\\s)*(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//         		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//         		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+//         		+ "(\\w|\\.|\\-|,|\\s)*\\| [^\\{\\}]*(\\}\\}<\\/ref>)";
+//       SCAN_REGEX_SINK("("+regex+")"); // 26s
+//       SCAN_REGEX_SINK(regex); // 28s
+//       SCAN_REGEX_SINK("(<ref )");
+//       SCAN_REGEX_SINK("(>\\{\\{cite journal )");
+//       SCAN_REGEX_SINK("(\\| title = )");
+//       SCAN_REGEX_SINK("(\\| author = )");
+//       SCAN_REGEX_SINK("(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//         		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//         		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)");
+//       SCAN_REGEX_SINK("(\\}\\}<\\/ref>)");
        
-       regex = "<ref (name= [A-Za-z0-9\\.\\-\\s]+)?(>\\{\\{cite journal )\\|[^\\{\\}]*"
-         		+ "(\\| url = )(http:\\/\\/www.[\\w-]+.(org|com|edu|gov|net)(\\/[\\w-\\.])*) \\|[^\\{\\}]*(\\}\\}<\\/ref>)";
-       SCAN_REGEX_SINK("("+regex+")"); // 26s
-//       SCAN_REGEX_SINK(regex); // 230s
-       SCAN_REGEX_SINK("(<ref )");
-       SCAN_REGEX_SINK("(>\\{\\{cite journal )");
-       SCAN_REGEX_SINK("(\\| url = )");
-       SCAN_REGEX_SINK("(\\}\\}<\\/ref>)");
+//       regex = "<ref (name= [A-Za-z0-9\\.\\-\\s]+)?(>\\{\\{cite journal )\\|[^\\{\\}]*"
+//         		+ "(\\| url = )(http:\\/\\/www.[\\w-]+.(org|com|edu|gov|net)(\\/[\\w-\\.])*) \\|[^\\{\\}]*(\\}\\}<\\/ref>)";
+//       SCAN_REGEX_SINK("("+regex+")"); // 25s // 169s
+//       SCAN_REGEX_SINK(regex); // 24s // 181s
+//       SCAN_REGEX_SINK("(<ref )");
+//       SCAN_REGEX_SINK("(>\\{\\{cite journal )");
+//       SCAN_REGEX_SINK("(\\| url = )");
+//       SCAN_REGEX_SINK("(\\}\\}<\\/ref>)");
+       
+       regex = "(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+        		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+        		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+        		+ "(\\w|\\.|\\-|,|\\s)*\\| [^\\{\\}]*(\\}\\}<\\/ref>)";
+//      SCAN_REGEX_SINK("("+regex+")"); // 28s // ####8####2050.168 // 100K ####3####284.331
+      SCAN_REGEX_SINK(regex); // 32s // 100K ####3####29.967
+//      SCAN_REGEX_SINK("((Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//        		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//        		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M))"); // ####86####2052.144
+//      SCAN_REGEX_SINK("((Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//        		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//        		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+//        		+ "(\\w|\\.|\\-|,|\\s)*)"); // ####86####2050.982
+//      SCAN_REGEX_SINK("((Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//	      		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//	      		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+//	      		+ "(\\w|\\.|\\-|,|\\s)*\\| )");  // ####10####2051.441
+//      SCAN_REGEX_SINK("((Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//        		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//        		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+//        		+ "(\\w|\\.|\\-|,|\\s)*\\| [^\\{\\}]*)");  // ####10####2053.379
+//      SCAN_REGEX_SINK("((Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
+//	      		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
+//	      		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
+//	      		+ "(\\w|\\.|\\-|,|\\s)*\\| [^\\{\\}]*(\\}\\}<\\/ref>))"); // ####8####2054.861 && if run in reverse: ####8####197.477
+//      SCAN_REGEX_SINK("(\\}\\}<\\/ref>)"); // ####209277####181.744
+      regex = "("
+      		+ "(\\[\\[[\\w\\|\\.'\\-\\s]+\\]\\])"
+      		+ "|"
+      		+ "("
+      		+ "(Angie|Ashton|Aubrey|Avery|Bek|Benedict|Bernadine|Bethany|Bette|Betty|"
+      		+ "Blanche|Braden|Bradley|Bret|Brett|Burdine|Caden|Cadence|Carrington|Charles|"
+      		+ "Charlton|Chay|Chet|Christopher|Clinton|Corina|Cristalyn|Dany|Daniel|Daris|Darleen|"
+      		+ "Darlene|Darnell|David|Deb|Debbie|Demi|Dennis|Destiny|Diamond|Dorothy|Earlene|"
+      		+ "Edith|Elaine|Elfriede|Evan|Gabriel|Georgiana|Gladys|Greenbury|Gregory|H|"
+      		+ "Harley|Hazel|Heather|Henrietta|Howard|Hulda|Increase|India|Irene|Iris|Jack|Jackie|"
+      		+ "Jade|Jemma|Jenny|Jerrold|Jerry|Jethro|Jigar|Jill|Jocelyn|Jodie|Julia|Julie|"
+      		+ "Justine|Kate|Kathryn|Kendall|Kendra|Kerr|Kimball|Kitty|Kristy|Kymber|Lawrence|"
+      		+ "Leanne|Leonora|Lianne|Lisa|Liza|Lizzie|Louise|Luci|Lucius|M|Maddox|Madelaine|"
+      		+ "Malford|Marlene|Mary|Mari|Maud|Melinda|Mike|Michael|Michelle|Mildred|Miley|Millicent|Mindy|Moira|Mycroft|Nancy|"
+      		+ "Naomi|Nelson|Nevaeh|Nigel|Osbert|Ottilie|Ottiwell|Peter|Paris|Pascoe|Patricia|Percy|"
+      		+ "Philip|Philippa|Pippa|Poppy|Priscilla|Quentin|Quintus|Rebecca|Reynold|Riley|"
+      		+ "Rosaleen|Rosalie|Rosie|Ruby|Ruth|Sanford|Sara|Sarah|Savannah|Scarlett|Sharon|Sheridan|"
+      		+ "Shiloh|Simone|Stacy|Sylvia|Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried)( \\w\\.?)? (\\w+)( Jr\\.?)?)"
+      		+ ")"
+      		+ "( (((is|was) born)|(died)) in )"
+      		+ "("
+      		+ "(\\[\\[[\\w\\|\\.'\\-\\s]+\\]\\])"
+      		+ "|"
+      		+ "((Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|"
+      		+ "Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|"
+      		+ "Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|"
+      		+ "New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|"
+      		+ "Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|"
+      		+ "Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|"
+      		+ "AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|"
+      		+ "NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)(, (USA|U\\.S\\.A\\.))?)"
+      		+ ")";
+//      SCAN_REGEX_SINK("("+regex+")"); // ####1####138.265 (4K records) // ####1####74.657 (reverse execution)
+//      SCAN_REGEX_SINK(regex); // ####1####5.56
+//      SCAN_REGEX_SINK("("
+//      		+ "(\\[\\[[\\w\\|\\.'\\-\\s]+\\]\\])"
+//      		+ "|"
+//      		+ "("
+//      		+ "(Angie|Ashton|Aubrey|Avery|Bek|Benedict|Bernadine|Bethany|Bette|Betty|"
+//      		+ "Blanche|Braden|Bradley|Bret|Brett|Burdine|Caden|Cadence|Carrington|Charles|"
+//      		+ "Charlton|Chay|Chet|Christopher|Clinton|Corina|Cristalyn|Dany|Daniel|Daris|Darleen|"
+//      		+ "Darlene|Darnell|David|Deb|Debbie|Demi|Dennis|Destiny|Diamond|Dorothy|Earlene|"
+//      		+ "Edith|Elaine|Elfriede|Evan|Gabriel|Georgiana|Gladys|Greenbury|Gregory|H|"
+//      		+ "Harley|Hazel|Heather|Henrietta|Howard|Hulda|Increase|India|Irene|Iris|Jack|Jackie|"
+//      		+ "Jade|Jemma|Jenny|Jerrold|Jerry|Jethro|Jigar|Jill|Jocelyn|Jodie|Julia|Julie|"
+//      		+ "Justine|Kate|Kathryn|Kendall|Kendra|Kerr|Kimball|Kitty|Kristy|Kymber|Lawrence|"
+//      		+ "Leanne|Leonora|Lianne|Lisa|Liza|Lizzie|Louise|Luci|Lucius|M|Maddox|Madelaine|"
+//      		+ "Malford|Marlene|Mary|Mari|Maud|Melinda|Mike|Michael|Michelle|Mildred|Miley|Millicent|Mindy|Moira|Mycroft|Nancy|"
+//      		+ "Naomi|Nelson|Nevaeh|Nigel|Osbert|Ottilie|Ottiwell|Peter|Paris|Pascoe|Patricia|Percy|"
+//      		+ "Philip|Philippa|Pippa|Poppy|Priscilla|Quentin|Quintus|Rebecca|Reynold|Riley|"
+//      		+ "Rosaleen|Rosalie|Rosie|Ruby|Ruth|Sanford|Sara|Sarah|Savannah|Scarlett|Sharon|Sheridan|"
+//      		+ "Shiloh|Simone|Stacy|Sylvia|Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+//      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried)( \\w\\.?)? (\\w+)( Jr\\.?)?)"
+//      		+ ")"); // ####3118####122.28
+//      SCAN_REGEX_SINK("( (((is|was) born)|(died)) in )"); // ####259####2.241
+//      SCAN_REGEX_SINK("("
+//      		+ "(\\[\\[[\\w\\|\\.'\\-\\s]+\\]\\])"
+//      		+ "|"
+//      		+ "((Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|"
+//      		+ "Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|"
+//      		+ "Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|"
+//      		+ "New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|"
+//      		+ "Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|"
+//      		+ "Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|"
+//      		+ "AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|"
+//      		+ "NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)(, (USA|U\\.S\\.A\\.))?)"
+//      		+ ")"); // ####3976####67.808
+       
+      regex = "("
+	      		+ "(\\[\\[[A-Z][a-z]+( [A-Z]\\.)? [A-Z][a-z]+\\]\\])"
+	      		+ "|"
+	      		+ "("
+		      		+ "(Angie|Ashton|Aubrey|Avery|Bek|Benedict|Bernadine|Bethany|Bette|Betty|"
+		      		+ "Blanche|Braden|Bradley|Bret|Brett|Burdine|Caden|Cadence|Carrington|Charles|"
+		      		+ "Charlton|Chay|Chet|Christopher|Clinton|Corina|Cristalyn|Dany|Daniel|Daris|Darleen|"
+		      		+ "Darlene|Darnell|David|Deb|Debbie|Demi|Dennis|Destiny|Diamond|Dorothy|Earlene|"
+		      		+ "Edith|Elaine|Elfriede|Evan|Gabriel|Georgiana|Gladys|Greenbury|Gregory|H|"
+		      		+ "Harley|Hazel|Heather|Henrietta|Howard|Hulda|Increase|India|Irene|Iris|Jack|Jackie|"
+		      		+ "Jade|Jemma|Jenny|Jerrold|Jerry|Jethro|Jigar|Jill|Jocelyn|Jodie|Julia|Julie|"
+		      		+ "Justine|Kate|Kathryn|Kendall|Kendra|Kerr|Kimball|Kitty|Kristy|Kymber|Lawrence|"
+		      		+ "Leanne|Leonora|Lianne|Lisa|Liza|Lizzie|Louise|Luci|Lucius|M|Maddox|Madelaine|"
+		      		+ "Malford|Marlene|Mary|Mari|Maud|Melinda|Mike|Michael|Michelle|Mildred|Miley|Millicent|Mindy|Moira|Mycroft|Nancy|"
+		      		+ "Naomi|Nelson|Nevaeh|Nigel|Osbert|Ottilie|Ottiwell|Peter|Paris|Pascoe|Patricia|Percy|"
+		      		+ "Philip|Philippa|Pippa|Poppy|Priscilla|Quentin|Quintus|Rebecca|Reynold|Riley|"
+		      		+ "Rosaleen|Rosalie|Rosie|Ruby|Ruth|Sanford|Sara|Sarah|Savannah|Scarlett|Sharon|Sheridan|"
+		      		+ "Shiloh|Simone|Stacy|Sylvia|Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+		      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried)( \\w\\.?)? (\\w+)( Jr\\.?)?"
+	      		+ ")"
+      		+ ")"
+    		//
+      		+ "( (patent(ed|s)|built|builds|made|makes|invent(s|ed)|found(s|ed)|start(s|ed)|begins|began) )"
+      		//
+      		+ "("
+      			+ "(the )?"
+      			+ "("
+      				+ "(\\[\\[[\\w\\s\\-\\.'\\|]+\\]\\])"
+      				+ "|"
+      				+ "([A-Z][a-z]+)"
+      			+ ")( (Inc\\.|Incorporation|Company|Palace|Castle|University|Institute|Org\\.|Organization|Kingdom|Impire|Regime|(F|f)actory|engine|Engine))?"
+      		+ ")"
+      		//
+      		+ "("
+      			+ " in (the )?"
+      			+ "("
+      				+ "(\\[\\[[\\w\\s\\-\\.'\\|]+\\]\\])" // entity
+      				+ "|"
+      				+ "(\\d{4})" // year
+      				+ "|"
+      				+ "(Jan|January|Feb|February|Mar|March|Apr|April|"
+      						+ "May|Jun|June|Jul|July|Aug|August|Sep|September|"
+      						+ "Oct|October|Nov|November|Dec|December)" // month
+      				+ "|"
+      				+ "(U\\.S\\.(A\\.)?|America|Germany|Poland|France|Italy|Iran|Iraq|Egypt|"
+	      				+ "China|Russia|Netherlands|Switzerland|Sweden|Denmark|"
+	      				+ "Canada|Chile|India|(North |South )?Korea)" // country
+      			+ ")"
+      		+ ")";
+      
+//      SCAN_REGEX_SINK("("+regex+")"); // ####1####235.396 (for 16K records) // ####1####602.032 (reverse execution)
+//      SCAN_REGEX_SINK(regex); // ####1####12.6
        // perform the extraction task
     }
 
@@ -224,10 +372,10 @@ public class WikipediaExtraction {
 //        	//          }
 //        }
         int count = result.size();
-        System.out.println("================================================");
-        System.out.println(regex);
-        System.out.println("Done_number of tuples" + count);
-        System.out.println("Total matching time: " + matchTime);
+//        System.out.println("================================================");
+        System.out.println(regex + "####" + count + "####" + matchTime );
+//        System.out.println("Done_number of tuples" + count);
+//        System.out.println("Total matching time: " + matchTime);
     }
     
     

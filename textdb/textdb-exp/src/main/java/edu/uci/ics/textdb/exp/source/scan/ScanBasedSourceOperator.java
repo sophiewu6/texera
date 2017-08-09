@@ -18,6 +18,9 @@ import edu.uci.ics.textdb.storage.RelationManager;
  */
 public class ScanBasedSourceOperator implements ISourceOperator {
 
+	private static final int MaxOutput = 16000;
+	private int outputTupleCounter = 0;
+	
     private DataReader dataReader;
     
     private boolean isOpen = false;
@@ -52,6 +55,12 @@ public class ScanBasedSourceOperator implements ISourceOperator {
             throw new DataFlowException(ErrorMessages.OPERATOR_NOT_OPENED);
         }
         try {
+        	if(++outputTupleCounter > MaxOutput){
+        		return null;
+        	}
+//        	if(outputTupleCounter % 1000 == 0){
+//        		System.out.println(outputTupleCounter);
+//        	}
             return dataReader.getNextTuple();
         } catch (Exception e) {
             e.printStackTrace();

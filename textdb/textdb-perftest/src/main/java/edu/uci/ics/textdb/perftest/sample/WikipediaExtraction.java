@@ -137,6 +137,9 @@ public class WikipediaExtraction {
 //       SCAN_REGEX_SINK("(\\| url = )");
 //       SCAN_REGEX_SINK("(\\}\\}<\\/ref>)");
        
+//       regex = "(\\|)"; // Real selectivity is about 0.6
+//       SCAN_REGEX_SINK(regex);
+    		   
        regex = "(Patrick J\\. Keeling|Charles Short|Laura Wegener Parfrey|"
         		+ "Erika Barbero|Elyse Lasser|Micah Dunthorn|"
         		+ "Debashish Bhattacharya|David J Patterson|Burki F|Shalchian-Tabrizi K|Minge M)"
@@ -285,6 +288,24 @@ public class WikipediaExtraction {
 //      SCAN_REGEX_SINK("("+regex+")"); // ####1####235.396 (for 16K records) // ####1####602.032 (reverse execution)
 //      SCAN_REGEX_SINK(regex); // ####1####12.6
        // perform the extraction task
+      
+//      regex = "(book)";
+//      SCAN_REGEX_SINK(regex);
+//      
+//      regex = "(book )(is )(written)";
+//      SCAN_REGEX_SINK(regex);
+//      
+//      regex = "( [^\\}\\{]+ )";
+//      SCAN_REGEX_SINK(regex);
+//      
+//      regex = "( [^\\}\\{]+ )([^\\}\\{]+)";
+//      SCAN_REGEX_SINK(regex);
+      
+//      regex = "((book|film|movie|story|company|magazine) )([^\\}\\{]+ )((written|made|built) by )(\\w+)";
+//      SCAN_REGEX_SINK(regex);
+      
+//      regex = "((book|film|movie|story|company|magazine) )([^\\}\\{]+ )((written|made|built) by )(\\[\\[)(\\w+)(\\]\\])";
+//      SCAN_REGEX_SINK(regex);
     }
 
 

@@ -88,6 +88,15 @@ class RegexStats{
 	
 	double matchingSrcAvgLen = 0;
 	
+	public RegexStats(int numAttributes){
+		for(int i = 0 ;  i < numAttributes; i++){
+			tfAveragePerAttribute.add(0.0);
+		}
+		tfAveragePerAttribute.set(0, 1.0);
+		// To avoid absolute zero for selectivity.
+		successDataPointCounter++;
+	}
+	
 	public void addStatsSubRegexFailure(double failureCost, int matchingSrcSize){
 		failureCostAverage = ((failureDataPointCounter * failureCostAverage) + failureCost ) / (failureDataPointCounter + 1);
 		failureDataPointCounter ++;
@@ -99,13 +108,14 @@ class RegexStats{
 		successCostAverage = ((successDataPointCounter * successCostAverage) + successCost ) / (successDataPointCounter + 1);
 		df ++;
 		// update the tf values
-		if(tfAveragePerAttribute.isEmpty()){
-			numberOfMatchSpans.stream().forEach(n -> tfAveragePerAttribute.add(0.0));
-		}
-		for(int i = 0 ; i < tfAveragePerAttribute.size(); ++i){
-			tfAveragePerAttribute.set(i, 
-					((successDataPointCounter * tfAveragePerAttribute.get(i)) + numberOfMatchSpans.get(i)) / 
-					(successDataPointCounter + 1) );
+		if(numberOfMatchSpans.size() == tfAveragePerAttribute.size()){
+			for(int i = 0 ; i < tfAveragePerAttribute.size(); ++i){
+				tfAveragePerAttribute.set(i, 
+						((successDataPointCounter * tfAveragePerAttribute.get(i)) + numberOfMatchSpans.get(i)) / 
+						(successDataPointCounter + 1) );
+			}
+		}else if(! numberOfMatchSpans.isEmpty()){
+			System.out.println("tfAverage input not consistent with the number of attributes."); // TODO remove the print
 		}
 		// update selectivity
 		successDataPointCounter ++;
@@ -162,7 +172,7 @@ class SubRegex{
 	int startingCoreSubRegIndex;
 	int numberOfCoreSubRegexes;
 	
-	RegexStats stats = new RegexStats();
+	RegexStats stats = null;
 	
 	// spans belong to the matches in the latest tuple
 	List<Span> latestMatchingSpans = null;
@@ -184,6 +194,7 @@ class SubRegex{
 		numberOfCoreSubRegexes = numberOfCSRs;
 		this.complexity = complexity;
 		reverseSubRegex = null;
+		stats = new RegexStats(regex.getAttributeNames().size());
 	}
 	
 	public void resetMatchingSpanList(List<Span> spanList){
@@ -280,13 +291,15 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     
     private Schema inputSchema;
     private static int inputTuplesCounter = 0;
+    private static int stableChangeCounter = 10;
+    private static long firstPhaseTime = 0;
 
     // List of granular sub-regexes.
     List<SubRegex> coreSubRegexes = new ArrayList<>();
     // The main container of all sub-regexes.
     List<List<SubRegex>> subRegexContainer = new ArrayList<>();
     // Parallel map to isSetNonHighCovering. Records the combined selectivity of each set of sub-regexes.
-    Map<Set<SubRegex>, RegexStats> setCombinedStats;
+    Map<Set<SubRegex>, RegexStats> setCombinedStats = new HashMap<>();
     // The final execution plan.
     List<SubRegex> selectedSubRegexes = null;
     
@@ -298,7 +311,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     public RegexMatcher(RegexPredicate predicate) {
     	mainRegexPredicate = predicate;
     }
-
+    
     @Override
     protected void setUp() throws DataFlowException {
 //    	
@@ -410,12 +423,12 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         if (inputTuple == null) {
             return null;
         }
-
         List<Span> matchingResults = null;
 //        if (this.regexType == RegexType.NO_LABELS) {
     	if (this.regexType == this.regexType) {
     		// start collecting statistics from the first tuple in the stream.
         	if(inputTuplesCounter < MAX_TUPLES_FOR_STAT_COLLECTION){
+        		long startTime = System.nanoTime();
         		// Collecting statistics for each sub regex
         		inputTuplesCounter ++;
         		// first collect statistics for non-High sub-regexes
@@ -457,7 +470,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         				System.out.println("Unexpected state. Something wrong.");// TODO remove print if this doesn't happen
         			}
         		}
+        		long endTime = System.nanoTime();
+        		firstPhaseTime += (endTime - startTime);
         	}else if(inputTuplesCounter == MAX_TUPLES_FOR_STAT_COLLECTION){
+    			long startTime = System.nanoTime();
         		// It's time to use the collected statistics to chose a plan
         		inputTuplesCounter ++;
         		// find a list of subRegexes that together as a plan minimize the expected cost and save it in selectedSubRegexes
@@ -466,7 +482,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		for(SubRegex sub: selectedSubRegexes){
         			sub.resetMatchingSpanList(null);
         		}
-//        		 printSelectedSubRegexes();
+        		long endTime = System.nanoTime();
+        		firstPhaseTime += (endTime - startTime);
+        		printSelectedSubRegexes();
         	}else { // inputTuplesCounter > MAX_TUPLES_FOR_STAT_COLLECTION
         		inputTuplesCounter ++;
         		for(SubRegex sub: selectedSubRegexes){
@@ -490,7 +508,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         			return null;
         		}
         	}
-        	
         	// 2-
         	
         	
@@ -644,9 +661,12 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 				}
 				
 				double newExpectedCost = sub.stats.getExpectedCost();
-				if(Math.abs(newExpectedCost - oldExpectedCost) < 1){
-					return false;
-				}
+//				if(Math.abs(newExpectedCost - oldExpectedCost) < 1){
+//					stableChangeCounter --;
+//					if(stableChangeCounter == 0){
+//						return false;
+//					}
+//				}
 			}
 			// right to left execution (reverse)
 			{
@@ -696,8 +716,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 						break;
 					}else if(possibleLeftBound.getEnd() < sub.getStart()){
 						break;
-					}else{
-						System.out.println("Unexpected case."); //TODO: remove print if never happens
 					}
 				}
 				if(leftBound != null){
@@ -867,6 +885,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             System.out.println("Total regex matching time is " + labledRegexNoQualifierProcessor.totalMatchingTime);
         	System.out.println("label regex operator closed.");
         }
+        System.out.println("First phase time : " + firstPhaseTime * 1.0 / 1000000000);
     }
 
     public RegexPredicate getPredicate() {
@@ -1084,7 +1103,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         // 2. For each key, (a) add itself to the setCombinedStats map, and (b) for each key whose value is true,
         // add its expansions by High sub-regexes to setCombinedStats also.
         for(Map.Entry<Set<SubRegex>, Boolean> pair : isSetNonHighCovering.entrySet()){
-        	setCombinedStats.put(pair.getKey(), new RegexStats());
+        	setCombinedStats.put(pair.getKey(), new RegexStats(coreSubRegexes.get(0).regex.getAttributeNames().size()));
         	if(pair.getValue()){
         		Set<SubRegex> newExpandingCombinedSet = new HashSet<>();
         		newExpandingCombinedSet.addAll(pair.getKey());
@@ -1101,10 +1120,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		if(! expandingSet.isEmpty()){
     			if(highSubRegexMode){
     				if(! combinedSetStats.containsKey(expandingSet)){
-    					combinedSetStats.put(expandingSet, new RegexStats());
+    					Set<SubRegex> expandingSetClone = new HashSet<>();
+    					expandingSetClone.addAll(expandingSet);
+    					combinedSetStats.put(expandingSetClone, new RegexStats(coreSubRegexes.get(0).regex.getAttributeNames().size()));
     				}
     			}else{
-    				isSetNonHighCovering.put(expandingSet, isFullyCovering);
+					Set<SubRegex> expandingSetClone = new HashSet<>();
+					expandingSetClone.addAll(expandingSet);
+    				isSetNonHighCovering.put(expandingSetClone, isFullyCovering);
     			}
     		}
     		return;
@@ -1158,9 +1181,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	// compute all possible covers with their costs
     	collectPlanCostEstimationsStartingAt(0, new ArrayList<SubRegex>(), coverCosts);
     	// choose the cover with the smallest expected cost
-    	SubRegexCover chosenCover = new SubRegexCover();
+    	SubRegexCover chosenCover = null;
     	for(SubRegexCover subRegCover: coverCosts){
-    		if(chosenCover.subRegexes == null || chosenCover.expectedCost > subRegCover.expectedCost){
+    		System.out.println(subRegCover);
+    		if(chosenCover == null){
+    			chosenCover = new SubRegexCover();
+    			chosenCover.subRegexes = subRegCover.subRegexes;
+    			chosenCover.expectedCost = subRegCover.expectedCost;    			
+    		}else if(chosenCover.expectedCost > subRegCover.expectedCost){
     			chosenCover.subRegexes = subRegCover.subRegexes;
     			chosenCover.expectedCost = subRegCover.expectedCost;
     		}
@@ -1170,8 +1198,16 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     }
     
     class SubRegexCover{
-    	public List<SubRegex> subRegexes = null;
+    	public List<SubRegex> subRegexes = new ArrayList<>();
     	public double expectedCost = -1;
+    	public String toString(){
+    		String result = "";
+    		for(SubRegex sub: subRegexes){
+    			result += "\n" + sub.toString();
+    		}
+    		result += "\nCost is " + expectedCost;
+    		return result;
+    	}
     }
     
     private void collectPlanCostEstimationsStartingAt(int startingCSR, 
@@ -1197,12 +1233,12 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     // finds the best order of matching of the sub regexes in the given cover. 
     // outputs the corresponding order in the input optimumReorderedCover input.
     private void estimateOptimumOrderAndCostOfCover(List<SubRegex> cover, SubRegexCover optimumReorderedCover){
-    	if(cover.size() == 1){ // the original complete regex
-    		SubRegex singleCoveringRegex = cover.get(0);
-    		optimumReorderedCover.subRegexes.add(singleCoveringRegex);
-    		optimumReorderedCover.expectedCost = singleCoveringRegex.getExpectedCost();
-    		return;
-    	}
+//    	if(cover.size() == 1){ // the original complete regex
+//    		SubRegex singleCoveringRegex = cover.get(0);
+//    		optimumReorderedCover.subRegexes.add(singleCoveringRegex);
+//    		optimumReorderedCover.expectedCost = singleCoveringRegex.getExpectedCost();
+//    		return;
+//    	}
 
     	// Example: 'H1H2H3''R4R5''H6''R7'
     	// The list of High complexity sub-regexes that are always placed at the end 
@@ -1260,6 +1296,19 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			System.out.println("Unexpected state. Something wrong. Trying to cost empty candidate plan."); // TODO: remove print
 			return Double.MAX_VALUE;
 		}
+		System.out.println("=============================================================");
+		System.out.println("Estimating the cost of new plan");
+		
+		if(plan.size() == 1){
+			SubRegex sub = plan.get(0);
+			if(! (sub.getStart() == 0 && sub.getEnd() == coreSubRegexes.size())){
+				System.out.println("Unexpected state. Something is wrong. Plan with single sub-regex which is not the main regex.");
+				return 0;
+			}
+			System.out.println("Cost of " + sub.toString());
+			System.out.println(sub.getExpectedCost() + " * " + sub.stats.matchingSrcAvgLen + " = " + (sub.getExpectedCost() * sub.stats.matchingSrcAvgLen));
+			return sub.getExpectedCost() * sub.stats.matchingSrcAvgLen;
+		}
 		
 		double expectedCost = 0;
 		// 1. First estimate the cost of the non-high sub-regexes of the plan (the skeleton)
@@ -1270,11 +1319,17 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 				break;
 			}
 			if(i == 0){
+				System.out.println("Adding cost of " + nextSubRegex.toString());
+				System.out.println(nextSubRegex.getExpectedCost() + " * " + nextSubRegex.stats.matchingSrcAvgLen + " = " + 
+						(nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen));
 				expectedCost = nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen;
 			}else{
 				if(! setCombinedStats.containsKey(pastSubRegexes)){
 					System.out.println("Unexpected state. setCombinedStats doesn't have a combination."); // TODO: remove print.
 				}
+				System.out.println("Adding cost of " + nextSubRegex.toString());
+				System.out.println(setCombinedStats.get(pastSubRegexes).getSelectivity() + " * " + nextSubRegex.getExpectedCost() + " * " + nextSubRegex.stats.matchingSrcAvgLen + " = " + 
+						(setCombinedStats.get(pastSubRegexes).getSelectivity() * nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen));
 				expectedCost = expectedCost + 
 						(
 							setCombinedStats.get(pastSubRegexes).getSelectivity() * 
@@ -1299,11 +1354,17 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
 			double amortizedCostOfVerification = nextSubRegex.getExpectedCost();
 			if(i == 0){
+				System.out.println("Adding cost of verification of " + nextSubRegex.toString());
+				System.out.println(amortizedCostOfVerification + " * " + totalNumberOfVerifications + " = " +
+							(amortizedCostOfVerification * totalNumberOfVerifications));
 				expectedCost = amortizedCostOfVerification * totalNumberOfVerifications;
 			}else{
 				if(! setCombinedStats.containsKey(pastSubRegexes)){
 					System.out.println("Unexpected state. setCombinedStats doesn't have a combination."); // TODO: remove print.
 				}
+				System.out.println("Adding cost of verification of " + nextSubRegex.toString());
+				System.out.println(setCombinedStats.get(pastSubRegexes).getSelectivity() + " * " + amortizedCostOfVerification + " * " + totalNumberOfVerifications + " = " +
+							(setCombinedStats.get(pastSubRegexes).getSelectivity() * amortizedCostOfVerification * totalNumberOfVerifications));
 				expectedCost = expectedCost + 
 						(
 							setCombinedStats.get(pastSubRegexes).getSelectivity() * 

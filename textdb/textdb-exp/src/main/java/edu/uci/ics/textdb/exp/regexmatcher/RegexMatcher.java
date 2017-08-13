@@ -152,6 +152,9 @@ class RegexStats{
 		return totalTfAverage;
 	}
 	
+	public double getConfidenceValue(){
+		return 2.58 * Math.sqrt(getSelectivity() * (1 - getSelectivity()) / getSize() );
+	}
 }
 
 
@@ -224,6 +227,18 @@ class SubRegex{
 		return "[" + getStart() + "," + getEnd() + ")///" + complexity + "///" + regex.getRegex();
 	}
 	
+	public String toStringShort(){
+		return "[" + getStart() + "," + getEnd() + "] ";
+	}
+	
+	public static String getPlanSignature(List<SubRegex> plan){
+		String signature = "";
+		for(SubRegex s: plan){
+			signature += s.toStringShort();
+		}
+		return signature;
+	}
+	
 	public boolean isReverseExecutionFaster(){
 		if(getReverseSubRegex() == null){
 			return false;
@@ -238,7 +253,6 @@ class SubRegex{
 			return stats.getExpectedCost();
 		}
 	}
-	
 }
 /**
  * Created by chenli on 3/25/16.
@@ -300,6 +314,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     List<List<SubRegex>> subRegexContainer = new ArrayList<>();
     // Parallel map to isSetNonHighCovering. Records the combined selectivity of each set of sub-regexes.
     Map<Set<SubRegex>, RegexStats> setCombinedStats = new HashMap<>();
+    // A map for memoization of the cost of candidate plans.
+    Map<Set<SubRegex>, SubRegexCover> candidatePlanCosts = new HashMap<>();
     // The final execution plan.
     List<SubRegex> selectedSubRegexes = null;
     
@@ -432,17 +448,18 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		// Collecting statistics for each sub regex
         		inputTuplesCounter ++;
         		// first collect statistics for non-High sub-regexes
+        		double maxConfidence = 0;
         		for(List<SubRegex> subRegexes: subRegexContainer){
         			for(SubRegex sub : subRegexes){
         				if(sub.complexity == SubRegex.ComplexityLevel.High){
         					continue;
         				}
-        				boolean shouldContinueStatsCollection = runAndCollectStatistics(inputTuple, sub);
-        				// Check if we will have to continue stats collection for the next tuple.
-        				if(! shouldContinueStatsCollection){
-        					System.out.println("Stats collection is over on record #" + inputTuplesCounter); //TODO remove print
-        					inputTuplesCounter = MAX_TUPLES_FOR_STAT_COLLECTION;
+        				runAndCollectStatistics(inputTuple, sub);
+        				double confidence = sub.stats.getConfidenceValue();
+        				if(confidence > maxConfidence){
+        					maxConfidence = confidence;
         				}
+        				// Check if we will have to continue stats collection for the next tuple.
         			}
         		}
         		// Now collect stats for High sub-regexes
@@ -451,17 +468,20 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         				if(sub.complexity != SubRegex.ComplexityLevel.High){
         					continue;
         				}
-        				boolean shouldContinueStatsCollection = runAndCollectStatistics(inputTuple, sub);
-        				// Check if we will have to continue stats collection for the next tuple.
-        				if(! shouldContinueStatsCollection){
-        					System.out.println("Stats collection is over on record #" + inputTuplesCounter); //TODO remove print
-        					inputTuplesCounter = MAX_TUPLES_FOR_STAT_COLLECTION;
+        				runAndCollectStatistics(inputTuple, sub);
+        				double confidence = sub.stats.getConfidenceValue();
+        				if(confidence > maxConfidence){
+        					maxConfidence = confidence;
         				}
         			}
         		}
+        		if(maxConfidence < 0.3){
+//        			System.out.println("Stats collection is over on record #" + inputTuplesCounter); //TODO remove print
+        			inputTuplesCounter = MAX_TUPLES_FOR_STAT_COLLECTION;
+        		}
         		// Now update selectivity stats for combinedSets
         		updateCombinedSetSelectivity();
-        		//////////////////////////////////////////////////// TODO TODO TODO TODO TODO
+        		//////////////////////////////////////////////////// TODO TODO TODO TODO TODO ??? Can we do better?
         		// Temporarily, we set the execution plan to be the original regex running as a whole.
         		if(selectedSubRegexes == null){
         			selectedSubRegexes = new ArrayList<>();
@@ -484,7 +504,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		}
         		long endTime = System.nanoTime();
         		firstPhaseTime += (endTime - startTime);
-        		printSelectedSubRegexes();
+//        		printSelectedSubRegexes();
         	}else { // inputTuplesCounter > MAX_TUPLES_FOR_STAT_COLLECTION
         		inputTuplesCounter ++;
         		for(SubRegex sub: selectedSubRegexes){
@@ -606,8 +626,12 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 		}
 		
 		if(sub.complexity == SubRegex.ComplexityLevel.High){ // High sub-regex
-			SubRegex leftBound = findSubRegexNearestComputedLeftNeighbor(selectedSubRegexes, subRegexIndex);
-			SubRegex rightBound = findSubRegexNearestComputedRightNeighbor(selectedSubRegexes, subRegexIndex);
+			Set<SubRegex> pastSubRegexes = new HashSet<>();
+			for(int i = 0 ; i < subRegexIndex; i++){
+				pastSubRegexes.add(selectedSubRegexes.get(i));
+			}
+			SubRegex leftBound = findSubRegexNearestComputedLeftNeighbor(pastSubRegexes, sub);
+			SubRegex rightBound = findSubRegexNearestComputedRightNeighbor(pastSubRegexes, sub);
 			subRegexSpans = 
 					computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
 							leftBound, rightBound, coreSubRegexes.size(), false, false); // no force on execution direction
@@ -622,7 +646,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 		}
     }
     
-	public boolean runAndCollectStatistics(Tuple inputTuple, SubRegex sub){
+	public void runAndCollectStatistics(Tuple inputTuple, SubRegex sub){
 		// first clean the data structures from the previous tuples
 		sub.resetMatchingSpanList(null);
 		// If it's the original complete regex, we can collect more precise statistics
@@ -700,7 +724,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     				sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchSizesPerAttributes, matchingCost, totalTupleTextSize);
 				}
 			}
-			return true;
+			return;
 		}
 		// If we are here, sub is not the original complete regex.
 		if(sub.complexity == SubRegex.ComplexityLevel.High){
@@ -842,15 +866,13 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			}
 		}
 		
-		return true;
+		return;
 	}
     
-    public static SubRegex findSubRegexNearestComputedLeftNeighbor(List<SubRegex> subRegexes, int index){
-    	SubRegex currentSubRegex = subRegexes.get(index);
+    public static SubRegex findSubRegexNearestComputedLeftNeighbor(Set<SubRegex> subRegexes, SubRegex currentSubRegex){
     	// find the right most computed sub-regex to the left of current sub-regex
     	SubRegex leftBound = null;
-    	for(int j = 0 ; j < index; j++){
-    		SubRegex computedSubRegex = subRegexes.get(j);
+    	for(SubRegex computedSubRegex : subRegexes){
     		if(computedSubRegex.getEnd() <= currentSubRegex.getStart()){
     			if(leftBound == null || leftBound.getEnd() < computedSubRegex.getEnd()){
     				leftBound = computedSubRegex;
@@ -860,12 +882,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	return leftBound;
     }
     
-    public static SubRegex findSubRegexNearestComputedRightNeighbor(List<SubRegex> subRegexes, int index){
-    	SubRegex currentSubRegex = subRegexes.get(index);
+    public static SubRegex findSubRegexNearestComputedRightNeighbor(Set<SubRegex> subRegexes, SubRegex currentSubRegex){
     	// find the right most computed sub-regex to the left of current sub-regex
     	SubRegex rightBound = null;
-    	for(int j = 0 ; j < index; j++){
-    		SubRegex computedSubRegex = subRegexes.get(j);
+    	for(SubRegex computedSubRegex : subRegexes){
     		if(computedSubRegex.getStart() >= currentSubRegex.getEnd()){
     			if(rightBound == null || rightBound.getStart() > computedSubRegex.getStart()){
     				rightBound = computedSubRegex;
@@ -885,7 +905,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             System.out.println("Total regex matching time is " + labledRegexNoQualifierProcessor.totalMatchingTime);
         	System.out.println("label regex operator closed.");
         }
-        System.out.println("First phase time : " + firstPhaseTime * 1.0 / 1000000000);
+//        System.out.println("First phase time : " + firstPhaseTime * 1.0 / 1000000000);
     }
 
     public RegexPredicate getPredicate() {
@@ -961,7 +981,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 //        System.out.println("---------------------------------------");
         
         if(numberOfCoreSubRegexes != coreSubRegexes.size()){
-        	System.out.println("Something wrong."); // TODO maybe never happens 
+        	System.out.println("Something wrong. The content of coreSubRegexes is not as expected."); // TODO maybe never happens 
         }
     }
     
@@ -980,19 +1000,46 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	return level;
     }
     
+    
+    // Finds the sub-regex starting with start and goin to end from the subRegexContainer
+    private SubRegex getSubRegex(int start, int end){
+    	for(int i = 0 ; i < subRegexContainer.get(start).size(); i++){
+    		if(subRegexContainer.get(start).get(i).getEnd() == end){
+    			return subRegexContainer.get(start).get(i);
+    		}
+    	}
+    	return null;
+    }
+
+    // Initializes the subRegexContainer structure with all possible expansions of 
+    // non-high sub-regexes
     private void generateExpandedSubRegexes(){
     	
     	// initialize the subRegex container
     	for(int startingCSRIndex = 0 ; startingCSRIndex < coreSubRegexes.size(); ++startingCSRIndex){
     		subRegexContainer.add(new ArrayList<>());
-    		
     	}
-    	// start making new sub-regexes by expanding the core sub-regexes from each starting point.
+    	// If it's high:
+    	// 				make the longest possible sub-regex starting from here ending before the next non-high sub-regex
+    	// If it's non-high:
+    	// 				just put the core sub-regex on that position and go to the next iteration
     	// Note: Non-high and high sub-regexes are not mixed.
     	for(int startingCSRIndex = 0 ; startingCSRIndex < coreSubRegexes.size(); ++startingCSRIndex){
     		
     		SubRegex coreSubRegex = coreSubRegexes.get(startingCSRIndex);
     		RegexPredicate coreRegexPredicate = coreSubRegex.regex;
+    		
+    		if(coreSubRegex.complexity != SubRegex.ComplexityLevel.High){
+        		if(coreSubRegex.getStart() == 0 && coreSubRegex.getEnd() == coreSubRegexes.size()){
+        			// this is the full regex, we have previously prepared this regex in the break function
+        			subRegexContainer.get(startingCSRIndex).add(mainRegex);
+        		}else{
+        			subRegexContainer.get(startingCSRIndex).add(coreSubRegex);
+        		}
+        		continue;
+    		}
+    		// High starting point
+    		
     		RegexPredicate expandingPredicate = new RegexPredicate(coreRegexPredicate.getRegex(), 
     				coreRegexPredicate.getAttributeNames(),
     				coreRegexPredicate.isIgnoreCase(),
@@ -1000,65 +1047,34 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		SubRegex.ComplexityLevel expandingComplexityLevel = coreSubRegex.complexity;
     		RegexPredicate reverseExpandingPredicate = new RegexPredicate(coreSubRegex.getReverseSubRegex().regex);
 
-    		if(expandingComplexityLevel == SubRegex.ComplexityLevel.High){ // keep expanding with High complexities
-    			int endingCSRIndex = startingCSRIndex;
-    			// expandingPredicate => R1
-        		for(; endingCSRIndex < coreSubRegexes.size() && coreSubRegexes.get(endingCSRIndex).complexity == SubRegex.ComplexityLevel.High; ++endingCSRIndex){
-        			
-        			if(startingCSRIndex != endingCSRIndex){
-        				// expandingPredicate => R1R2
-        				expandingPredicate.setRegex(expandingPredicate.getRegex() + coreSubRegexes.get(endingCSRIndex).regex.getRegex());
-        				expandingPredicate.setSpanListName(expandingPredicate.getSpanListName() + endingCSRIndex);
-        				// reverseExpandingPredicate => rev(R2)rev(R1)
-        				reverseExpandingPredicate.setRegex(coreSubRegexes.get(endingCSRIndex).getReverseSubRegex().regex.getRegex() + reverseExpandingPredicate.getRegex());
-        				reverseExpandingPredicate.setSpanListName(reverseExpandingPredicate.getSpanListName() + endingCSRIndex);
-        			}
-        		}
-        		RegexPredicate newSubRegexPredicate = new RegexPredicate(expandingPredicate);
-        		SubRegex newSubRegex = new SubRegex(newSubRegexPredicate, startingCSRIndex, endingCSRIndex - startingCSRIndex, expandingComplexityLevel);
-        		// Set the reverse sub regex of the new expanded subregex
-        		if(newSubRegex.getStart() == 0 && newSubRegex.getEnd() == coreSubRegexes.size()){
-        			// this is the full regex, we have previously prepared this regex in the break function
-        			subRegexContainer.get(startingCSRIndex).add(mainRegex);
-        		}else{
-        			RegexPredicate newReverseSubRegexPredicate = new RegexPredicate(reverseExpandingPredicate);
-        			SubRegex newReverseSubRegex = new SubRegex(newReverseSubRegexPredicate, startingCSRIndex, endingCSRIndex - startingCSRIndex, expandingComplexityLevel);
-        			newSubRegex.setReverseSubRegex(newReverseSubRegex);
-        			subRegexContainer.get(startingCSRIndex).add(newSubRegex);
-        		}
-        		startingCSRIndex = endingCSRIndex - 1;
-    		}else{
-    			int endingCSRIndex = startingCSRIndex;
-    			for(; endingCSRIndex < coreSubRegexes.size() && 
-    					coreSubRegexes.get(endingCSRIndex).complexity != SubRegex.ComplexityLevel.High; ++endingCSRIndex){
-    				int numberOfCoreSubRegexes = endingCSRIndex - startingCSRIndex + 1;
-    				if(startingCSRIndex != endingCSRIndex){
-    					// new complecxity level
-    					if(expandingComplexityLevel == SubRegex.ComplexityLevel.Medium || coreSubRegexes.get(endingCSRIndex).complexity == SubRegex.ComplexityLevel.Medium){
-    						expandingComplexityLevel = SubRegex.ComplexityLevel.Medium;
-    					}
-    					// expand the regex. R1 => R1R2
-    					expandingPredicate.setRegex(expandingPredicate.getRegex() + coreSubRegexes.get(endingCSRIndex).regex.getRegex());
-    					expandingPredicate.setSpanListName(expandingPredicate.getSpanListName() + endingCSRIndex);
-    					// expand the reverse regex. rev(R1) => rev(R2)rev(R1)
-    					reverseExpandingPredicate.setRegex(coreSubRegexes.get(endingCSRIndex).getReverseSubRegex().regex.getRegex() + reverseExpandingPredicate.getRegex());
-    					expandingPredicate.setSpanListName(reverseExpandingPredicate.getSpanListName() + endingCSRIndex);
-    				}
-    				RegexPredicate newSubRegexPredicate = new RegexPredicate(expandingPredicate);
-    				RegexPredicate newReverseSubRegexPredicate = new RegexPredicate(reverseExpandingPredicate);
-    				SubRegex newSubRegex = new SubRegex(newSubRegexPredicate, startingCSRIndex, numberOfCoreSubRegexes, expandingComplexityLevel);
-    				if(newSubRegex.getStart() == 0 && newSubRegex.getEnd() == coreSubRegexes.size()){
-    					subRegexContainer.get(startingCSRIndex).add(mainRegex);
-    				}else{
-    					// set the reverse sub regex
-    					SubRegex newReverseSubRegex = new SubRegex(newReverseSubRegexPredicate, startingCSRIndex, numberOfCoreSubRegexes, expandingComplexityLevel);
-    					newSubRegex.setReverseSubRegex(newReverseSubRegex);
-    					subRegexContainer.get(startingCSRIndex).add(newSubRegex);
-    				}
+			int endingCSRIndex = startingCSRIndex;
+			// expandingPredicate => R1
+    		for(; endingCSRIndex < coreSubRegexes.size() && coreSubRegexes.get(endingCSRIndex).complexity == SubRegex.ComplexityLevel.High; ++endingCSRIndex){
+    			
+    			if(startingCSRIndex != endingCSRIndex){
+    				// expandingPredicate => R1R2
+    				expandingPredicate.setRegex(expandingPredicate.getRegex() + coreSubRegexes.get(endingCSRIndex).regex.getRegex());
+    				expandingPredicate.setSpanListName(expandingPredicate.getSpanListName() + endingCSRIndex);
+    				// reverseExpandingPredicate => rev(R2)rev(R1)
+    				reverseExpandingPredicate.setRegex(coreSubRegexes.get(endingCSRIndex).getReverseSubRegex().regex.getRegex() + reverseExpandingPredicate.getRegex());
+    				reverseExpandingPredicate.setSpanListName(reverseExpandingPredicate.getSpanListName() + endingCSRIndex);
     			}
     		}
+    		RegexPredicate newSubRegexPredicate = new RegexPredicate(expandingPredicate);
+    		SubRegex newSubRegex = new SubRegex(newSubRegexPredicate, startingCSRIndex, endingCSRIndex - startingCSRIndex, expandingComplexityLevel);
+    		// Set the reverse sub regex of the new expanded subregex
+    		if(newSubRegex.getStart() == 0 && newSubRegex.getEnd() == coreSubRegexes.size()){
+    			// this is the full regex, we have previously prepared this regex in the break function
+    			subRegexContainer.get(startingCSRIndex).add(mainRegex);
+    		}else{
+    			RegexPredicate newReverseSubRegexPredicate = new RegexPredicate(reverseExpandingPredicate);
+    			SubRegex newReverseSubRegex = new SubRegex(newReverseSubRegexPredicate, startingCSRIndex, endingCSRIndex - startingCSRIndex, expandingComplexityLevel);
+    			newSubRegex.setReverseSubRegex(newReverseSubRegex);
+    			subRegexContainer.get(startingCSRIndex).add(newSubRegex);
+    		}
+    		startingCSRIndex = endingCSRIndex - 1;
     	}
-    	
+    		
     	// Also add a sub-regex starting from zero with full length which would be the 
     	// original complete regex.
     	
@@ -1097,7 +1113,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         // and false otherwise.
         Map<Set<SubRegex>, Boolean> isSetNonHighCovering = new HashMap<>();
         
-        // 1. First generate those keys that contain only non-high sub-regexes.
+        // 1. First generate those set keys that contain only non-high sub-regexes.
         expandCombinedSetsStartingAt(0, new HashSet<SubRegex>(), true, isSetNonHighCovering, false, null);
         
         // 2. For each key, (a) add itself to the setCombinedStats map, and (b) for each key whose value is true,
@@ -1110,6 +1126,72 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		expandCombinedSetsStartingAt(0, newExpandingCombinedSet, true, null, true, setCombinedStats);
         	}
         }
+    }
+    
+    
+    // This function recieves a set of core sub-regexes and tried to merge those 
+    // elements that are adjacent together.
+    // For example:
+    // If it recieves {[0,1], [1,2], [4,5]}
+    // It will output {[0, 2], [4,5]}
+    private void mergeAdjacentElements(Set<SubRegex> elements, Set<SubRegex> maximizedElements){
+    	while(true){
+    		SubRegex toMergeLeft = null;
+    		SubRegex toMergeRight = null;
+    		boolean matched = false;
+    		for(SubRegex outerSub : elements){
+    			if(outerSub.complexity == SubRegex.ComplexityLevel.High){
+    				continue;
+    			}
+        		for(SubRegex innerSub : elements){
+        			if(innerSub.complexity == SubRegex.ComplexityLevel.High){
+        				continue;
+        			}
+        			if(outerSub.getEnd() == innerSub.getStart()){
+        				toMergeLeft = outerSub;
+        				toMergeRight = innerSub;
+        				matched = true;
+        				break;
+        			}else if(innerSub.getEnd() == outerSub.getStart() ){
+        				toMergeLeft = innerSub;
+        				toMergeRight = outerSub;
+        				matched = true;
+        				break;        				
+        			}
+        		}
+        		if(matched){
+        			break;
+        		}
+    		}
+    		if(! matched){ // no adjacent elements left
+    			maximizedElements.addAll(elements);
+    			return;
+    		}
+    		SubRegex mergedSub = getSubRegex(toMergeLeft.getStart(), toMergeRight.getEnd());
+    		elements.remove(toMergeLeft);
+    		elements.remove(toMergeRight);
+    		elements.add(mergedSub);
+    		matched = false;
+    	}
+    }
+    
+    
+    // This function breaks every compound element in the input and makes a new possibly larger set
+    // For example:
+    // Input: {[0,2], [4,6]}
+    // Output: {[0,1], [1,2], [4,5], [5,6]}
+    private void breakToCoreElements(Set<SubRegex> elements, Set<SubRegex> coreElements){
+    	for(SubRegex s : elements){
+    		if(s.complexity == SubRegex.ComplexityLevel.High){
+    			coreElements.add(s);
+    		}else{
+    			if(s.getStart() + 1 < s.getEnd()){ // So it's a compound sub-regex
+    				for(int i = s.getStart() ; i < s.getEnd(); i++){
+    					coreElements.add(getSubRegex(i, i+1));
+    				}
+    			}
+    		}
+    	}
     }
     
     // isFullyCovering is true when the expandingSet has not missed any non-high part of the regex
@@ -1132,7 +1214,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		}
     		return;
     	}
-    	if(highSubRegexMode){ // skipping over High sub-regexes.
+    	if(highSubRegexMode){
     		// if next sub-regex is High, try both cases of having and not having it.
     		if(subRegexContainer.get(start).get(0).complexity == SubRegex.ComplexityLevel.High){
     			SubRegex sub = subRegexContainer.get(start).get(0);
@@ -1147,6 +1229,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     			expandingSet.remove(sub);
     			return;
     		}else{
+    			// Just skip over non-high sub-regexes because we are in highSubRegexMode
     			expandCombinedSetsStartingAt(start + 1, 
     					expandingSet, isFullyCovering, isSetNonHighCovering, highSubRegexMode, combinedSetStats);
     		}
@@ -1183,7 +1266,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	// choose the cover with the smallest expected cost
     	SubRegexCover chosenCover = null;
     	for(SubRegexCover subRegCover: coverCosts){
-    		System.out.println(subRegCover);
+//    		System.out.println(subRegCover);
     		if(chosenCover == null){
     			chosenCover = new SubRegexCover();
     			chosenCover.subRegexes = subRegCover.subRegexes;
@@ -1221,7 +1304,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     			// partialCoverClone is complete. Estimate the expected cost and save
     			SubRegexCover completeCoverReOrdered = new SubRegexCover();
     			// estimate the expected cost of the cover.
-    			estimateOptimumOrderAndCostOfCover(partialCoverClone, completeCoverReOrdered);
+    			findOptimumPermutation(partialCoverClone, completeCoverReOrdered);
     			coverCosts.add(completeCoverReOrdered);
     			return;
     		}
@@ -1230,154 +1313,253 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	}
     }
     
-    // finds the best order of matching of the sub regexes in the given cover. 
-    // outputs the corresponding order in the input optimumReorderedCover input.
-    private void estimateOptimumOrderAndCostOfCover(List<SubRegex> cover, SubRegexCover optimumReorderedCover){
-//    	if(cover.size() == 1){ // the original complete regex
-//    		SubRegex singleCoveringRegex = cover.get(0);
-//    		optimumReorderedCover.subRegexes.add(singleCoveringRegex);
-//    		optimumReorderedCover.expectedCost = singleCoveringRegex.getExpectedCost();
-//    		return;
-//    	}
-
-    	// Example: 'H1H2H3''R4R5''H6''R7'
-    	// The list of High complexity sub-regexes that are always placed at the end 
-    	// of the regex
-    	// in the example above they are 'H1H2H3' and 'H6'
-
-    	// 1. Prepare permutations of non-high complexity sub-regexes.
-    	Set<Integer> nonHighSubRegexIndexes = new HashSet<>();
-    	Set<Integer> highSubRegexIndexes = new HashSet<>();
-    	for(int i =0 ; i < cover.size(); ++i){
-    		if(cover.get(i).complexity == SubRegex.ComplexityLevel.High){
-    			highSubRegexIndexes.add(i);
-    		}else{
-    			nonHighSubRegexIndexes.add(i);
-    		}
+    private void findOptimumPermutation(Set<SubRegex> elements, Set<SubRegex> previouslyUseElements, SubRegexCover optimumPermutation){
+    	// Out most call can get previouslyUseElements null which means no sub-regexes where used before
+    	if(previouslyUseElements == null){
+    		previouslyUseElements = new HashSet<>();
     	}
-    	// 1. generate all the permutations of non-high sub-regexes.
-    	List<List<Integer>> nonHighPermutations = new ArrayList<>();
-    	generateAllPermutations(nonHighSubRegexIndexes, new ArrayList<Integer>(), nonHighPermutations);
-    	// 2. generate all the permutations of high sub-regexes.
-    	List<List<Integer>> highPermutations = new ArrayList<>();
-    	generateAllPermutations(highSubRegexIndexes, new ArrayList<Integer>(), highPermutations);
-    	// 3. concat non-high and high permutations to make complete permutations
-    	List<List<Integer>> permutations = new ArrayList<>();
-    	for(List<Integer> nonHighPerm : nonHighPermutations){
-        	for(List<Integer> highPerm : highPermutations){
-        		List<Integer> completePerm = new ArrayList<>();
-        		completePerm.addAll(nonHighPerm);
-        		completePerm.addAll(highPerm);
-        		permutations.add(completePerm);
-        	}    		
+    	if(! optimumPermutation.subRegexes.isEmpty()){
+    		System.out.println("Unexpected input. OUT parameter must be empty but it's not.");
     	}
     	
-    	// 4. for each permutation estimate the expected cost
-    	for(List<Integer> permutation: permutations){
-    		// could be 'R7''R4R5'
-    		List<SubRegex> candidatePlan = new ArrayList<>();
-    		for(Integer i : permutation){
-    			candidatePlan.add(cover.get(i));
+    	// The selectivity that should apply to these elements
+    	double preSelectivity = estimateSetSelectivity(previouslyUseElements);
+    	// 1. check for memoization
+    	if(candidatePlanCosts.containsKey(elements)){
+    		SubRegexCover c = candidatePlanCosts.get(elements);
+    		optimumPermutation.subRegexes.addAll(c.subRegexes);
+    		optimumPermutation.expectedCost = c.expectedCost ;
+    		return;
+    	}
+    	
+    	
+    	// 2. check for the end case where elements has one element in it
+    	if(elements.size() == 1){
+    		for(SubRegex nextSubRegex : elements){ // We know it has only one element but since it's set we have to iterate
+    			// First calculate the expected cost of s
+    			double nextSubRegexCost = 0;
+    			if(nextSubRegex.getStart() == 0 && nextSubRegex.getEnd() == coreSubRegexes.size()){ // The complete regex case
+    				nextSubRegexCost = nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen;
+    			}else{
+    				if(nextSubRegex.complexity == SubRegex.ComplexityLevel.High){
+    					// Find the closest computed sub-regex to the left
+    					SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, nextSubRegex);
+    					// Find the closest computed sub-regex to the right
+    					SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, nextSubRegex);
+    					double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
+    					nextSubRegexCost = nextSubRegex.getExpectedCost() * totalNumberOfVerifications;
+    				}else{
+    					nextSubRegexCost = nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen;
+    				}
+    			}
+    			
+    			optimumPermutation.subRegexes.add(nextSubRegex);
+    			optimumPermutation.expectedCost = preSelectivity * nextSubRegexCost;
+    			// Save in memoization map
+    			SubRegexCover forMemoization = new SubRegexCover();
+    			forMemoization.subRegexes.add(nextSubRegex);
+    			forMemoization.expectedCost = preSelectivity * nextSubRegexCost;
+    			candidatePlanCosts.put(elements, forMemoization);
     		}
-    		// get the cost
-    		double candidatePlanCost = estimateExpectedCostOfCandidatePlan(candidatePlan);
-    		if(optimumReorderedCover.expectedCost == -1 || optimumReorderedCover.expectedCost > candidatePlanCost){
-    			optimumReorderedCover.subRegexes = candidatePlan;
-    			optimumReorderedCover.expectedCost = candidatePlanCost;
+    		return;
+    	}
+    	
+    	
+    	
+    	optimumPermutation.expectedCost = Double.MAX_VALUE;
+    	Set<SubRegex> newElements = new HashSet<>();
+    	newElements.addAll(elements);
+    	// Try High sub-regexes only for the case where we have no non-high sub-regex left
+    	for(SubRegex s : elements){
+    		// Remember cost of s
+    		double sCost = 0;
+			if(s.getStart() == 0 && s.getEnd() == coreSubRegexes.size()){ // The complete regex case
+				sCost = s.getExpectedCost() * s.stats.matchingSrcAvgLen;
+			}else{
+				if(s.complexity == SubRegex.ComplexityLevel.High){
+					// Find the closest computed sub-regex to the left
+					SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, s);
+					// Find the closest computed sub-regex to the right
+					SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, s);
+					double totalNumberOfVerifications = estimateNumberOfNeededVerifications(s, leftSub, rightSub);
+					sCost = s.getExpectedCost() * totalNumberOfVerifications;
+				}else{
+					sCost = s.getExpectedCost() * s.stats.matchingSrcAvgLen;
+				}
+			}
+			// Remove s and do recursion
+    		newElements.remove(s);
+    		previouslyUseElements.add(s);
+    		SubRegexCover subsetOptimum = new SubRegexCover();
+    		findOptimumPermutation(newElements, previouslyUseElements, subsetOptimum);
+    		// calculate combined cost
+    		double combinedCost = preSelectivity * sCost + subsetOptimum.expectedCost;
+    		if(combinedCost < optimumPermutation.expectedCost){
+    			optimumPermutation.subRegexes.clear();
+    			optimumPermutation.subRegexes.add(s);
+    			optimumPermutation.subRegexes.addAll(subsetOptimum.subRegexes);
+    			optimumPermutation.expectedCost = combinedCost;
+    		}
+    		// Fix the newElements and previouslyUseElements variables for next iteration
+    		newElements.add(s);
+    		previouslyUseElements.remove(s);
+    	}
+    	// The optimumPermutation variable is ready for return
+    	// Just save in memoization map before returning
+		SubRegexCover forMemoization = new SubRegexCover();
+		forMemoization.subRegexes.addAll(optimumPermutation.subRegexes);
+		forMemoization.expectedCost = optimumPermutation.expectedCost;
+    	candidatePlanCosts.put(elements, forMemoization);
+    	return;
+    }
+    
+    
+    // finds the best order of matching of the sub regexes in the given cover. 
+    // outputs the corresponding order in the input optimumReorderedCover input.
+    private void findOptimumPermutation(List<SubRegex> cover, SubRegexCover optimumReorderedCover){
+
+    	Set<SubRegex> elements = new HashSet<>();
+    	Set<SubRegex> preSelectedElements = new HashSet<>();
+    	for(int i =0 ; i < cover.size(); ++i){
+    		if(cover.get(i).complexity != SubRegex.ComplexityLevel.High){
+    			elements.add(cover.get(i));
     		}
     	}
-    	return;
+    	SubRegexCover nonHighOptimumPermutation = new SubRegexCover();
+    	preSelectedElements.clear();
+    	findOptimumPermutation(elements, preSelectedElements, nonHighOptimumPermutation);
+    	preSelectedElements.clear();
+    	preSelectedElements.addAll(elements);
+    	elements.clear();
+    	for(int i =0 ; i < cover.size(); ++i){
+    		if(cover.get(i).complexity == SubRegex.ComplexityLevel.High){
+    			elements.add(cover.get(i));
+    		}
+    	}
+    	SubRegexCover highOptimumPermutation = new SubRegexCover();
+    	findOptimumPermutation(elements, preSelectedElements, highOptimumPermutation);
+    	
+    	optimumReorderedCover.subRegexes.addAll(nonHighOptimumPermutation.subRegexes);
+    	optimumReorderedCover.subRegexes.addAll(highOptimumPermutation.subRegexes);
+    	optimumReorderedCover.expectedCost = nonHighOptimumPermutation.expectedCost + highOptimumPermutation.expectedCost;
+    }
+    
+    public double estimateSetSelectivity(Set<SubRegex> elements){
+    	// Not selective at all if empty
+    	if(elements.isEmpty()){
+    		return 1.0;
+    	}
+    	
+    	// Check if a separate selectivity is measured for the set itself
+    	if(setCombinedStats.containsKey(elements)){
+    		return setCombinedStats.get(elements).getSelectivity();
+    	}else{
+    		// See if we can at least combined selectivity for sub-sets
+    		//TODO but for now just multiple ...
+    		System.out.println("Unexpected state. Set of sub-regexes is not included in the stats set.");
+    		return 0.0;
+    	}
+    	
     }
     
 	// The input cover is a list of SubRegexes that will be computed in the same order to 
     // find the matching results of the original regex.
-	public double estimateExpectedCostOfCandidatePlan(List<SubRegex> plan){
-		if(plan.size() == 0) {
+	public double estimateExpectedCostOfCandidatePlan(List<SubRegex> plan, Set<SubRegex> previouslyUsedPlanSubs){
+		// The outmost call be made with passing null for previouslyUsedPlanSubs
+		if(previouslyUsedPlanSubs == null){
+			previouslyUsedPlanSubs = new HashSet<>();
+		}
+		double preUsedSelectivity = estimateSetSelectivity(previouslyUsedPlanSubs);
+		if(plan == null || plan.size() == 0) {
 			System.out.println("Unexpected state. Something wrong. Trying to cost empty candidate plan."); // TODO: remove print
 			return Double.MAX_VALUE;
 		}
-		System.out.println("=============================================================");
-		System.out.println("Estimating the cost of new plan");
-		
+		Set<SubRegex> planElements = new HashSet<>();
+		planElements.addAll(plan);
+		// Check if cost of this plan is memoized
+		if(candidatePlanCosts.containsKey(planElements)){
+			System.out.println("SubRegex.getPlanSignature(plan) Memoized : " + candidatePlanCosts.get(SubRegex.getPlanSignature(plan)));
+			return candidatePlanCosts.get(planElements).expectedCost;
+		}
+		// End case
 		if(plan.size() == 1){
 			SubRegex sub = plan.get(0);
-			if(! (sub.getStart() == 0 && sub.getEnd() == coreSubRegexes.size())){
-				System.out.println("Unexpected state. Something is wrong. Plan with single sub-regex which is not the main regex.");
-				return 0;
-			}
-			System.out.println("Cost of " + sub.toString());
-			System.out.println(sub.getExpectedCost() + " * " + sub.stats.matchingSrcAvgLen + " = " + (sub.getExpectedCost() * sub.stats.matchingSrcAvgLen));
-			return sub.getExpectedCost() * sub.stats.matchingSrcAvgLen;
+			System.out.println(SubRegex.getPlanSignature(plan) + " >> " + preUsedSelectivity +" * "+ sub.getExpectedCost() +" * "+ sub.stats.matchingSrcAvgLen + " = " + (preUsedSelectivity * sub.getExpectedCost() * sub.stats.matchingSrcAvgLen));
+			return preUsedSelectivity * sub.getExpectedCost() * sub.stats.matchingSrcAvgLen;
 		}
-		
-		double expectedCost = 0;
-		// 1. First estimate the cost of the non-high sub-regexes of the plan (the skeleton)
-		Set<SubRegex> pastSubRegexes = new HashSet<>();
-		for(int i = 0 ; i < plan.size(); ++i){
-			SubRegex nextSubRegex = plan.get(i);
+		////////////////////////
+		// Not computed before. Compute recursively.
+		SubRegex nextSubRegex = null;
+		int nextSubRegexIndex = -1;
+		Iterator<SubRegex> iter = null;
+		// 1. Find the next sub-regex to run. First try to find non-high and if nothing left, find a high sub-regex.
+		{
+			int i = 0 ;
+			for(iter = plan.listIterator(); iter.hasNext(); ){
+				SubRegex sub = iter.next();
+				if(sub.complexity != SubRegex.ComplexityLevel.High){
+					nextSubRegex = sub;
+					nextSubRegexIndex = i;
+					break;
+				}
+				i++;
+			}
+			if(nextSubRegex == null){
+				iter = null;
+				i = 0;
+				for(iter = plan.listIterator(); iter.hasNext(); ){
+					SubRegex sub = iter.next();
+					if(sub.complexity == SubRegex.ComplexityLevel.High){
+						nextSubRegex = sub;
+						nextSubRegexIndex = i;
+						break;
+					}
+					i++;
+				}		
+			}
+		}
+		// 2. Get the expected cost of running the nextSubRegex
+		double nextSubRegexCost = 0;
+		{
 			if(nextSubRegex.complexity == SubRegex.ComplexityLevel.High){
-				break;
-			}
-			if(i == 0){
-				System.out.println("Adding cost of " + nextSubRegex.toString());
-				System.out.println(nextSubRegex.getExpectedCost() + " * " + nextSubRegex.stats.matchingSrcAvgLen + " = " + 
-						(nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen));
-				expectedCost = nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen;
+				// Find the closest computed sub-regex to the left
+				planElements.remove(nextSubRegex);
+				SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(planElements, nextSubRegex);
+				// Find the closest computed sub-regex to the right
+				SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(planElements, nextSubRegex);
+				double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
+				nextSubRegexCost = nextSubRegex.getExpectedCost() * totalNumberOfVerifications;
 			}else{
-				if(! setCombinedStats.containsKey(pastSubRegexes)){
-					System.out.println("Unexpected state. setCombinedStats doesn't have a combination."); // TODO: remove print.
-				}
-				System.out.println("Adding cost of " + nextSubRegex.toString());
-				System.out.println(setCombinedStats.get(pastSubRegexes).getSelectivity() + " * " + nextSubRegex.getExpectedCost() + " * " + nextSubRegex.stats.matchingSrcAvgLen + " = " + 
-						(setCombinedStats.get(pastSubRegexes).getSelectivity() * nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen));
-				expectedCost = expectedCost + 
-						(
-							setCombinedStats.get(pastSubRegexes).getSelectivity() * 
-							nextSubRegex.getExpectedCost() * 
-							nextSubRegex.stats.matchingSrcAvgLen
-						);
+				nextSubRegexCost = nextSubRegex.getExpectedCost() * nextSubRegex.stats.matchingSrcAvgLen;
 			}
-			//
-			pastSubRegexes.add(nextSubRegex);
 		}
 		
-		// 2. Now, continue estimating the cost by estimating the cost of verification for High sub-regexes.
-		for(int i = 0 ; i < plan.size(); ++i){
-			SubRegex nextSubRegex = plan.get(i);
-			if(nextSubRegex.complexity != SubRegex.ComplexityLevel.High){
-				continue;
-			}
-			// Find the closest computed sub-regex to the left
-			SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(plan, i);
-			// Find the closest computed sub-regex to the right
-			SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(plan, i);
-			double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
-			double amortizedCostOfVerification = nextSubRegex.getExpectedCost();
-			if(i == 0){
-				System.out.println("Adding cost of verification of " + nextSubRegex.toString());
-				System.out.println(amortizedCostOfVerification + " * " + totalNumberOfVerifications + " = " +
-							(amortizedCostOfVerification * totalNumberOfVerifications));
-				expectedCost = amortizedCostOfVerification * totalNumberOfVerifications;
-			}else{
-				if(! setCombinedStats.containsKey(pastSubRegexes)){
-					System.out.println("Unexpected state. setCombinedStats doesn't have a combination."); // TODO: remove print.
-				}
-				System.out.println("Adding cost of verification of " + nextSubRegex.toString());
-				System.out.println(setCombinedStats.get(pastSubRegexes).getSelectivity() + " * " + amortizedCostOfVerification + " * " + totalNumberOfVerifications + " = " +
-							(setCombinedStats.get(pastSubRegexes).getSelectivity() * amortizedCostOfVerification * totalNumberOfVerifications));
-				expectedCost = expectedCost + 
-						(
-							setCombinedStats.get(pastSubRegexes).getSelectivity() * 
-							amortizedCostOfVerification * 
-							totalNumberOfVerifications
-						);						
-			}
-			//
-			pastSubRegexes.add(nextSubRegex);
-		}
-		return expectedCost;
+		// 3. Remove the nextSubRegex from the plan and add it to previouslyUsedPlanSubs to make the recursive call
+		List<SubRegex> planTmp = new ArrayList<>();
+		planTmp.addAll(plan);
+		iter.remove();
+		previouslyUsedPlanSubs.add(nextSubRegex);
+		// 4. Calculate the cost of the rest of the plan calculated recursively and do memoization
+		double subPlanCost = estimateExpectedCostOfCandidatePlan(plan, previouslyUsedPlanSubs);
+		SubRegexCover subPlanCover = new SubRegexCover();
+		subPlanCover.expectedCost = subPlanCost;
+		subPlanCover.subRegexes.addAll(plan);
+		candidatePlanCosts.put(planElements, subPlanCover);
+		// 5. Calculate the cost of this plan based on the recursion results
+		double cost = preUsedSelectivity * 
+				(	nextSubRegexCost
+					+ 
+					subPlanCost
+				);
+		// 6. Fix the input before returning.
+		plan.clear();
+		plan.addAll(planTmp);
+		previouslyUsedPlanSubs.remove(nextSubRegex);
+		System.out.println(SubRegex.getPlanSignature(plan) + " >> " + preUsedSelectivity +" * (" + nextSubRegexCost + " + " + subPlanCost + ") = " + cost);
+		return cost;
 	}
     
+	
     private void generateAllPermutations(Set<Integer> elements, List<Integer> currentPermutation, List<List<Integer>> permutations){
     	if(elements.isEmpty()){
     		permutations.add(new ArrayList<>(currentPermutation));

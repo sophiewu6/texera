@@ -271,8 +271,7 @@ class SubRegex{
 		if(getReverseSubRegex() == null || getReverseSubRegex().stats.getSize() == 0){
 			return false;
 		}
-//		return getReverseSubRegex().stats.getExpectedCost() < stats.getExpectedCost();
-		return false;
+		return getReverseSubRegex().stats.getExpectedCost() < stats.getExpectedCost();
 	}
 	
 	public double getExpectedCost(){

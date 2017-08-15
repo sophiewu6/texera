@@ -271,7 +271,8 @@ class SubRegex{
 		if(getReverseSubRegex() == null || getReverseSubRegex().stats.getSize() == 0){
 			return false;
 		}
-		return getReverseSubRegex().stats.getExpectedCost() < stats.getExpectedCost();
+//		return getReverseSubRegex().stats.getExpectedCost() < stats.getExpectedCost();
+		return false;
 	}
 	
 	public double getExpectedCost(){
@@ -348,8 +349,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     List<SubRegex> coreSubRegexes = new ArrayList<>();
     // The main container of all sub-regexes.
     List<List<SubRegex>> subRegexContainer = new ArrayList<>();
-    // The candidate plan to break
-    MultiRegexPlan multiRegexPlan = null;
+    // The candidate plans
+    List<QueryPlan> queryPlans = new ArrayList<>();
     // Parallel map to isSetNonHighCovering. Records the combined selectivity of each set of sub-regexes.
     Map<Set<SubRegex>, RegexStats> setCombinedStats = new HashMap<>();
     // A map for memoization of the cost of candidate plans.
@@ -405,7 +406,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             
             // 3. Populate the combined set maps (isSetNonHighCovering and combinedSetStats) with all possible
             //    and useful key values (combinedSetStats values to be updated in stats collection phase).
-            populateCombinedSetStatsMap();
+//            populateCombinedSetStatsMap();
 
             // 4. This will continue with collecting/using stats in processOneInputTuple.
             //    Note. Even if the regex is not breakable, we still collect statistics to see 
@@ -478,11 +479,26 @@ public class RegexMatcher extends AbstractSingleInputOperator {
             return null;
         }
         List<Span> matchingResults = null;
+        boolean executed = false;
 //        if (this.regexType == RegexType.NO_LABELS) {
     	if (this.regexType == this.regexType) {
-    		// start collecting statistics from the first tuple in the stream.
-    		matchingResults = multiRegexPlan.process(inputTuple);
-
+    		for(QueryPlan plan : queryPlans){
+    			if(plan.needsMoreStatistics()){
+    				matchingResults = plan.process(inputTuple);
+    				executed = true;
+    			}
+    		}
+    		if(! executed){
+    			double minCost = Double.MAX_VALUE;
+    			QueryPlan bestPlan = null;
+        		for(QueryPlan plan : queryPlans){
+        			if(plan.getExpectedCost() < minCost){
+        				bestPlan = plan;
+        				minCost = plan.getExpectedCost();
+        			}
+        		}
+        		matchingResults = bestPlan.process(inputTuple);
+    		}
         } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
             matchingResults = labeledRegexProcessor.computeMatchingResults(inputTuple);
         } else {
@@ -509,12 +525,12 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 		if(sub.getStart() == 0 && sub.getEnd() == coreSubRegexes.size()){
 			if(sub.isReverseExecutionFaster()){
 				subRegexSpans = 
-						computeMatchingResultsWithCompletePattern(inputTuple, 
+						RegexMatcherUtils.computeMatchingResultsWithCompletePattern(inputTuple, 
 								sub.regex, sub.regexPatern, true, 
 								sub.getReverseSubRegex().regex, sub.getReverseSubRegex().regexPatern);
 			}else{
 				subRegexSpans = 
-						computeMatchingResultsWithCompletePattern(inputTuple, 
+						RegexMatcherUtils.computeMatchingResultsWithCompletePattern(inputTuple, 
 								sub.regex, sub.regexPatern, false, null, null);
 			}
 			// Save the span list for this subregex to be used in the second phase of the algorithm.
@@ -554,7 +570,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 				
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						computeMatchingResultsWithCompletePattern(inputTuple, 
+						RegexMatcherUtils.computeMatchingResultsWithCompletePattern(inputTuple, 
 								sub.regex, sub.regexPatern, false, null, null);
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
@@ -594,7 +610,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			{
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						computeMatchingResultsWithCompletePattern(inputTuple, 
+						RegexMatcherUtils.computeMatchingResultsWithCompletePattern(inputTuple, 
 								sub.regex, sub.regexPatern, true, 
 								sub.getReverseSubRegex().regex, sub.getReverseSubRegex().regexPatern);
 				long endMatchingTime = System.nanoTime();
@@ -964,14 +980,19 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		// the large complete regex which starts from zero and goes to the end
     		subRegexContainer.get(0).add(mainRegex);
     	}
-    	
-    	List<SubRegex> subRegexCover = new ArrayList<>();
-    	for(int start = 0 ; start < subRegexContainer.size(); start ++){
-    		SubRegex next = subRegexContainer.get(start).get(0);
-    		subRegexCover.add(next);
-    		start = next.getEnd() - 1;
+    	// Prepare query plans
+    	queryPlans.add(new SingleRegexPlan(mainRegex));
+    	if(coreSubRegexes.size() > 1){
+    		List<SubRegex> subRegexCover = new ArrayList<>();
+    		for(int start = 0 ; start < subRegexContainer.size(); start ++){
+    			SubRegex next = subRegexContainer.get(start).get(0);
+    			subRegexCover.add(next);
+    			start = next.getEnd() - 1;
+    		}
+    		if(subRegexCover.size() > 1){
+    			queryPlans.add(new MultiRegexPlan(subRegexCover));
+    		}
     	}
-    	multiRegexPlan = new MultiRegexPlan(subRegexCover);
     }
     
     // For each set as a key of the setCombinedStats map, it checks the latest matching results of 
@@ -1491,44 +1512,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     	System.out.println("---------------------------------------------------------------");
     }
 
-    public static List<Span> computeMatchingResultsWithCompletePattern(Tuple inputTuple, RegexPredicate predicate, Pattern pattern, boolean reverse, RegexPredicate revPredicate, Pattern revPattern) {
-        List<Span> matchingResults = new ArrayList<>();
-
-        for (String attributeName : predicate.getAttributeNames()) {
-            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-
-            // types other than TEXT and STRING: throw Exception for now
-            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-            }
-
-//            System.out.println(fieldValue);
-//            System.out.println("--------------------------");
-//            System.out.println(predicate.getRegex());
-            if(reverse){
-            	String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
-            	Matcher javaMatcher = revPattern.matcher(reverseFieldValue);
-            	while (javaMatcher.find()) {
-            		int start = fieldValue.length() - javaMatcher.end();
-            		int end = fieldValue.length() - javaMatcher.start();
-            		matchingResults.add(
-            				new Span(attributeName, start, end, predicate.getRegex(), fieldValue.substring(start, end)));
-            	}            	
-            }else{
-            	Matcher javaMatcher = pattern.matcher(fieldValue);
-            	while (javaMatcher.find()) {
-            		int start = javaMatcher.start();
-            		int end = javaMatcher.end();
-            		matchingResults.add(
-            				new Span(attributeName, start, end, predicate.getRegex(), fieldValue.substring(start, end)));
-            	}
-            }
-        }
-
-        return matchingResults;
-    }
-    
     public static boolean hasAnyMatches(Tuple inputTuple, SubRegex subRegex){
         for (String attributeName : subRegex.regex.getAttributeNames()) {
             AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();

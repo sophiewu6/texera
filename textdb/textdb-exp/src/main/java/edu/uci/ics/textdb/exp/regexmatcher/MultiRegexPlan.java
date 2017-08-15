@@ -26,6 +26,14 @@ public class MultiRegexPlan extends QueryPlan{
 	private QueryGraphNode nullNodeToStart = new QueryGraphNode(null);
 	private List<QueryGraphNode> subPlanQueryGraphNodes = new ArrayList<>();
 	
+	private Map<String, Integer> usedPlans = new HashMap<>(); //TODO: just for testing, remove.
+	private void recordUsedPlan(String plan){
+		if(! usedPlans.containsKey(plan)){
+			usedPlans.put(plan, 0);
+		}
+		usedPlans.put(plan, usedPlans.get(plan) + 1);
+	}
+	
 	private double sumCost = 0;
 	
 	public MultiRegexPlan(List<SubRegex> subregexes){
@@ -58,6 +66,11 @@ public class MultiRegexPlan extends QueryPlan{
 				return null;
 			}
 		}
+//		if(getProcessedTupleCounter() % 10000 == 0){
+//			for(String plan : usedPlans.keySet()){
+//				System.out.println(plan + " used " + usedPlans.get(plan) + " time.");
+//			}
+//		}
 		long startTime = System.nanoTime();
 		List<Span> result =  processPostWarmUpPhase(inputTuple);
 		long endTime = System.nanoTime();
@@ -66,12 +79,14 @@ public class MultiRegexPlan extends QueryPlan{
 	}
 	
 	private List<Span> processPostWarmUpPhase(Tuple inputTuple){
+		String usedPlan = ""; // TODO: remove
 		// 1. Try to fail the tuple by using the graph
 		List<QueryGraphNode> passingNodes = new ArrayList<>();
 		QueryGraphNode.startGreedyIterator(nullNodeToStart);
 		QueryGraphNode nextToExecute = QueryGraphNode.getGreedyIteratorNextNode();
 		while(nextToExecute != null){
 			if(! nextToExecute.getSubPlan().isExecuted){
+				usedPlan += nextToExecute.getSubPlan().sub.toStringShort(); //TODO remove
 				List<Span> spans = executeSubPlan(inputTuple, nextToExecute.getSubPlan());
 				if(spans != null && spans.isEmpty()){
 					nextToExecute.getSubPlan().sub.resetMatchingSpanList(null);
@@ -81,6 +96,7 @@ public class MultiRegexPlan extends QueryPlan{
 					for(QueryGraphNode passingNode : passingNodes){
 						passingNode.increaseEdgeTo(nextToExecute);
 					}
+					recordUsedPlan(usedPlan); // TODO: remove
 					return null;
 				}
 				passingNodes.add(nextToExecute);
@@ -98,6 +114,7 @@ public class MultiRegexPlan extends QueryPlan{
 			if(nextToExecute.getSubPlan().isExecuted){
 				continue;
 			}
+			usedPlan += nextToExecute.getSubPlan().sub.toStringShort();//TODO remove
 			List<Span> spans = executeSubPlan(inputTuple, nextToExecute.getSubPlan());
 			if(spans != null && spans.isEmpty()){
 				nextToExecute.getSubPlan().sub.resetMatchingSpanList(null);
@@ -118,6 +135,7 @@ public class MultiRegexPlan extends QueryPlan{
 			}
 //			//TODO remove print
 //			printQueryGraphNodes();
+			recordUsedPlan(usedPlan); // TODO: remove
 			return null;
 		}
 //		System.out.println("All selection sub-plans passed.");
@@ -141,25 +159,33 @@ public class MultiRegexPlan extends QueryPlan{
 			if(nextToVerify == null){
 				break;
 			}
+			usedPlan += nextToVerify.sub.toStringShort();//TODO remove
 			List<Span> spans = executeSubPlan(inputTuple, nextToVerify);
 			if(spans != null && spans.isEmpty()){
 				nextToVerify.sub.resetMatchingSpanList(null);
 			}
 			if(spans == null || spans.isEmpty()){
+				recordUsedPlan(usedPlan); // TODO: remove
 				return null;
 			}
 		}
 //		System.out.println("Probably success. Generating fully covering spans.");
 		// 4. If we are here, all sub-plans have passed.
+		recordUsedPlan(usedPlan); // TODO: remove
 		return generateFullyCoveringMatchingSpans();
 	}
 
 	@Override
 	public boolean needsMoreStatistics() {
 		if(! isWarmUpFinished()){
-			return false;
+			return true;
 		}
-		return true;
+//		for(SubPlan s : subsForSelection){
+//			if(s.sub.stats.getConfidenceValue() >= 0.3){
+//				return true;
+//			}
+//		}
+		return false;
 	}
 
 	@Override
@@ -412,7 +438,7 @@ public class MultiRegexPlan extends QueryPlan{
 		}
 		expandingSpanList.clear();
 		for(int i = newSpanLists.size() - 1; i >= 0; i--){
-			List<Span> spanList = spanLists.get(i);
+			List<Span> spanList = newSpanLists.get(i);
 			List<Span> newSpanList = resultSpanLists.get(i);
 			if(i == newSpanLists.size() - 1){
 				expandingSpanList.addAll(spanList);
@@ -468,7 +494,7 @@ public class MultiRegexPlan extends QueryPlan{
 					findSubRegexNearestComputedLeftNeighbor(executedSubRegexes, subPlan.sub);
 			SubRegex rightBound = RegexMatcherUtils.
 					findSubRegexNearestComputedRightNeighbor(executedSubRegexes, subPlan.sub);
-			if(isWarmUpFinished()){
+			if(! needsMoreStatistics()){
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
 						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.sub, 
@@ -571,7 +597,7 @@ public class MultiRegexPlan extends QueryPlan{
 		
 		// SubPlan is for Selection (uses a non-high sub-regex)
 		// SubRegex doesn't have * or +, so we will find all matches to also measure tf_average
-		if(isWarmUpFinished()){ // Warmup finished. We don't force to try reverse execution.
+		if(! needsMoreStatistics()){ // Warmup finished. We don't force to try reverse execution.
 			long startMatchingTime = System.nanoTime();
 			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.sub, false, false);
 			long endMatchingTime = System.nanoTime();

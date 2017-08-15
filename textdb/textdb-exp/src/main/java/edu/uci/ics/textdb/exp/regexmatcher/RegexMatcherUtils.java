@@ -10,6 +10,7 @@ import edu.uci.ics.textdb.api.schema.AttributeType;
 import edu.uci.ics.textdb.api.span.Span;
 import edu.uci.ics.textdb.api.tuple.Tuple;
 import jregex.Matcher;
+import jregex.Pattern;
 
 public class RegexMatcherUtils {
     public static SubRegex findSubRegexNearestComputedLeftNeighbor(Set<SubRegex> subRegexes, 
@@ -434,5 +435,43 @@ public class RegexMatcherUtils {
     		}
 	        return totalNumOfVerifications;
     	}
+    }
+    
+    public static List<Span> computeMatchingResultsWithCompletePattern(Tuple inputTuple, RegexPredicate predicate, Pattern pattern, boolean reverse, RegexPredicate revPredicate, Pattern revPattern) {
+        List<Span> matchingResults = new ArrayList<>();
+
+        for (String attributeName : predicate.getAttributeNames()) {
+            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
+
+            // types other than TEXT and STRING: throw Exception for now
+            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
+                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+            }
+
+//            System.out.println(fieldValue);
+//            System.out.println("--------------------------");
+//            System.out.println(predicate.getRegex());
+            if(reverse){
+            	String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
+            	Matcher javaMatcher = revPattern.matcher(reverseFieldValue);
+            	while (javaMatcher.find()) {
+            		int start = fieldValue.length() - javaMatcher.end();
+            		int end = fieldValue.length() - javaMatcher.start();
+            		matchingResults.add(
+            				new Span(attributeName, start, end, predicate.getRegex(), fieldValue.substring(start, end)));
+            	}            	
+            }else{
+            	Matcher javaMatcher = pattern.matcher(fieldValue);
+            	while (javaMatcher.find()) {
+            		int start = javaMatcher.start();
+            		int end = javaMatcher.end();
+            		matchingResults.add(
+            				new Span(attributeName, start, end, predicate.getRegex(), fieldValue.substring(start, end)));
+            	}
+            }
+        }
+
+        return matchingResults;
     }
 }

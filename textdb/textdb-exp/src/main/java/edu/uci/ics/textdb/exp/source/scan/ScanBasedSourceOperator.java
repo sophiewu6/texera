@@ -18,7 +18,7 @@ import edu.uci.ics.textdb.storage.RelationManager;
  */
 public class ScanBasedSourceOperator implements ISourceOperator {
 
-	private static final int MaxOutput = 16000;
+	private static final int MaxOutput = 100000;
 	private int outputTupleCounter = 0;
 	
     private DataReader dataReader;

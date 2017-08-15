@@ -10,6 +10,7 @@ import com.google.re2j.PublicRE2;
 import com.google.re2j.PublicRegexp;
 import com.google.re2j.PublicSimplify;
 import com.google.re2j.PublicRegexp.PublicOp;
+import com.mysql.fabric.xmlrpc.base.Array;
 
 import edu.uci.ics.textdb.api.constants.ErrorMessages;
 import edu.uci.ics.textdb.api.exception.DataFlowException;
@@ -98,15 +99,31 @@ class RegexStats{
 	}
 	
 	public void addStatsSubRegexFailure(double failureCost, int matchingSrcSize){
-		failureCostAverage = ((failureDataPointCounter * failureCostAverage) + failureCost ) / (failureDataPointCounter + 1);
+		if(failureCost != 0){ // Cost average won't be updated if the passed input is zero
+			failureCostAverage = ((failureDataPointCounter * failureCostAverage) + failureCost ) / (failureDataPointCounter + 1);
+		}
 		failureDataPointCounter ++;
 		addStatsMatchingSrcSize(matchingSrcSize);
 	}
 	
-	public void addStatsSubRegexSuccess(List<Integer> numberOfMatchSpans, double successCost, int matchingSrcSize){
+	public void addStatsSubRegexSuccess(double successCost, int matchingSrcSize){
 		// update cost
-		successCostAverage = ((successDataPointCounter * successCostAverage) + successCost ) / (successDataPointCounter + 1);
+		if(successCost != 0){ // Update cost average only if the passed input is greater than zero
+			successCostAverage = ((successDataPointCounter * successCostAverage) + successCost ) / (successDataPointCounter + 1);
+		}
 		df ++;
+		// update selectivity
+		successDataPointCounter ++;
+		// update matching src size
+		addStatsMatchingSrcSize(matchingSrcSize);
+	}
+	
+	public void addTfAveragePerAttribute(List<Integer> numberOfMatchSpans){
+		if(successDataPointCounter == 0){
+			System.out.println("Unexpected state. Adding tfAverage while success is not incremented."); // TODO: remove or replace with exception
+			return;
+		}
+		successDataPointCounter --;
 		// update the tf values
 		if(numberOfMatchSpans.size() == tfAveragePerAttribute.size()){
 			for(int i = 0 ; i < tfAveragePerAttribute.size(); ++i){
@@ -117,10 +134,7 @@ class RegexStats{
 		}else if(! numberOfMatchSpans.isEmpty()){
 			System.out.println("tfAverage input not consistent with the number of attributes."); // TODO remove the print
 		}
-		// update selectivity
 		successDataPointCounter ++;
-		// update matching src size
-		addStatsMatchingSrcSize(matchingSrcSize);
 	}
 	
 	private void addStatsMatchingSrcSize(int matchingSrcSize){
@@ -129,7 +143,11 @@ class RegexStats{
 	}
 	
 	public double getSelectivity(){
-		return (successDataPointCounter * 1.0 / (getSize() + 1));
+		double selectivity = (successDataPointCounter * 1.0 / getSize());
+		if(selectivity == 0){
+			return 0.001;
+		}
+		return selectivity;
 	}
 	
 	public double getExpectedCost(){
@@ -174,6 +192,7 @@ class SubRegex{
 	// CSR = CoreSubRegex
 	int startingCoreSubRegIndex;
 	int numberOfCoreSubRegexes;
+	int originalRegexSubsCount;
 	
 	RegexStats stats = null;
 	
@@ -184,7 +203,7 @@ class SubRegex{
 		regexPatern = null;
 		startWithRegexPattern = null;
 		startToEndRegexPattern = null;
-		startingCoreSubRegIndex = numberOfCoreSubRegexes = -1;
+		startingCoreSubRegIndex = numberOfCoreSubRegexes = originalRegexSubsCount = -1;
 		this.complexity = ComplexityLevel.Low;
 		reverseSubRegex = null;
 	}
@@ -198,6 +217,14 @@ class SubRegex{
 		this.complexity = complexity;
 		reverseSubRegex = null;
 		stats = new RegexStats(regex.getAttributeNames().size());
+		this.originalRegexSubsCount = 0;
+	}
+	
+	public void setOriginalSubRegexCount(int count){
+		originalRegexSubsCount = count;
+		if(reverseSubRegex != null){
+			reverseSubRegex.setOriginalSubRegexCount(count);
+		}
 	}
 	
 	public void resetMatchingSpanList(List<Span> spanList){
@@ -240,7 +267,8 @@ class SubRegex{
 	}
 	
 	public boolean isReverseExecutionFaster(){
-		if(getReverseSubRegex() == null){
+		// No reverse available or there is no stats collected for reverse 
+		if(getReverseSubRegex() == null || getReverseSubRegex().stats.getSize() == 0){
 			return false;
 		}
 		return getReverseSubRegex().stats.getExpectedCost() < stats.getExpectedCost();
@@ -252,6 +280,14 @@ class SubRegex{
 		}else{
 			return stats.getExpectedCost();
 		}
+	}
+	
+	public boolean isFirstSubRegex(){
+		return getStart() == 0;
+	}
+	
+	public boolean isLastSubRegex(){
+		return getEnd() == originalRegexSubsCount;
 	}
 }
 /**
@@ -312,6 +348,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     List<SubRegex> coreSubRegexes = new ArrayList<>();
     // The main container of all sub-regexes.
     List<List<SubRegex>> subRegexContainer = new ArrayList<>();
+    // The candidate plan to break
+    MultiRegexPlan multiRegexPlan = null;
     // Parallel map to isSetNonHighCovering. Records the combined selectivity of each set of sub-regexes.
     Map<Set<SubRegex>, RegexStats> setCombinedStats = new HashMap<>();
     // A map for memoization of the cost of candidate plans.
@@ -443,149 +481,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 //        if (this.regexType == RegexType.NO_LABELS) {
     	if (this.regexType == this.regexType) {
     		// start collecting statistics from the first tuple in the stream.
-        	if(inputTuplesCounter < MAX_TUPLES_FOR_STAT_COLLECTION){
-        		long startTime = System.nanoTime();
-        		// Collecting statistics for each sub regex
-        		inputTuplesCounter ++;
-        		// first collect statistics for non-High sub-regexes
-        		double maxConfidence = 0;
-        		for(List<SubRegex> subRegexes: subRegexContainer){
-        			for(SubRegex sub : subRegexes){
-        				if(sub.complexity == SubRegex.ComplexityLevel.High){
-        					continue;
-        				}
-        				runAndCollectStatistics(inputTuple, sub);
-        				double confidence = sub.stats.getConfidenceValue();
-        				if(confidence > maxConfidence){
-        					maxConfidence = confidence;
-        				}
-        				// Check if we will have to continue stats collection for the next tuple.
-        			}
-        		}
-        		// Now collect stats for High sub-regexes
-        		for(List<SubRegex> subRegexes: subRegexContainer){
-        			for(SubRegex sub : subRegexes){
-        				if(sub.complexity != SubRegex.ComplexityLevel.High){
-        					continue;
-        				}
-        				runAndCollectStatistics(inputTuple, sub);
-        				double confidence = sub.stats.getConfidenceValue();
-        				if(confidence > maxConfidence){
-        					maxConfidence = confidence;
-        				}
-        			}
-        		}
-        		if(maxConfidence < 0.3){
-//        			System.out.println("Stats collection is over on record #" + inputTuplesCounter); //TODO remove print
-        			inputTuplesCounter = MAX_TUPLES_FOR_STAT_COLLECTION;
-        		}
-        		// Now update selectivity stats for combinedSets
-        		updateCombinedSetSelectivity();
-        		//////////////////////////////////////////////////// TODO TODO TODO TODO TODO ??? Can we do better?
-        		// Temporarily, we set the execution plan to be the original regex running as a whole.
-        		if(selectedSubRegexes == null){
-        			selectedSubRegexes = new ArrayList<>();
-        			selectedSubRegexes.add(mainRegex);
-        			if(subRegexContainer.get(0).get(subRegexContainer.get(0).size() - 1) != mainRegex){
-        				System.out.println("Unexpected state. Something wrong.");// TODO remove print if this doesn't happen
-        			}
-        		}
-        		long endTime = System.nanoTime();
-        		firstPhaseTime += (endTime - startTime);
-        	}else if(inputTuplesCounter == MAX_TUPLES_FOR_STAT_COLLECTION){
-    			long startTime = System.nanoTime();
-        		// It's time to use the collected statistics to chose a plan
-        		inputTuplesCounter ++;
-        		// find a list of subRegexes that together as a plan minimize the expected cost and save it in selectedSubRegexes
-        		selectedSubRegexes.clear();
-        		findCheapestCoveringListOfSubRegexes();
-        		for(SubRegex sub: selectedSubRegexes){
-        			sub.resetMatchingSpanList(null);
-        		}
-        		long endTime = System.nanoTime();
-        		firstPhaseTime += (endTime - startTime);
-//        		printSelectedSubRegexes();
-        	}else { // inputTuplesCounter > MAX_TUPLES_FOR_STAT_COLLECTION
-        		inputTuplesCounter ++;
-        		for(SubRegex sub: selectedSubRegexes){
-        			sub.resetMatchingSpanList(null);
-        		}
-        	}
-//    		if(inputTuplesCounter % 1000 == 0){
-//    			System.out.println("Processing the " + inputTuplesCounter + "th tuple ...");
-//    		}
-        	// Now use the generated plan:
-        	// 1- First, find the span lists for all sub-regexes and return null if any list is empty
-        	// 2- Second, generate all possible bigger matches from the sub-matches
-        	
-        	// 1-
-        	for(int i = 0 ; i < selectedSubRegexes.size(); ++i){
-        		SubRegex sub = selectedSubRegexes.get(i);
-        		if(sub.getLatestMatchingSpanList() == null){
-        			runSubRegex(inputTuple, i);
-        		}
-        		if(sub.getLatestMatchingSpanList() == null || sub.getLatestMatchingSpanList().isEmpty()){
-        			return null;
-        		}
-        	}
-        	// 2-
-        	
-        	
-        	// use the generated matching spans and aggregate them into larger spans
-        	matchingResults = new ArrayList<>();
-        	int nextSubRegexInOriginalOrder = 0;
-        	for(int i = 0 ; i < selectedSubRegexes.size(); ++i){
-        		if(selectedSubRegexes.get(i).getStart() == 0){
-        			nextSubRegexInOriginalOrder = i;
-        			break;
-        		}
-        	}
-        	matchingResults.addAll(selectedSubRegexes.get(nextSubRegexInOriginalOrder).getLatestMatchingSpanList());
-//			System.out.println("#" + selectedSubRegexes.get(nextSubRegexInOriginalOrder).regex.getRegex() + "#" + 
-//					selectedSubRegexes.get(nextSubRegexInOriginalOrder).startingCoreSubRegIndex + " size " + 
-//					selectedSubRegexes.get(nextSubRegexInOriginalOrder).numberOfCoreSubRegexes);
-			// now find the next subregex in original order (whose start numberOfCoreSubRegexes coreSubRegexes away)
-			boolean hasNext = false;
-			for(int i = 0 ; i < selectedSubRegexes.size(); ++i){
-				if(selectedSubRegexes.get(i).getStart() == selectedSubRegexes.get(nextSubRegexInOriginalOrder).getEnd()){
-					nextSubRegexInOriginalOrder = i;
-					hasNext = true;
-					break;
-				}
-			}
-        	while(hasNext){
-        		
-//    			System.out.println("#" + selectedSubRegexes.get(nextSubRegexInOriginalOrder).regex.getRegex() + "#" + 
-//    					selectedSubRegexes.get(nextSubRegexInOriginalOrder).startingCoreSubRegIndex + " size " + 
-//    					selectedSubRegexes.get(nextSubRegexInOriginalOrder).numberOfCoreSubRegexes);
-        		
-        		List<Span> newMatchingResults = new ArrayList<>();
-        		for(Span s: matchingResults){
-        			for(Span innerS : selectedSubRegexes.get(nextSubRegexInOriginalOrder).getLatestMatchingSpanList()){
-        				if(s.getEnd() == innerS.getStart() && s.getAttributeName().equals(innerS.getAttributeName())){
-        					newMatchingResults.add(new Span(s.getAttributeName(), 
-        							s.getStart(), 
-        							innerS.getEnd(), 
-        							s.getKey() + selectedSubRegexes.get(nextSubRegexInOriginalOrder).regex.getRegex(), 
-        							s.getValue() + innerS.getValue()));
-        				}
-        			}
-        		}
-        		matchingResults.clear();
-        		matchingResults.addAll(newMatchingResults);
-        		if(matchingResults.isEmpty()){
-        			return null;
-        		}
-    			// now find the next subregex in original order (whose start numberOfCoreSubRegexes coreSubRegexes away)
-    			hasNext = false;
-    			for(int i = 0 ; i < selectedSubRegexes.size(); ++i){
-    				if(selectedSubRegexes.get(i).getStart() == selectedSubRegexes.get(nextSubRegexInOriginalOrder).getEnd()){
-    					nextSubRegexInOriginalOrder = i;
-    					hasNext = true;
-    					break;
-    				}
-    			}
-        	}
+    		matchingResults = multiRegexPlan.process(inputTuple);
+
         } else if (this.regexType == RegexType.LABELED_WITH_QUALIFIERS) {
             matchingResults = labeledRegexProcessor.computeMatchingResults(inputTuple);
         } else {
@@ -593,7 +490,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         }
 
         // matchingResults is ready. Will save it in the tuple.
-        if (matchingResults.isEmpty()) {
+        if (matchingResults == null || matchingResults.isEmpty()) {
             return null;
         }
 
@@ -630,16 +527,16 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			for(int i = 0 ; i < subRegexIndex; i++){
 				pastSubRegexes.add(selectedSubRegexes.get(i));
 			}
-			SubRegex leftBound = findSubRegexNearestComputedLeftNeighbor(pastSubRegexes, sub);
-			SubRegex rightBound = findSubRegexNearestComputedRightNeighbor(pastSubRegexes, sub);
+			SubRegex leftBound = RegexMatcherUtils.findSubRegexNearestComputedLeftNeighbor(pastSubRegexes, sub);
+			SubRegex rightBound = RegexMatcherUtils.findSubRegexNearestComputedRightNeighbor(pastSubRegexes, sub);
 			subRegexSpans = 
-					computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
-							leftBound, rightBound, coreSubRegexes.size(), false, false); // no force on execution direction
+					RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
+							leftBound, rightBound, false, false); // no force on execution direction
 			// Save the span list for this subregex to be used in the second phase of the algorithm.
 			sub.resetMatchingSpanList(subRegexSpans);
 			return;
 		}else { // Non-high sub-regex
-			subRegexSpans = computeAllMatchingResults(inputTuple, sub, false, false); // no force on execution direction
+			subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, sub, false, false); // no force on execution direction
 			// also save the span list for this subregex to be used in the second phase of the algorithm.
 			sub.resetMatchingSpanList(subRegexSpans);
 			return;
@@ -681,7 +578,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-    				sub.stats.addStatsSubRegexSuccess(matchSizesPerAttributes, matchingCost, totalTupleTextSize);
+    				sub.stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+    				sub.stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 				
 				double newExpectedCost = sub.stats.getExpectedCost();
@@ -721,7 +619,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-    				sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchSizesPerAttributes, matchingCost, totalTupleTextSize);
+    				sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+    				sub.getReverseSubRegex().stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 			}
 			return;
@@ -753,11 +652,11 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			{	// measure the time of verification if we use direct order
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
-								leftBound, rightBound, coreSubRegexes.size(), true, false); // force not to use reverse execution
+						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
+								leftBound, rightBound, true, false); // force not to use reverse execution
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
-				int numVerifications = computeNumberOfNeededVerifications(inputTuple, sub, leftBound, rightBound);
+				int numVerifications = RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, sub, leftBound, rightBound);
 				double verificationCost = (matchingTime * 1.0) / Math.max(numVerifications, 1);
 				// Save the span list for this subregex to be used in the second phase of the algorithm.
 				sub.resetMatchingSpanList(subRegexSpans);
@@ -774,17 +673,18 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-					sub.stats.addStatsSubRegexSuccess(matchSizesPerAttributes, verificationCost, numVerifications);
+					sub.stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+					sub.stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 			}
 			{	// measure the time of verification if we use reverse order
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
-								leftBound, rightBound, coreSubRegexes.size(), true, true); // force to use reverse execution
+						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, sub, 
+								leftBound, rightBound, true, true); // force to use reverse execution
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
-				int numVerifications = computeNumberOfNeededVerifications(inputTuple, sub, leftBound, rightBound);
+				int numVerifications = RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, sub, leftBound, rightBound);
 				double verificationCost = (matchingTime * 1.0) / Math.max(numVerifications, 1);
 				// Save the span list for this subregex to be used in the second phase of the algorithm.
 				sub.resetMatchingSpanList(subRegexSpans);
@@ -801,7 +701,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-					sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchSizesPerAttributes, verificationCost, numVerifications);
+					sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+					sub.getReverseSubRegex().stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 			}
 		}else{
@@ -809,7 +710,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			// Collect statistics for running normally
 			{
 				long startMatchingTime = System.nanoTime();
-				List<Span> subRegexSpans = computeAllMatchingResults(inputTuple, sub, true, false); // run normally
+				List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, sub, true, false); // run normally
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
 				int totalTupleTextSize = 1;
@@ -832,13 +733,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-					sub.stats.addStatsSubRegexSuccess(matchSizesPerAttributes, matchingCost, totalTupleTextSize);
+					sub.stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+					sub.stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 			}
 			// Collect statistics for running in reverse
 			{
 				long startMatchingTime = System.nanoTime();
-				List<Span> subRegexSpans = computeAllMatchingResults(inputTuple, sub, true, true); // run in reverse
+				List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, sub, true, true); // run in reverse
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
 				int totalTupleTextSize = 1;
@@ -861,7 +763,8 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 														collect(Collectors.toList()).size()
 						));
-					sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchSizesPerAttributes, matchingCost, totalTupleTextSize);
+					sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+					sub.getReverseSubRegex().stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 				}
 			}
 		}
@@ -869,32 +772,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 		return;
 	}
     
-    public static SubRegex findSubRegexNearestComputedLeftNeighbor(Set<SubRegex> subRegexes, SubRegex currentSubRegex){
-    	// find the right most computed sub-regex to the left of current sub-regex
-    	SubRegex leftBound = null;
-    	for(SubRegex computedSubRegex : subRegexes){
-    		if(computedSubRegex.getEnd() <= currentSubRegex.getStart()){
-    			if(leftBound == null || leftBound.getEnd() < computedSubRegex.getEnd()){
-    				leftBound = computedSubRegex;
-    			}
-    		}
-    	}
-    	return leftBound;
-    }
-    
-    public static SubRegex findSubRegexNearestComputedRightNeighbor(Set<SubRegex> subRegexes, SubRegex currentSubRegex){
-    	// find the right most computed sub-regex to the left of current sub-regex
-    	SubRegex rightBound = null;
-    	for(SubRegex computedSubRegex : subRegexes){
-    		if(computedSubRegex.getStart() >= currentSubRegex.getEnd()){
-    			if(rightBound == null || rightBound.getStart() > computedSubRegex.getStart()){
-    				rightBound = computedSubRegex;
-    			}
-    		}
-    	}
-    	return rightBound;
-    }
-
     @Override
     protected void cleanUp() throws DataFlowException {
         if (this.regexType == RegexType.NO_LABELS) {
@@ -979,7 +856,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 //        	System.out.println(subRegex.regex.getRegex());
 //        }
 //        System.out.println("---------------------------------------");
-        
+        for(SubRegex sub : coreSubRegexes){
+        	sub.setOriginalSubRegexCount(numberOfCoreSubRegexes);
+        }
+        mainRegex.setOriginalSubRegexCount(numberOfCoreSubRegexes);
         if(numberOfCoreSubRegexes != coreSubRegexes.size()){
         	System.out.println("Something wrong. The content of coreSubRegexes is not as expected."); // TODO maybe never happens 
         }
@@ -1084,6 +964,14 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		// the large complete regex which starts from zero and goes to the end
     		subRegexContainer.get(0).add(mainRegex);
     	}
+    	
+    	List<SubRegex> subRegexCover = new ArrayList<>();
+    	for(int start = 0 ; start < subRegexContainer.size(); start ++){
+    		SubRegex next = subRegexContainer.get(start).get(0);
+    		subRegexCover.add(next);
+    		start = next.getEnd() - 1;
+    	}
+    	multiRegexPlan = new MultiRegexPlan(subRegexCover);
     }
     
     // For each set as a key of the setCombinedStats map, it checks the latest matching results of 
@@ -1099,7 +987,7 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     		}
     		// All costs are passed 0 because we just want to store selectivity in this map.
     		if(isSuccessful){
-    			pair.getValue().addStatsSubRegexSuccess(new ArrayList<>(), 0, 0);
+    			pair.getValue().addStatsSubRegexSuccess(0, 0);
     		}else{
     			pair.getValue().addStatsSubRegexFailure(0, 0);
     		}
@@ -1343,9 +1231,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
     			}else{
     				if(nextSubRegex.complexity == SubRegex.ComplexityLevel.High){
     					// Find the closest computed sub-regex to the left
-    					SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, nextSubRegex);
+    					SubRegex leftSub = RegexMatcherUtils.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, nextSubRegex);
     					// Find the closest computed sub-regex to the right
-    					SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, nextSubRegex);
+    					SubRegex rightSub = RegexMatcherUtils.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, nextSubRegex);
     					double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
     					nextSubRegexCost = nextSubRegex.getExpectedCost() * totalNumberOfVerifications;
     				}else{
@@ -1378,9 +1266,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			}else{
 				if(s.complexity == SubRegex.ComplexityLevel.High){
 					// Find the closest computed sub-regex to the left
-					SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, s);
+					SubRegex leftSub = RegexMatcherUtils.findSubRegexNearestComputedLeftNeighbor(previouslyUseElements, s);
 					// Find the closest computed sub-regex to the right
-					SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, s);
+					SubRegex rightSub = RegexMatcherUtils.findSubRegexNearestComputedRightNeighbor(previouslyUseElements, s);
 					double totalNumberOfVerifications = estimateNumberOfNeededVerifications(s, leftSub, rightSub);
 					sCost = s.getExpectedCost() * totalNumberOfVerifications;
 				}else{
@@ -1524,9 +1412,9 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 			if(nextSubRegex.complexity == SubRegex.ComplexityLevel.High){
 				// Find the closest computed sub-regex to the left
 				planElements.remove(nextSubRegex);
-				SubRegex leftSub = RegexMatcher.findSubRegexNearestComputedLeftNeighbor(planElements, nextSubRegex);
+				SubRegex leftSub = RegexMatcherUtils.findSubRegexNearestComputedLeftNeighbor(planElements, nextSubRegex);
 				// Find the closest computed sub-regex to the right
-				SubRegex rightSub = RegexMatcher.findSubRegexNearestComputedRightNeighbor(planElements, nextSubRegex);
+				SubRegex rightSub = RegexMatcherUtils.findSubRegexNearestComputedRightNeighbor(planElements, nextSubRegex);
 				double totalNumberOfVerifications = estimateNumberOfNeededVerifications(nextSubRegex, leftSub, rightSub);
 				nextSubRegexCost = nextSubRegex.getExpectedCost() * totalNumberOfVerifications;
 			}else{
@@ -1641,90 +1529,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         return matchingResults;
     }
     
-    /*
-     * Also returns overlapping and nested mathces. More expensive than computeMatchingResultsWithCompletePattern 
-     * because it calls proceed() from the RegexMatcher rather than find().
-     */
-    public static List<Span> computeAllMatchingResults(Tuple inputTuple, SubRegex subRegex, boolean forcedExecutionDirection, boolean forcedReverse){
-        List<Span> matchingResults = new ArrayList<>();
-
-        for (String attributeName : subRegex.regex.getAttributeNames()) {
-            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-
-            // types other than TEXT and STRING: throw Exception for now
-            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-            }
-
-			boolean runReverse = (forcedExecutionDirection && forcedReverse) || ((!forcedExecutionDirection) && subRegex.isReverseExecutionFaster());
-			if(runReverse){
-				String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
-				Matcher javaMatcher = subRegex.getReverseSubRegex().regexPatern.matcher(reverseFieldValue);
-				while (javaMatcher.proceed()) {
-					int start = reverseFieldValue.length() - javaMatcher.end();
-					int end = reverseFieldValue.length() - javaMatcher.start();
-					matchingResults.add(
-							new Span(attributeName, start, end, subRegex.regex.getRegex(), fieldValue.substring(start, end)));
-				}
-			}else{
-				Matcher javaMatcher = subRegex.regexPatern.matcher(fieldValue);
-				while (javaMatcher.proceed()) {
-					int start = javaMatcher.start();
-					int end = javaMatcher.end();
-					matchingResults.add(
-							new Span(attributeName, start, end, subRegex.regex.getRegex(), fieldValue.substring(start, end)));
-				}
-			}
-        }
-
-        return matchingResults;
-    }
-    
-    public static List<Span> computeMatchingResultsStartingAt(String attributeName, String src, int start, SubRegex subRegex, boolean findAll){
-    	if(start < 0 || start >= src.length()){
-    		return new ArrayList<>();
-    	}
-    	Matcher matcher = subRegex.startWithRegexPattern.matcher(src.substring(start));
-    	List<Span> matchingResults = new ArrayList<>();
-    	boolean hasMore = findAll? matcher.proceed(): matcher.find();
-    	while(hasMore){
-    		matchingResults.add(new Span(attributeName, 
-    				matcher.start() + start , 
-    				matcher.end() + start, 
-    				subRegex.regex.getRegex(), 
-    				src.substring(matcher.start() + start , matcher.end() + start)));
-    		hasMore = findAll? matcher.proceed(): matcher.find();
-    	}
-    	return matchingResults;
-    }
-
-    public static List<Span> computeAllMatchingResults(String attributeName, String src, SubRegex subRegex, boolean findAll){
-    	Matcher matcher = subRegex.regexPatern.matcher(src);
-    	List<Span> matchingResults = new ArrayList<>();
-    	boolean hasMore = findAll? matcher.proceed(): matcher.find();
-    	while(hasMore){
-    		matchingResults.add(new Span(attributeName, 
-    				matcher.start(), 
-    				matcher.end(), 
-    				subRegex.regex.getRegex(), 
-    				src.substring(matcher.start(), matcher.end())));
-    		hasMore = findAll? matcher.proceed(): matcher.find();
-    	}
-    	return matchingResults;
-    }
-    
-    public static boolean doesMatchStartToEnd(String attributeName, String src, int start, int end, SubRegex subRegex){
-    	if(start < 0 || start >= src.length() || end < 0 || end >= src.length()){
-    		return false;
-    	}
-    	
-//    	System.out.println(src.substring(start, end));
-//    	System.out.println(subRegex.toString());
-    	Matcher matcher = subRegex.startToEndRegexPattern.matcher(src.substring(start, end));
-    	return matcher.find();
-    }
-    
     public static boolean hasAnyMatches(Tuple inputTuple, SubRegex subRegex){
         for (String attributeName : subRegex.regex.getAttributeNames()) {
             AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
@@ -1780,312 +1584,6 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         		return subRegex.stats.matchingSrcAvgLen;
 			}
     	}
-    }
-    public static int computeNumberOfNeededVerifications(Tuple inputTuple, SubRegex subRegex, 
-    		SubRegex leftBound, SubRegex rightBound){
-    	if(leftBound == null && rightBound == null){ // No computed subRegex is around the subRegex
-        	// Default number of running the regex when there is no helping bound around it.
-        	int totalSourceSize = 0;
-        	for (String attributeName : subRegex.regex.getAttributeNames()) {
-                AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-                String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-                // types other than TEXT and STRING: throw Exception for now
-                if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                    throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-                }
-                totalSourceSize += fieldValue.length();
-        	}
-    		return totalSourceSize;
-    	}else if(leftBound == null){ // && rightBound != null // one computed subRegex on right
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-    		if(subRegex.getEnd() == rightBound.getStart()){ // Direct right neighbor is computed.
-    			return rightBoundSpans.size();
-    		}else{ // right bound isn't direct.
-    			// start reverse matching (from right to left) from rightBound maximum of span starts to the left
-    			int totalMatchingSize = 0;
-    	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-    	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-    	            // types other than TEXT and STRING: throw Exception for now
-    	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-    	            }
-    	            // span list must be pruned for only those spans that belong to the same attribute.
-    	            SpanListSummary rightBoundSummary = 
-    	            		SpanListSummary.summerize(
-    	            				rightBoundSpans.stream().filter(
-    	            						s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList()));
-    	            totalMatchingSize += (fieldValue.length() - rightBoundSummary.startMax);
-    	        }
-    	        return totalMatchingSize;
-    		}
-    	}else if(rightBound == null){ // && leftBound != null // one computed subRegex on left
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		if(subRegex.getStart() == leftBound.getEnd()){ // Direct left neighbor is computed.
-    			return leftBoundSpans.size();
-    		}else{ // left bound isn't direct.
-    			// start matching from leftBound minimum of span ends to the right
-    			int totalMatchingSize = 0;
-    	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-    	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-    	            // types other than TEXT and STRING: throw Exception for now
-    	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-    	            }
-    	            SpanListSummary leftBoundSummary = SpanListSummary.summerize(
-    	            		leftBoundSpans.stream().filter(
-            						s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList()));
-    	            totalMatchingSize += leftBoundSummary.endMin;
-    	        }
-    	        return totalMatchingSize;
-    		}
-    	}else{ // rightBound != null && leftBound != null// two computed subRegexes on both sides
-    		// start matching from the minimum end of the left bound spans to maximum start of the right bound spans
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-    		int totalNumOfVerifications = 0;
-    		for (String attributeName : subRegex.regex.getAttributeNames()) {
-    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-    			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-    			// types other than TEXT and STRING: throw Exception for now
-    			if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    				throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-    			}
-    			List<Span> leftSpans = leftBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
-    			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftSpans);
-    			List<Span> rightSpans = rightBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
-    			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
-    			if(leftBound.getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getStart()){ // left and right are both direct neighbors
-    				for(Span leftSpan: leftSpans){
-    					int start = leftSpan.getEnd();
-    					for(Span rightSpan: rightSpans){
-    						int end = rightSpan.getStart();
-    						if(end < start){
-    							continue;
-    						}
-    						totalNumOfVerifications ++;
-    					}
-    				}
-    				
-    			}else if(leftBound.getEnd() == subRegex.getStart()){ // only left is direct neighbor
-    				for(Span leftSpan: leftSpans){
-    					int start = leftSpan.getEnd();
-    					if(start >= rightBoundSummary.startMax){
-    						continue;
-    					}
-    					totalNumOfVerifications ++;   					
-    				}
-    			}else if(subRegex.getEnd() == rightBound.getStart()){ // only right is direct neighbor
-    				for(Span rightSpan: rightSpans){
-    					int end = rightSpan.getStart();
-    					if(end <= leftBoundSummary.endMin){
-    						continue;
-    					}
-    					totalNumOfVerifications ++;
-    				}
-    				
-    			}else { // no left nor right are direct neighbors
-    				String fieldValueSubStr = fieldValue.substring(leftBoundSummary.endMin, rightBoundSummary.startMax);
-    				totalNumOfVerifications += fieldValueSubStr.length();
-    			}
-    		}
-	        return totalNumOfVerifications;
-    	}
-    }
-    
-    public static List<Span> computeSubRegexMatchesWithComputedNeighbors(Tuple inputTuple, 
-    		SubRegex subRegex, 
-    		SubRegex leftBound, SubRegex rightBound, 
-    		int numberOfCoreSubRegexes, boolean forceExecutionDirection, boolean forceReverse){
-    	
-    	List<Span> matchingResults = new ArrayList<>();
-    	
-    	if(leftBound == null && rightBound == null){ // No computed subRegex is around the subRegex
-    		if(subRegex.getStart() == 0 && subRegex.getEnd() == numberOfCoreSubRegexes){
-    			return computeMatchingResultsWithCompletePattern(inputTuple, subRegex.regex, subRegex.regexPatern, false, null, null);
-    		}else {
-    			return computeAllMatchingResults(inputTuple, subRegex, false, false);
-    		}
-    	}else if(leftBound == null){ // && rightBound != null // one computed subRegex on right
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-	            // types other than TEXT and STRING: throw Exception for now
-	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-	            }
-	            List<Span> rightSpans = rightBoundSpans.
-	            		stream().filter(s -> s.getAttributeName().equals(attributeName)).
-	            		collect(Collectors.toList());
-	            if(subRegex.getEnd() == rightBound.getStart()){ // Direct right neighbor is computed.
-    	            String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
-    	            for(Span rightSpan: rightSpans){
-    	            	List<Span> reverseMatches = 
-    	            			computeMatchingResultsStartingAt(attributeName, reverseFieldValue, 
-    	            			fieldValue.length() - rightSpan.getStart(), subRegex.getReverseSubRegex(), subRegex.getStart() != 0);
-    	            	for(Span s: reverseMatches){
-    	            		matchingResults.add(new Span(attributeName, 
-    	            				fieldValue.length() - s.getEnd(), 
-    	            				fieldValue.length() - s.getStart(), 
-    	            				subRegex.regex.getRegex(), 
-    	            				fieldValue.substring(fieldValue.length() - s.getEnd(), fieldValue.length() - s.getStart())));
-    	            	}
-    	            }
-	            }else{
-	            	// start reverse matching (from right to left) from rightBound maximum of span starts to the left
-	    			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
-    	            String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
-	            	List<Span> reverseMatches = 
-	            			computeAllMatchingResults(attributeName, 
-	            					reverseFieldValue.substring(fieldValue.length() - rightBoundSummary.startMax), 
-	            			subRegex.getReverseSubRegex(), subRegex.getStart() != 0);
-	            	for(Span s: reverseMatches){
-	            		matchingResults.add(new Span(attributeName, 
-	            				rightBoundSummary.startMax - s.getEnd(), 
-	            				rightBoundSummary.startMax - s.getStart(), 
-	            				subRegex.regex.getRegex(), 
-	            				fieldValue.substring(rightBoundSummary.startMax - s.getEnd(), 
-	            						rightBoundSummary.startMax - s.getStart())));
-	            	}
-	            }
-	        }
-    			
-    	}else if(rightBound == null){ // && leftBound != null // one computed subRegex on left
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-	            // types other than TEXT and STRING: throw Exception for now
-	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-	            }
-	            List<Span> leftSpans = leftBoundSpans.
-	            		stream().filter(s -> s.getAttributeName().equals(attributeName)).
-	            		collect(Collectors.toList());
-	    		if(subRegex.getStart() == leftBound.getEnd()){ // Direct left neighbor is computed.
-    	            for(Span leftSpan: leftSpans){
-    	            	List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue, 
-    	            			leftSpan.getEnd(), subRegex, subRegex.getEnd() != numberOfCoreSubRegexes);
-    	            	matchingResults.addAll(spans);
-    	            }
-	    		}else{ // left bound isn't direct.
-	    			// start matching from leftBound minimum of span ends to the right
-	    			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftBoundSpans);
-    	            List<Span> spans = computeAllMatchingResults(attributeName, 
-    	            		fieldValue.substring(leftBoundSummary.endMin), subRegex, 
-    	            		subRegex.getEnd() != numberOfCoreSubRegexes);
-    	            for(Span s: spans){
-    	            	matchingResults.add(new Span(s.getAttributeName(), s.getStart() + leftBoundSummary.endMin, 
-    	            			s.getEnd() + leftBoundSummary.endMin, s.getKey(), s.getValue()));
-    	            }
-	    		}
-	        }
-    	}else{ // rightBound != null && leftBound != null// two computed subRegexes on both sides
-    		// start matching from the minimum end of the left bound spans to maximum start of the right bound spans
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-    		for (String attributeName : subRegex.regex.getAttributeNames()) {
-    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
-    			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-    			// types other than TEXT and STRING: throw Exception for now
-    			if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    				throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-    			}
-    			List<Span> leftSpans = leftBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
-    			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftSpans);
-    			List<Span> rightSpans = rightBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
-    			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
-    			if(leftBound.getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getStart()){ // left and right are both direct neighbors
-    				String reverseFieldValue = null;
-    				if(subRegex.isReverseExecutionFaster()){
-    					reverseFieldValue = new StringBuffer(fieldValue).reverse().toString();
-    				}
-    				for(Span leftSpan: leftSpans){
-    					int start = leftSpan.getEnd();
-    					for(Span rightSpan: rightSpans){
-    						int end = rightSpan.getStart();
-    						if(end < start){
-    							continue;
-    						}
-    						boolean runReverse = (forceExecutionDirection && forceReverse) || ((!forceExecutionDirection) && subRegex.isReverseExecutionFaster());
-							if(runReverse){
-    							// verify in reverse direction..
-    							if(doesMatchStartToEnd(attributeName, reverseFieldValue, 
-    									reverseFieldValue.length() - end, reverseFieldValue.length() - start, 
-    									subRegex.getReverseSubRegex())){
-    								matchingResults.add(new Span(attributeName, start, end, subRegex.regex.getRegex(), 
-    										fieldValue.substring(start, end)));
-    							}
-							}else{
-    							// verify in normal left to right direction
-    							if(doesMatchStartToEnd(attributeName, fieldValue, start, end, subRegex)){
-    								matchingResults.add(new Span(attributeName, start, end, subRegex.regex.getRegex(), 
-    										fieldValue.substring(start, end)));
-    							}
-							}
-    					}
-    				}
-    			}else if(leftBound.getEnd() == subRegex.getStart()){ // only left is direct neighbor
-    				for(Span leftSpan: leftSpans){
-    					int start = leftSpan.getEnd();
-    					if(start >= rightBoundSummary.startMax){
-    						continue;
-    					}
-    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, 
-    							fieldValue.substring(0, rightBoundSummary.startMax), 
-    							start, subRegex, true);
-    					matchingResults.addAll(spans);				
-    				}
-    			}else if(subRegex.getEnd() == rightBound.getStart()){ // only right is direct neighbor
-    				String reverseFieldValue = new StringBuffer(fieldValue).reverse().toString();
-    				for(Span rightSpan: rightSpans){
-    					int end = rightSpan.getStart();
-    					if(end <= leftBoundSummary.endMin){
-    						continue;
-    					}
-    					int reverseStart = fieldValue.length() - end;
-    					int reverseEndBound = fieldValue.length() - leftBoundSummary.endMin;
-    					List<Span> spans = computeMatchingResultsStartingAt(attributeName, reverseFieldValue.substring(0, reverseEndBound), 
-    							reverseStart, subRegex.getReverseSubRegex(), true);
-    					for(Span reverseSpan: spans){
-    						matchingResults.add(new Span(attributeName, 
-    								fieldValue.length() - reverseSpan.getEnd(), 
-    								fieldValue.length() - reverseSpan.getStart(), 
-    								subRegex.regex.getRegex(), 
-    								fieldValue.substring(fieldValue.length() - reverseSpan.getEnd(), fieldValue.length() - reverseSpan.getStart())));
-    					}
-    				}
-    				
-    			}else { // no left nor right are direct neighbors
-    				String fieldValueSubStr = fieldValue.substring(leftBoundSummary.endMin, rightBoundSummary.startMax);
-					boolean runReverse = (forceExecutionDirection && forceReverse) || ((!forceExecutionDirection) && subRegex.isReverseExecutionFaster());
-					if(runReverse){
-						// run in reverse order
-    					String reverseFieldSubStr = new StringBuffer(fieldValueSubStr).reverse().toString();
-    					List<Span> spans = computeAllMatchingResults(attributeName, reverseFieldSubStr, 
-    							subRegex.getReverseSubRegex(), true);
-    					for(Span s: spans){
-    						matchingResults.add(new Span(s.getAttributeName(), 
-    								rightBoundSummary.startMax - s.getEnd(), rightBoundSummary.startMax - s.getStart(), 
-    								subRegex.regex.toString(),
-    								fieldValue.substring(rightBoundSummary.startMax - s.getEnd(), 
-    										rightBoundSummary.startMax - s.getStart())));
-    					}
-					}else{
-						List<Span> spans = computeAllMatchingResults(attributeName, fieldValueSubStr, subRegex, true);
-						for(Span s: spans){
-							matchingResults.add(new Span(s.getAttributeName(), 
-									s.getStart() + leftBoundSummary.endMin , s.getEnd() + leftBoundSummary.endMin , 
-									s.getKey(), s.getValue()));
-						}
-					}
-    			}
-    		}
-    	}
-    	
-    	return matchingResults;
     }
     
 }

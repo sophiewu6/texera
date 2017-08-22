@@ -13,26 +13,26 @@ import jregex.Matcher;
 import jregex.Pattern;
 
 public class RegexMatcherUtils {
-    public static SubRegex findSubRegexNearestComputedLeftNeighbor(Set<SubRegex> subRegexes, 
-    		SubRegex currentSubRegex){
+    public static SubPlan findSubRegexNearestComputedLeftNeighbor(Set<SubPlan> subPlans, 
+    		SubPlan currentSubPlan){
     	// find the right most computed sub-regex to the left of current sub-regex
-    	SubRegex leftBound = null;
-    	for(SubRegex computedSubRegex : subRegexes){
-    		if(computedSubRegex.getEnd() <= currentSubRegex.getStart()){
-    			if(leftBound == null || leftBound.getEnd() < computedSubRegex.getEnd()){
-    				leftBound = computedSubRegex;
+    	SubPlan leftBound = null;
+    	for(SubPlan computedSubPlan : subPlans){
+    		if(computedSubPlan.getSubSeq().getEnd() <= currentSubPlan.getSubSeq().getStart()){
+    			if(leftBound == null || leftBound.getSubSeq().getEnd() < computedSubPlan.getSubSeq().getEnd()){
+    				leftBound = computedSubPlan;
     			}
     		}
     	}
     	return leftBound;
     }
     
-    public static SubRegex findSubRegexNearestComputedRightNeighbor(Set<SubRegex> subRegexes, SubRegex currentSubRegex){
+    public static SubPlan findSubRegexNearestComputedRightNeighbor(Set<SubPlan> subPlans, SubPlan currentSubPlan){
     	// find the right most computed sub-regex to the left of current sub-regex
-    	SubRegex rightBound = null;
-    	for(SubRegex computedSubRegex : subRegexes){
-    		if(computedSubRegex.getStart() >= currentSubRegex.getEnd()){
-    			if(rightBound == null || rightBound.getStart() > computedSubRegex.getStart()){
+    	SubPlan rightBound = null;
+    	for(SubPlan computedSubRegex : subPlans){
+    		if(computedSubRegex.getSubSeq().getStart() >= currentSubPlan.getSubSeq().getEnd()){
+    			if(rightBound == null || rightBound.getSubSeq().getStart() > computedSubRegex.getSubSeq().getStart()){
     				rightBound = computedSubRegex;
     			}
     		}
@@ -42,7 +42,7 @@ public class RegexMatcherUtils {
     
     public static List<Span> computeSubRegexMatchesWithComputedNeighbors(Tuple inputTuple, 
     		SubRegex subRegex, 
-    		SubRegex leftBound, SubRegex rightBound, 
+    		SubPlan leftBound, SubPlan rightBound, 
     		boolean forceExecutionDirection, boolean forceReverse){
     	
     	List<Span> matchingResults = new ArrayList<>();
@@ -53,7 +53,7 @@ public class RegexMatcherUtils {
     	if(leftBound == null && rightBound == null){ // No computed subRegex is around the subRegex
     		return computeAllMatchingResults(inputTuple, subRegex, false, false);
     	}else if(leftBound == null){ // && rightBound != null // one computed subRegex on right
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
+    		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
 	        for (String attributeName : subRegex.regex.getAttributeNames()) {
 	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
 	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
@@ -65,7 +65,7 @@ public class RegexMatcherUtils {
 	            List<Span> rightSpans = rightBoundSpans.
 	            		stream().filter(s -> s.getAttributeName().equals(attributeName)).
 	            		collect(Collectors.toList());
-	            if(subRegex.getEnd() == rightBound.getStart()){ // Direct right neighbor is computed.
+	            if(subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // Direct right neighbor is computed.
     	            String reverseFieldValue = new StringBuilder(fieldValue).reverse().toString();
     	            for(Span rightSpan: rightSpans){
     	            	List<Span> reverseMatches = 
@@ -99,7 +99,7 @@ public class RegexMatcherUtils {
 	        }
     			
     	}else if(rightBound == null){ // && leftBound != null // one computed subRegex on left
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
+    		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
 	        for (String attributeName : subRegex.regex.getAttributeNames()) {
 	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
 	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
@@ -111,10 +111,10 @@ public class RegexMatcherUtils {
 	            List<Span> leftSpans = leftBoundSpans.
 	            		stream().filter(s -> s.getAttributeName().equals(attributeName)).
 	            		collect(Collectors.toList());
-	    		if(subRegex.getStart() == leftBound.getEnd()){ // Direct left neighbor is computed.
+	    		if(subRegex.getStart() == leftBound.getSubSeq().getEnd()){ // Direct left neighbor is computed.
     	            for(Span leftSpan: leftSpans){
     	            	List<Span> spans = computeMatchingResultsStartingAt(attributeName, fieldValue, 
-    	            			leftSpan.getEnd(), subRegex, ! subRegex.isLastSubRegex());
+    	            			leftSpan.getEnd(), subRegex, ! subRegex.isLastSubSequence());
     	            	matchingResults.addAll(spans);
     	            }
 	    		}else{ // left bound isn't direct.
@@ -122,7 +122,7 @@ public class RegexMatcherUtils {
 	    			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftBoundSpans);
     	            List<Span> spans = computeAllMatchingResults(attributeName, 
     	            		fieldValue.substring(leftBoundSummary.endMin), subRegex, 
-    	            		! subRegex.isLastSubRegex());
+    	            		! subRegex.isLastSubSequence());
     	            for(Span s: spans){
     	            	matchingResults.add(new Span(s.getAttributeName(), s.getStart() + leftBoundSummary.endMin, 
     	            			s.getEnd() + leftBoundSummary.endMin, s.getKey(), s.getValue()));
@@ -131,8 +131,8 @@ public class RegexMatcherUtils {
 	        }
     	}else{ // rightBound != null && leftBound != null// two computed subRegexes on both sides
     		// start matching from the minimum end of the left bound spans to maximum start of the right bound spans
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
+    		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
+    		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
     		for (String attributeName : subRegex.regex.getAttributeNames()) {
     			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
     			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
@@ -146,7 +146,7 @@ public class RegexMatcherUtils {
     			List<Span> rightSpans = rightBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
     			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
     			
-    			if(leftBound.getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getStart()){ // left and right are both direct neighbors
+    			if(leftBound.getSubSeq().getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // left and right are both direct neighbors
     				String reverseFieldValue = null;
 
     				if(runReverse){
@@ -176,7 +176,7 @@ public class RegexMatcherUtils {
 							}
     					}
     				}
-    			}else if(leftBound.getEnd() == subRegex.getStart()){ // only left is direct neighbor
+    			}else if(leftBound.getSubSeq().getEnd() == subRegex.getStart()){ // only left is direct neighbor
     				for(Span leftSpan: leftSpans){
     					int start = leftSpan.getEnd();
     					if(start >= rightBoundSummary.startMax){
@@ -187,7 +187,7 @@ public class RegexMatcherUtils {
     							start, subRegex, true);
     					matchingResults.addAll(spans);				
     				}
-    			}else if(subRegex.getEnd() == rightBound.getStart()){ // only right is direct neighbor
+    			}else if(subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // only right is direct neighbor
     				String reverseFieldValue = new StringBuffer(fieldValue).reverse().toString();
     				for(Span rightSpan: rightSpans){
     					int end = rightSpan.getStart();
@@ -324,8 +324,7 @@ public class RegexMatcherUtils {
     	return matcher.find();
     }
     
-    public static int computeNumberOfNeededVerifications(Tuple inputTuple, SubRegex subRegex, 
-    		SubRegex leftBound, SubRegex rightBound){
+    public static int computeNumberOfNeededVerifications(Tuple inputTuple, SubRegex subRegex, SubPlan leftBound, SubPlan rightBound){
     	if(leftBound == null && rightBound == null){ // No computed subRegex is around the subRegex
         	// Default number of running the regex when there is no helping bound around it.
         	int totalSourceSize = 0;
@@ -340,8 +339,8 @@ public class RegexMatcherUtils {
         	}
     		return totalSourceSize;
     	}else if(leftBound == null){ // && rightBound != null // one computed subRegex on right
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
-    		if(subRegex.getEnd() == rightBound.getStart()){ // Direct right neighbor is computed.
+    		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
+    		if(subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // Direct right neighbor is computed.
     			return rightBoundSpans.size();
     		}else{ // right bound isn't direct.
     			// start reverse matching (from right to left) from rightBound maximum of span starts to the left
@@ -363,8 +362,8 @@ public class RegexMatcherUtils {
     	        return totalMatchingSize;
     		}
     	}else if(rightBound == null){ // && leftBound != null // one computed subRegex on left
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		if(subRegex.getStart() == leftBound.getEnd()){ // Direct left neighbor is computed.
+    		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
+    		if(subRegex.getStart() == leftBound.getSubSeq().getEnd()){ // Direct left neighbor is computed.
     			return leftBoundSpans.size();
     		}else{ // left bound isn't direct.
     			// start matching from leftBound minimum of span ends to the right
@@ -385,8 +384,8 @@ public class RegexMatcherUtils {
     		}
     	}else{ // rightBound != null && leftBound != null// two computed subRegexes on both sides
     		// start matching from the minimum end of the left bound spans to maximum start of the right bound spans
-    		List<Span> leftBoundSpans = leftBound.getLatestMatchingSpanList();
-    		List<Span> rightBoundSpans = rightBound.getLatestMatchingSpanList();
+    		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
+    		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
     		int totalNumOfVerifications = 0;
     		for (String attributeName : subRegex.regex.getAttributeNames()) {
     			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
@@ -399,7 +398,7 @@ public class RegexMatcherUtils {
     			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftSpans);
     			List<Span> rightSpans = rightBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
     			SpanListSummary rightBoundSummary = SpanListSummary.summerize(rightSpans);
-    			if(leftBound.getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getStart()){ // left and right are both direct neighbors
+    			if(leftBound.getSubSeq().getEnd() == subRegex.getStart() && subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // left and right are both direct neighbors
     				for(Span leftSpan: leftSpans){
     					int start = leftSpan.getEnd();
     					for(Span rightSpan: rightSpans){
@@ -411,7 +410,7 @@ public class RegexMatcherUtils {
     					}
     				}
     				
-    			}else if(leftBound.getEnd() == subRegex.getStart()){ // only left is direct neighbor
+    			}else if(leftBound.getSubSeq().getEnd() == subRegex.getStart()){ // only left is direct neighbor
     				for(Span leftSpan: leftSpans){
     					int start = leftSpan.getEnd();
     					if(start >= rightBoundSummary.startMax){
@@ -419,7 +418,7 @@ public class RegexMatcherUtils {
     					}
     					totalNumOfVerifications ++;   					
     				}
-    			}else if(subRegex.getEnd() == rightBound.getStart()){ // only right is direct neighbor
+    			}else if(subRegex.getEnd() == rightBound.getSubSeq().getStart()){ // only right is direct neighbor
     				for(Span rightSpan: rightSpans){
     					int end = rightSpan.getStart();
     					if(end <= leftBoundSummary.endMin){

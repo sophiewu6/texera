@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import edu.uci.ics.textdb.api.field.ListField;
 import edu.uci.ics.textdb.api.span.Span;
 import edu.uci.ics.textdb.api.tuple.Tuple;
 import edu.uci.ics.textdb.exp.regexmatcher.SubRegex.ComplexityLevel;
@@ -20,6 +21,7 @@ public class MultiRegexPlan extends QueryPlan{
 
 	private List<SubPlan> subsForSelection = new ArrayList<>();
 	private List<SubPlan> subsForVerification = new ArrayList<>();
+	private List<SubPlan> subsForLabels = new ArrayList<>();
 	
 	private List<List<List<Span>>> warmUpFullSelectionResults = new ArrayList<>();
 	
@@ -36,16 +38,21 @@ public class MultiRegexPlan extends QueryPlan{
 	
 	private double sumCost = 0;
 	
-	public MultiRegexPlan(List<SubRegex> subregexes){
-		for(SubRegex s: subregexes){
-			if(s.complexity == ComplexityLevel.High){
-				subsForVerification.add(new SubPlan(s));
+	public MultiRegexPlan(List<SubSequence> subSequences){
+		for(SubSequence sub : subSequences){
+			if(sub.isSubRegex()){
+				SubRegex s = (SubRegex)sub;
+				if(s.complexity == ComplexityLevel.High){
+					subsForVerification.add(new SubPlan(s));
+				}else{
+					subsForSelection.add(new SubPlan(s));
+				}
 			}else{
-				subsForSelection.add(new SubPlan(s));
+				subsForLabels.add(new SubPlan(sub));
 			}
 		}
-		if(subsForSelection.isEmpty()){ // TODO remove or replace with exception
-			System.out.println("Unexpected. MultiRegexPlan constructor input is unacceptable.");
+		if(subsForSelection.isEmpty() && subsForLabels.isEmpty()){ // TODO remove or replace with exception
+			System.out.println("Unexpected. MultiRegexPlan constructor input is unacceptable (no labels and nothing for selection).");
 		}
 	}
 	
@@ -54,6 +61,10 @@ public class MultiRegexPlan extends QueryPlan{
 		// Reset the per-tuple structures and prepare for execution
 		subsForSelection.stream().forEach(s -> s.resetForNextTuple());
 		subsForVerification.stream().forEach(s -> s.resetForNextTuple());
+		subsForLabels.stream().forEach(s -> s.resetForNextTuple());
+		for(SubPlan s : subsForLabels){
+			executeSubPlan(inputTuple, s);
+		}
 		// Phase 0 (warm up):
 		// If it's still warm up run all the sub-regexes and record statistics about their 
 		// cost and selectivity.
@@ -86,10 +97,10 @@ public class MultiRegexPlan extends QueryPlan{
 		QueryGraphNode nextToExecute = QueryGraphNode.getGreedyIteratorNextNode();
 		while(nextToExecute != null){
 			if(! nextToExecute.getSubPlan().isExecuted){
-				usedPlan += nextToExecute.getSubPlan().sub.toStringShort(); //TODO remove
+				usedPlan += nextToExecute.getSubPlan().getSubSeq().toStringShort(); //TODO remove
 				List<Span> spans = executeSubPlan(inputTuple, nextToExecute.getSubPlan());
 				if(spans != null && spans.isEmpty()){
-					nextToExecute.getSubPlan().sub.resetMatchingSpanList(null);
+					nextToExecute.getSubPlan().getSubSeq().resetMatchingSpanList(null);
 				}
 				if(spans == null || spans.isEmpty()){
 					nullNodeToStart.increaseEdgeTo(nextToExecute);
@@ -114,10 +125,10 @@ public class MultiRegexPlan extends QueryPlan{
 			if(nextToExecute.getSubPlan().isExecuted){
 				continue;
 			}
-			usedPlan += nextToExecute.getSubPlan().sub.toStringShort();//TODO remove
+			usedPlan += nextToExecute.getSubPlan().getSubSeq().toStringShort();//TODO remove
 			List<Span> spans = executeSubPlan(inputTuple, nextToExecute.getSubPlan());
 			if(spans != null && spans.isEmpty()){
-				nextToExecute.getSubPlan().sub.resetMatchingSpanList(null);
+				nextToExecute.getSubPlan().getSubSeq().resetMatchingSpanList(null);
 			}
 			if(spans == null || spans.isEmpty()){
 				if(leastExpensiveFailureCost > nextToExecute.getSubPlan().getExpectedCost()){
@@ -151,18 +162,18 @@ public class MultiRegexPlan extends QueryPlan{
 				if(subPlan.isExecuted){
 					continue;
 				}
-				if(subPlan.getExpectedCost() * (1.0 / (1.001 - subPlan.sub.stats.getSelectivity())) < nextToVerifyExpectedCost){
+				if(subPlan.getExpectedCost() * (1.0 / (1.001 - subPlan.getSubSeq().stats.getSelectivity())) < nextToVerifyExpectedCost){
 					nextToVerify = subPlan;
-					nextToVerifyExpectedCost = subPlan.getExpectedCost() * (1.0 / (1.001 - subPlan.sub.stats.getSelectivity()));
+					nextToVerifyExpectedCost = subPlan.getExpectedCost() * (1.0 / (1.001 - subPlan.getSubSeq().stats.getSelectivity()));
 				}
 			}
 			if(nextToVerify == null){
 				break;
 			}
-			usedPlan += nextToVerify.sub.toStringShort();//TODO remove
+			usedPlan += nextToVerify.getSubSeq().toStringShort();//TODO remove
 			List<Span> spans = executeSubPlan(inputTuple, nextToVerify);
 			if(spans != null && spans.isEmpty()){
-				nextToVerify.sub.resetMatchingSpanList(null);
+				nextToVerify.getSubSeq().resetMatchingSpanList(null);
 			}
 			if(spans == null || spans.isEmpty()){
 				recordUsedPlan(usedPlan); // TODO: remove
@@ -211,7 +222,7 @@ public class MultiRegexPlan extends QueryPlan{
 			List<QueryGraphNode> passedSubPlanNodes = new ArrayList<>();
 			for(int subIndex = 0 ; subIndex < subsForSelection.size(); subIndex++){
 				QueryGraphNode node = subPlanQueryGraphNodes.get(subIndex);
-				totalSuccessCost += node.getSubPlan().getExpectedCost() * node.getSubPlan().sub.stats.matchingSrcAvgLen;
+				totalSuccessCost += node.getSubPlan().getExpectedCost() * node.getSubPlan().getSubSeq().stats.matchingSrcAvgLen;
 				if(subIndex > results.size()){
 					System.out.println("Unexpected state. Warmup result doesnt have enough elements."); //TODO remove when debugging is done.
 				}
@@ -230,7 +241,7 @@ public class MultiRegexPlan extends QueryPlan{
 				for(QueryGraphNode passedNode : passedSubPlanNodes){
 					passedNode.increaseEdgeTo(leastExpensiveFailure);
 				}
-				sumCost += leastExpensiveFailure.getSubPlan().getExpectedCost() * leastExpensiveFailure.getSubPlan().sub.stats.matchingSrcAvgLen;
+				sumCost += leastExpensiveFailure.getSubPlan().getExpectedCost() * leastExpensiveFailure.getSubPlan().getSubSeq().stats.matchingSrcAvgLen;
 			}else{
 				sumCost += totalSuccessCost;
 			}
@@ -249,14 +260,14 @@ public class MultiRegexPlan extends QueryPlan{
 				selectionPassed = false;
 			}
 			if(spans != null && spans.isEmpty()){
-				sPlan.sub.resetMatchingSpanList(null);
+				sPlan.getSubSeq().resetMatchingSpanList(null);
 			}
 		}
 		// Try to prune the produced spans of adjacent sub-regexes (those for selection)
 		pruneSelectionMatchingSpans();
 		// Remember the results of this tuple for selection sub-plans
 		List<List<Span>> tupleSubPlanResults = new ArrayList<>();
-		subsForSelection.stream().forEach(subPlan -> tupleSubPlanResults.add(subPlan.sub.getLatestMatchingSpanList()));
+		subsForSelection.stream().forEach(subPlan -> tupleSubPlanResults.add(subPlan.getSubSeq().getLatestMatchingSpanList()));
 		warmUpFullSelectionResults.add(tupleSubPlanResults);
 		// Done with selection sub-plans.
 		if(! selectionPassed){
@@ -270,12 +281,12 @@ public class MultiRegexPlan extends QueryPlan{
 				verificationPassed = false;
 			}
 			if(spans != null && spans.isEmpty()){
-				sPlan.sub.resetMatchingSpanList(null);
+				sPlan.getSubSeq().resetMatchingSpanList(null);
 			}
 		}
 		// Remember the results of this tuple for verification sub-plans
 		List<List<Span>> tupleSubPlanVerificationResults = new ArrayList<>();
-		subsForVerification.stream().forEach(subPlan -> tupleSubPlanVerificationResults.add(subPlan.sub.getLatestMatchingSpanList()));
+		subsForVerification.stream().forEach(subPlan -> tupleSubPlanVerificationResults.add(subPlan.getSubSeq().getLatestMatchingSpanList()));
 		warmUpFullSelectionResults.get(warmUpFullSelectionResults.size() - 1).addAll(tupleSubPlanVerificationResults);
 		return verificationPassed;
 	}
@@ -287,34 +298,43 @@ public class MultiRegexPlan extends QueryPlan{
 		while(true){
 			SubPlan nextSubPlan = null;
 			for(SubPlan sPlan : subsForSelection){
-				if(nextSubPlan == null && sPlan.sub.getStart() >= startingSubRegexIndex){
+				if(nextSubPlan == null && sPlan.getSubSeq().getStart() >= startingSubRegexIndex){
 					nextSubPlan = sPlan;
 					continue;
 				}
-				if(sPlan.sub.getStart() >= startingSubRegexIndex && sPlan.sub.getStart() < nextSubPlan.sub.getStart()){
+				if(sPlan.getSubSeq().getStart() >= startingSubRegexIndex && sPlan.getSubSeq().getStart() < nextSubPlan.getSubSeq().getStart()){
 					nextSubPlan = sPlan;
 				}
 			}
 			for(SubPlan sPlan : subsForVerification){
-				if(nextSubPlan == null && sPlan.sub.getStart() >= startingSubRegexIndex){
+				if(nextSubPlan == null && sPlan.getSubSeq().getStart() >= startingSubRegexIndex){
 					nextSubPlan = sPlan;
 					continue;
 				}
-				if(sPlan.sub.getStart() >= startingSubRegexIndex && sPlan.sub.getStart() < nextSubPlan.sub.getStart()){
+				if(sPlan.getSubSeq().getStart() >= startingSubRegexIndex && sPlan.getSubSeq().getStart() < nextSubPlan.getSubSeq().getStart()){
+					nextSubPlan = sPlan;
+				}
+			}
+			for(SubPlan sPlan : subsForLabels){
+				if(nextSubPlan == null && sPlan.getSubSeq().getStart() >= startingSubRegexIndex){
+					nextSubPlan = sPlan;
+					continue;
+				}
+				if(sPlan.getSubSeq().getStart() >= startingSubRegexIndex && sPlan.getSubSeq().getStart() < nextSubPlan.getSubSeq().getStart()){
 					nextSubPlan = sPlan;
 				}
 			}
 			if(nextSubPlan == null){
 				break;
 			}
-			if(nextSubPlan.sub.getLatestMatchingSpanList() == null){
+			if(nextSubPlan.getSubSeq().getLatestMatchingSpanList() == null){
 				System.out.println("Unexpected state. A sub-plan is failed in a success tuple.");// TODO: remove or replace with exception
 				
 				
 				return null;
 			}
-			spanLists.add(nextSubPlan.sub.getLatestMatchingSpanList());
-			startingSubRegexIndex = nextSubPlan.sub.getEnd();
+			spanLists.add(nextSubPlan.getSubSeq().getLatestMatchingSpanList());
+			startingSubRegexIndex = nextSubPlan.getSubSeq().getEnd();
 		}
 		// Now, make all possible fully covering matches.
 		List<Span> expandingSpanList = new ArrayList<>();
@@ -346,33 +366,42 @@ public class MultiRegexPlan extends QueryPlan{
 		while(true){
 			SubPlan nextSubPlan = null;
 			for(SubPlan sPlan : subsForSelection){
-				if(nextSubPlan == null && sPlan.sub.getStart() >= startingSubRegexIndex){
+				if(nextSubPlan == null && sPlan.getSubSeq().getStart() >= startingSubRegexIndex){
 					nextSubPlan = sPlan;
 					continue;
 				}
-				if(sPlan.sub.getStart() >= startingSubRegexIndex && sPlan.sub.getStart() < nextSubPlan.sub.getStart()){
+				if(sPlan.getSubSeq().getStart() >= startingSubRegexIndex && sPlan.getSubSeq().getStart() < nextSubPlan.getSubSeq().getStart()){
+					nextSubPlan = sPlan;
+				}
+			}
+			for(SubPlan sPlan : subsForLabels){
+				if(nextSubPlan == null && sPlan.getSubSeq().getStart() >= startingSubRegexIndex){
+					nextSubPlan = sPlan;
+					continue;
+				}
+				if(sPlan.getSubSeq().getStart() >= startingSubRegexIndex && sPlan.getSubSeq().getStart() < nextSubPlan.getSubSeq().getStart()){
 					nextSubPlan = sPlan;
 				}
 			}
 			if(nextSubPlan == null){
 				break;
 			}
-			if(nextSubPlan.sub.getLatestMatchingSpanList() == null || nextSubPlan.sub.getLatestMatchingSpanList().isEmpty()){
+			if(nextSubPlan.getSubSeq().getLatestMatchingSpanList() == null || nextSubPlan.getSubSeq().getLatestMatchingSpanList().isEmpty()){
 				if(! subPlansToMerge.isEmpty()){
 					pruneSpanListsAndUpdateStats(subPlansToMerge);
 					subPlansToMerge.clear();
 				}
-				startingSubRegexIndex = nextSubPlan.sub.getEnd();
+				startingSubRegexIndex = nextSubPlan.getSubSeq().getEnd();
 				continue;
 			}
-			if(nextSubPlan.sub.getStart() > startingSubRegexIndex){
+			if(nextSubPlan.getSubSeq().getStart() > startingSubRegexIndex){
 				if(! subPlansToMerge.isEmpty()){
 					pruneSpanListsAndUpdateStats(subPlansToMerge);
 					subPlansToMerge.clear();
 				}
 			}
 			subPlansToMerge.add(nextSubPlan);
-			startingSubRegexIndex = nextSubPlan.sub.getEnd();
+			startingSubRegexIndex = nextSubPlan.getSubSeq().getEnd();
 		}
 		if(! subPlansToMerge.isEmpty()){
 			pruneSpanListsAndUpdateStats(subPlansToMerge);
@@ -382,7 +411,7 @@ public class MultiRegexPlan extends QueryPlan{
 	
 	private void pruneSpanListsAndUpdateStats(List<SubPlan> subPlans){
 		List<List<Span>> spanLists = new ArrayList<>();
-		subPlans.stream().forEach(s -> spanLists.add(s.sub.getLatestMatchingSpanList()));
+		subPlans.stream().forEach(s -> spanLists.add(s.getSubSeq().getLatestMatchingSpanList()));
 		List<List<Span>> newSpanLists = null;
 		if(subPlans.size() == 1){
 			newSpanLists = spanLists;
@@ -391,14 +420,14 @@ public class MultiRegexPlan extends QueryPlan{
 		}
 		for(int i = 0 ; i < newSpanLists.size(); i++){
 			List<Span> newSpanList = newSpanLists.get(i);
-			subPlans.get(i).sub.resetMatchingSpanList(newSpanList);
+			subPlans.get(i).getSubSeq().resetMatchingSpanList(newSpanList);
 			List<Integer> matchSizesPerAttributes = new ArrayList<>();
-			subPlans.get(i).sub.regex.getAttributeNames().stream().
+			subPlans.get(i).getSubSeq().getAttributeNames().stream().
 				forEach(attr -> matchSizesPerAttributes.add(
 						newSpanList.stream().filter(s -> s.getAttributeName().equals(attr)).
 												collect(Collectors.toList()).size()
 				));
-			subPlans.get(i).sub.stats.addTfAveragePerAttribute(matchSizesPerAttributes);
+			subPlans.get(i).getSubSeq().stats.addTfAveragePerAttribute(matchSizesPerAttributes);
 		}
 	}
 	// Each spanList in spanLists is the matching spans of one sub-regex 
@@ -469,52 +498,68 @@ public class MultiRegexPlan extends QueryPlan{
 	// Statistics of reverse regex executions are only collected in warmUp phase.
 	private List<Span> executeSubPlan(Tuple inputTuple, SubPlan subPlan){
 		if(subPlan.isExecuted){
-			return subPlan.sub.getLatestMatchingSpanList();
+			return subPlan.getSubSeq().getLatestMatchingSpanList();
 		}
+		
+		// Execute the sub-plan
+		subPlan.isExecuted = true;
+		
+		if(subPlan.isLabelSubSequence()){
+			LabelSubSequence labelSub = (LabelSubSequence)subPlan.getSubSeq();
+	        ListField<Span> spanListField = inputTuple.getField(labelSub.labelName);
+			List<Span> newSpanList = new ArrayList<>();
+			newSpanList.addAll(spanListField.getValue());
+			subPlan.getSubSeq().resetMatchingSpanList(newSpanList);
+			return newSpanList;
+		}
+		
 		// Prepare the set of already executed sub-regexes
-		Set<SubRegex> executedSubRegexes = new HashSet<>();
+		Set<SubPlan> executedSubPlans = new HashSet<>();
 		for(SubPlan sPlan : subsForSelection){
 			if(sPlan.isExecuted){
-				executedSubRegexes.add(sPlan.sub);
+				executedSubPlans.add(sPlan);
+			}
+		}
+		for(SubPlan sPlan : subsForLabels){
+			if(sPlan.isExecuted){
+				executedSubPlans.add(sPlan);
 			}
 		}
 		if(subPlan.isForVerification()){
 			for(SubPlan sPlan : subsForVerification){
 				if(sPlan.isExecuted){
-					executedSubRegexes.add(sPlan.sub);
+					executedSubPlans.add(sPlan);
 				}
 			}
 		}
-		// Execute the sub-plan
-		subPlan.isExecuted = true;
 		
 		if(subPlan.isForVerification()){ // High sub-regex
 			// Find the closest computed sub-regex to the left and right
-			SubRegex leftBound = RegexMatcherUtils.
-					findSubRegexNearestComputedLeftNeighbor(executedSubRegexes, subPlan.sub);
-			SubRegex rightBound = RegexMatcherUtils.
-					findSubRegexNearestComputedRightNeighbor(executedSubRegexes, subPlan.sub);
+			SubPlan leftBound = RegexMatcherUtils.
+					findSubRegexNearestComputedLeftNeighbor(executedSubPlans, subPlan);
+			SubPlan rightBound = RegexMatcherUtils.
+					findSubRegexNearestComputedRightNeighbor(executedSubPlans, subPlan);
 			if(! needsMoreStatistics()){
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.sub, 
+						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.getSubRegex(), 
 								leftBound, rightBound, false, false); // Not forcing the reverse/forward directions
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
 				int numVerifications = 
-						RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.sub, leftBound, rightBound);
+						RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.getSubRegex(), leftBound, rightBound);
 				double verificationCost = (matchingTime * 1.0) / Math.max(numVerifications, 1);
 				// Save the span list for this subregex to be used in the second phase of the algorithm.
-				subPlan.sub.resetMatchingSpanList(subRegexSpans);
+				subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 				// Update the statistics
 				if(subRegexSpans == null || subRegexSpans.isEmpty()){
 					// no matches
 					// update statistics with the cost of failure
-					if(subPlan.sub.isReverseExecutionFaster()){
-						subPlan.sub.stats.addStatsSubRegexFailure(0, numVerifications);
-						subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
+					if(subPlan.getSubRegex().isReverseExecutionFaster()){
+						subPlan.getSubRegex().stats.addStatsSubRegexFailure(0, numVerifications);
+						subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
 					}else{
-						subPlan.sub.stats.addStatsSubRegexFailure(verificationCost, numVerifications);
+						subPlan.getSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
 					}
 				}else{
 					// some matches exist
@@ -525,11 +570,11 @@ public class MultiRegexPlan extends QueryPlan{
 //								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //														collect(Collectors.toList()).size()
 //						));
-					if(subPlan.sub.isReverseExecutionFaster()){
-						subPlan.sub.stats.addStatsSubRegexSuccess(0, numVerifications);
-						subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+					if(subPlan.getSubRegex().isReverseExecutionFaster()){
+						subPlan.getSubRegex().stats.addStatsSubRegexSuccess(0, numVerifications);
+						subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
 					}else{
-						subPlan.sub.stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+						subPlan.getSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
 					}
 				}
 				return subRegexSpans;
@@ -539,19 +584,19 @@ public class MultiRegexPlan extends QueryPlan{
 			{	// measure the time of verification if we use direct order
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.sub, 
+						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.getSubRegex(), 
 								leftBound, rightBound, true, false); // force not to use reverse execution
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
 				int numVerifications = 
-						RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.sub, leftBound, rightBound);
+						RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.getSubRegex(), leftBound, rightBound);
 				double verificationCost = (matchingTime * 1.0) / Math.max(numVerifications, 1);
 				// Save the span list for this subregex to be used in the second phase of the algorithm.
-				subPlan.sub.resetMatchingSpanList(subRegexSpans);
+				subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 				if(subRegexSpans == null || subRegexSpans.isEmpty()){
 					// no matches
 					// update statistics with the cost of failure
-					subPlan.sub.stats.addStatsSubRegexFailure(verificationCost, numVerifications);
+					subPlan.getSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
 				}else{
 					// some matches exist
 					// update statistics upon success (df, tf, and success cost)
@@ -561,25 +606,25 @@ public class MultiRegexPlan extends QueryPlan{
 //								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //														collect(Collectors.toList()).size()
 //						));
-					subPlan.sub.stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+					subPlan.getSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
 				}
 			}
 			// Case 2.
 			{	// measure the time of verification if we use reverse order
 				long startMatchingTime = System.nanoTime();
 				List<Span> subRegexSpans = 
-						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.sub, 
+						RegexMatcherUtils.computeSubRegexMatchesWithComputedNeighbors(inputTuple, subPlan.getSubRegex(), 
 								leftBound, rightBound, true, true); // force to use reverse execution
 				long endMatchingTime = System.nanoTime();
 				long matchingTime = endMatchingTime - startMatchingTime;
-				int numVerifications = RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.sub, leftBound, rightBound);
+				int numVerifications = RegexMatcherUtils.computeNumberOfNeededVerifications(inputTuple, subPlan.getSubRegex(), leftBound, rightBound);
 				double verificationCost = (matchingTime * 1.0) / Math.max(numVerifications, 1);
 				// Save the span list for this subregex to be used in the second phase of the algorithm.
-				subPlan.sub.resetMatchingSpanList(subRegexSpans);
+				subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 				if(subRegexSpans == null || subRegexSpans.isEmpty()){
 					// no matches
 					// update statistics with the cost of failure
-					subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
+					subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexFailure(verificationCost, numVerifications);
 				}else{
 					// some matches exist
 					// update statistics upon success (df, tf, and success cost)
@@ -589,34 +634,35 @@ public class MultiRegexPlan extends QueryPlan{
 //								subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //														collect(Collectors.toList()).size()
 //						));
-					subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
+					subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexSuccess(verificationCost, numVerifications);
 				}
 			}
-			return subPlan.sub.getLatestMatchingSpanList();
+			return subPlan.getSubRegex().getLatestMatchingSpanList();
 		}
 		
 		// SubPlan is for Selection (uses a non-high sub-regex)
+		// Find left and right neighboring labels if there exist any
 		// SubRegex doesn't have * or +, so we will find all matches to also measure tf_average
 		if(! needsMoreStatistics()){ // Warmup finished. We don't force to try reverse execution.
 			long startMatchingTime = System.nanoTime();
-			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.sub, false, false);
+			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.getSubRegex(), false, false);;
 			long endMatchingTime = System.nanoTime();
 			long matchingTime = endMatchingTime - startMatchingTime;
 			int totalTupleTextSize = 1;
-			for(String attributeName : subPlan.sub.regex.getAttributeNames()){
+			for(String attributeName : subPlan.getSubRegex().regex.getAttributeNames()){
 				totalTupleTextSize += inputTuple.getField(attributeName).getValue().toString().length();
 			}
 			double matchingCost = (matchingTime * 1.0) / totalTupleTextSize;
 			// also save the span list for this subregex to be used in the second phase of the algorithm.
-			subPlan.sub.resetMatchingSpanList(subRegexSpans);
+			subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 			if(subRegexSpans == null || subRegexSpans.isEmpty()){
 				// no matches
 				// update statistics with the cost of failure
-				if(subPlan.sub.isReverseExecutionFaster()){
-					subPlan.sub.stats.addStatsSubRegexFailure(0, totalTupleTextSize);
-					subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
+				if(subPlan.getSubRegex().isReverseExecutionFaster()){
+					subPlan.getSubRegex().stats.addStatsSubRegexFailure(0, totalTupleTextSize);
+					subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
 				}else{
-					subPlan.sub.stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
+					subPlan.getSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
 				}
 			}else{
 				// some matches exist
@@ -627,11 +673,11 @@ public class MultiRegexPlan extends QueryPlan{
 //							subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //													collect(Collectors.toList()).size()
 //					));
-				if(subPlan.sub.isReverseExecutionFaster()){
-					subPlan.sub.stats.addStatsSubRegexSuccess(0, totalTupleTextSize);
-					subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+				if(subPlan.getSubRegex().isReverseExecutionFaster()){
+					subPlan.getSubRegex().stats.addStatsSubRegexSuccess(0, totalTupleTextSize);
+					subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
 				}else{
-					subPlan.sub.stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+					subPlan.getSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
 				}
 			}
 			return subRegexSpans;
@@ -641,20 +687,20 @@ public class MultiRegexPlan extends QueryPlan{
 		// Collect statistics for running normally
 		{
 			long startMatchingTime = System.nanoTime();
-			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.sub, true, false); // run normally
+			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.getSubRegex(), true, false);;
 			long endMatchingTime = System.nanoTime();
 			long matchingTime = endMatchingTime - startMatchingTime;
 			int totalTupleTextSize = 1;
-			for(String attributeName : subPlan.sub.regex.getAttributeNames()){
+			for(String attributeName : subPlan.getSubRegex().regex.getAttributeNames()){
 				totalTupleTextSize += inputTuple.getField(attributeName).getValue().toString().length();
 			}
 			double matchingCost = (matchingTime * 1.0) / totalTupleTextSize;
 			// also save the span list for this subregex to be used in the second phase of the algorithm.
-			subPlan.sub.resetMatchingSpanList(subRegexSpans);
+			subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 			if(subRegexSpans == null || subRegexSpans.isEmpty()){
 				// no matches
 				// update statistics with the cost of failure
-				subPlan.sub.stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
+				subPlan.getSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
 			}else{
 				// some matches exist
 				// update statistics upon success (df, tf, and success cost)
@@ -664,27 +710,27 @@ public class MultiRegexPlan extends QueryPlan{
 //							subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //													collect(Collectors.toList()).size()
 //					));
-				subPlan.sub.stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+				subPlan.getSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
 			}
 		}
 		// Case 2.
 		// Collect statistics for running in reverse
 		{
 			long startMatchingTime = System.nanoTime();
-			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.sub, true, true); // run in reverse
+			List<Span> subRegexSpans = RegexMatcherUtils.computeAllMatchingResults(inputTuple, subPlan.getSubRegex(), true, true);;
 			long endMatchingTime = System.nanoTime();
 			long matchingTime = endMatchingTime - startMatchingTime;
 			int totalTupleTextSize = 1;
-			for(String attributeName : subPlan.sub.regex.getAttributeNames()){
+			for(String attributeName : subPlan.getSubRegex().regex.getAttributeNames()){
 				totalTupleTextSize += inputTuple.getField(attributeName).getValue().toString().length();
 			}
 			double matchingCost = (matchingTime * 1.0) / totalTupleTextSize;
 			// also save the span list for this subregex to be used in the second phase of the algorithm.
-			subPlan.sub.resetMatchingSpanList(subRegexSpans);
+			subPlan.getSubRegex().resetMatchingSpanList(subRegexSpans);
 			if(subRegexSpans == null || subRegexSpans.isEmpty()){
 				// no matches
 				// update statistics with the cost of failure
-				subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
+				subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexFailure(matchingCost, totalTupleTextSize);
 			}else{
 				// some matches exist
 				// update statistics upon success (df, tf, and success cost)
@@ -694,19 +740,19 @@ public class MultiRegexPlan extends QueryPlan{
 //							subRegexSpans.stream().filter(s -> s.getAttributeName().equals(attr)).
 //													collect(Collectors.toList()).size()
 //					));
-				subPlan.sub.getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
+				subPlan.getSubRegex().getReverseSubRegex().stats.addStatsSubRegexSuccess(matchingCost, totalTupleTextSize);
 			}
 		}
-		return subPlan.sub.getLatestMatchingSpanList();	
+		return subPlan.getSubRegex().getLatestMatchingSpanList();	
 	}
 	
 	public void printQueryGraphNodes(){
 		for(QueryGraphNode node : subPlanQueryGraphNodes){
 			System.out.println("=========================================================");
-			System.out.println(node.getSubPlan().sub.toStringShort());
+			System.out.println(node.getSubPlan().getSubSeq().toStringShort());
 			Map<QueryGraphNode, Integer> outEdges = node.getPossibleNextMovesPopularities();
 			for(QueryGraphNode outNode : outEdges.keySet()){
-				System.out.println(outNode.getSubPlan().sub.toStringShort() + " -> " + outEdges.get(outNode));
+				System.out.println(outNode.getSubPlan().getSubSeq().toStringShort() + " -> " + outEdges.get(outNode));
 			}
 		}
 	}
@@ -714,35 +760,61 @@ public class MultiRegexPlan extends QueryPlan{
 }
 
 class SubPlan{
-	public SubRegex sub = null;
+	public SubSequence subSequence = null;
 	public boolean isExecuted = false;
-	SubPlan(SubRegex sub){
+	SubPlan(SubSequence sub){
 		if(sub == null){
 			System.out.println("SubPlan constructor wrong input !!!!!"); //TODO remove or replace with exception
 		}
-		this.sub = sub;
+		this.subSequence = sub;
 	}
 	public void resetForNextTuple(){
 		isExecuted = false;
-		sub.resetMatchingSpanList(null);
+		subSequence.resetMatchingSpanList(null);
 	}
 	
 	// Returns whether or not this sub-plan has had any matches in the most recent tuple.
 	public boolean isSuccessful(){
-		return ! (sub.latestMatchingSpans == null || sub.latestMatchingSpans.isEmpty());
+		return ! (subSequence.latestMatchingSpans == null || subSequence.latestMatchingSpans.isEmpty());
 	}
 	
 	// Returns whether or not the sub-regex is a high sub-regex. (High is for verification)
 	public boolean isForVerification(){
-		return sub.complexity == ComplexityLevel.High;
+		if(! subSequence.isSubRegex()){
+			return false;
+		}
+
+		return getSubRegex().complexity == ComplexityLevel.High;
 	}
 	
 	public double getExpectedCost(){
-		return sub.getExpectedCost();
+		if(! subSequence.isSubRegex()){
+			return 0.0;
+		}
+		return getSubRegex().getExpectedCost();
 	}
 	
 	public double getSelectivity(){
-		return sub.stats.getSelectivity();
+		if(! subSequence.isSubRegex()){
+			return 1.0;
+		}
+		return getSubRegex().stats.getSelectivity();
+	}
+	
+	public SubRegex getSubRegex(){
+		if(! subSequence.isSubRegex()){
+			System.out.println("Unexpected call to the getSubRegex method in SubPlan.");
+			return null;
+		}
+		return (SubRegex)subSequence;
+	}
+	
+	public SubSequence getSubSeq(){
+		return subSequence;
+	}
+	
+	public boolean isLabelSubSequence(){
+		return ! subSequence.isSubRegex();
 	}
 }
 
@@ -766,7 +838,7 @@ class QueryGraphNode{
 		for(QueryGraphNode nextNode : nextNodePopularity.keySet()){
 			int popularity = nextNodePopularity.get(nextNode);
 			results.put(nextNode, calculateCombinedScore(popularity * 1.0 / getTotalNumberOfSamples(), 
-					1.001 - nextNode.getSubPlan().sub.stats.getSelectivity(), nextNode.getSubPlan().sub.getExpectedCost()));
+					1.001 - nextNode.getSubPlan().getSubRegex().stats.getSelectivity(), nextNode.getSubPlan().getSubRegex().getExpectedCost()));
 		}
 		return results;
 	}

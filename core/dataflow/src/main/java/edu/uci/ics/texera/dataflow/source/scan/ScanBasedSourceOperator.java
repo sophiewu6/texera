@@ -19,6 +19,8 @@ import edu.uci.ics.texera.storage.RelationManager;
 public class ScanBasedSourceOperator implements ISourceOperator {
 
     private DataReader dataReader;
+	private static final int MaxOutput = 100000;
+	private int outputTupleCounter = 0;
     
     private boolean isOpen = false;
 
@@ -52,6 +54,9 @@ public class ScanBasedSourceOperator implements ISourceOperator {
             throw new DataflowException(ErrorMessages.OPERATOR_NOT_OPENED);
         }
         try {
+        	if(++outputTupleCounter > MaxOutput){
+        		return null;
+        	}
             return dataReader.getNextTuple();
         } catch (Exception e) {
             e.printStackTrace();

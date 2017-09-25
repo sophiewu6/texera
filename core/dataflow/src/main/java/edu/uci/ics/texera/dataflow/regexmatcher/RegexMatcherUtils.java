@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import edu.uci.ics.texera.api.exception.DataFlowException;
+import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.schema.AttributeType;
 import edu.uci.ics.texera.api.span.Span;
 import edu.uci.ics.texera.api.tuple.Tuple;
@@ -55,11 +55,11 @@ public class RegexMatcherUtils {
     	}else if(leftBound == null){ // && rightBound != null // one computed subRegex on right
     		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
 	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
 	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
 	            // types other than TEXT and STRING: throw Exception for now
 	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+	                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
 	            }
 	            // Filter the bound spans for the current attributes
 	            List<Span> rightSpans = rightBoundSpans.
@@ -101,11 +101,11 @@ public class RegexMatcherUtils {
     	}else if(rightBound == null){ // && leftBound != null // one computed subRegex on left
     		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
 	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
 	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
 	            // types other than TEXT and STRING: throw Exception for now
 	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+	                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
 	            }
 	            // Filter the bound spans for the current attributes
 	            List<Span> leftSpans = leftBoundSpans.
@@ -134,11 +134,11 @@ public class RegexMatcherUtils {
     		List<Span> leftBoundSpans = leftBound.getSubSeq().getLatestMatchingSpanList();
     		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
     		for (String attributeName : subRegex.regex.getAttributeNames()) {
-    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
     			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
     			// types other than TEXT and STRING: throw Exception for now
     			if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    				throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+    				throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
     			}
 	            // Filter the bound spans for the current attributes
     			List<Span> leftSpans = leftBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
@@ -266,12 +266,12 @@ public class RegexMatcherUtils {
         List<Span> matchingResults = new ArrayList<>();
 
         for (String attributeName : subRegex.regex.getAttributeNames()) {
-            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
             String fieldValue = inputTuple.getField(attributeName).getValue().toString();
 
             // types other than TEXT and STRING: throw Exception for now
             if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
             }
 
             // either forced to be reverse, or is known to be better to be reverse
@@ -333,11 +333,11 @@ public class RegexMatcherUtils {
         	// Default number of running the regex when there is no helping bound around it.
         	int totalSourceSize = 0;
         	for (String attributeName : subRegex.regex.getAttributeNames()) {
-                AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+                AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
                 String fieldValue = inputTuple.getField(attributeName).getValue().toString();
                 // types other than TEXT and STRING: throw Exception for now
                 if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                    throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+                    throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
                 }
                 totalSourceSize += fieldValue.length();
         	}
@@ -350,11 +350,11 @@ public class RegexMatcherUtils {
     			// start reverse matching (from right to left) from rightBound maximum of span starts to the left
     			int totalMatchingSize = 0;
     	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
     	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
     	            // types other than TEXT and STRING: throw Exception for now
     	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+    	                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
     	            }
     	            // span list must be pruned for only those spans that belong to the same attribute.
     	            SpanListSummary rightBoundSummary = 
@@ -373,11 +373,11 @@ public class RegexMatcherUtils {
     			// start matching from leftBound minimum of span ends to the right
     			int totalMatchingSize = 0;
     	        for (String attributeName : subRegex.regex.getAttributeNames()) {
-    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+    	            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
     	            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
     	            // types other than TEXT and STRING: throw Exception for now
     	            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    	                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+    	                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
     	            }
     	            SpanListSummary leftBoundSummary = SpanListSummary.summerize(
     	            		leftBoundSpans.stream().filter(
@@ -392,11 +392,11 @@ public class RegexMatcherUtils {
     		List<Span> rightBoundSpans = rightBound.getSubSeq().getLatestMatchingSpanList();
     		int totalNumOfVerifications = 0;
     		for (String attributeName : subRegex.regex.getAttributeNames()) {
-    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+    			AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
     			String fieldValue = inputTuple.getField(attributeName).getValue().toString();
     			// types other than TEXT and STRING: throw Exception for now
     			if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-    				throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+    				throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
     			}
     			List<Span> leftSpans = leftBoundSpans.stream().filter(s -> s.getAttributeName().equals(attributeName)).collect(Collectors.toList());
     			SpanListSummary leftBoundSummary = SpanListSummary.summerize(leftSpans);
@@ -444,12 +444,12 @@ public class RegexMatcherUtils {
         List<Span> matchingResults = new ArrayList<>();
 
         for (String attributeName : predicate.getAttributeNames()) {
-            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getAttributeType();
+            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
             String fieldValue = inputTuple.getField(attributeName).getValue().toString();
 
             // types other than TEXT and STRING: throw Exception for now
             if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataFlowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
             }
 
 //            System.out.println(fieldValue);

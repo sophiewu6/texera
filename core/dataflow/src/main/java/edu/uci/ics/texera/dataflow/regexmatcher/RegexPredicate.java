@@ -20,10 +20,10 @@ import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
  */
 public class RegexPredicate extends PredicateBase {
 
-    private final String regex;
-    private final List<String> attributeNames;
-    private final String spanListName;
-    private final Boolean ignoreCase;
+    private String regex;
+    private List<String> attributeNames;
+    private String spanListName;
+    private Boolean ignoreCase;
     
     /*
      * This constructor is only for internal use.

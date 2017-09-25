@@ -230,6 +230,9 @@ public class PublicRegexp extends Regexp {
         }
 
     }
+    public void setOp(PublicOp op) {
+    	this.op = Op.valueOf(this.op.toString());
+    }
 
     /**
      * This returns a bitmap of parse flags. <br>
@@ -268,6 +271,9 @@ public class PublicRegexp extends Regexp {
      */
     public int[] getRunes() {
         return this.runes;
+    }
+    public void setRunes(int [] runes) {
+    	this.runes = runes;
     }
 
     /**

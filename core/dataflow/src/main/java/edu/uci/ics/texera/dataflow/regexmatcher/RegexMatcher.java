@@ -1,8 +1,7 @@
 package edu.uci.ics.texera.dataflow.regexmatcher;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import jregex.*;
 import java.util.stream.Collectors;
 
 import com.google.re2j.PublicParser;
@@ -28,6 +27,7 @@ import edu.stanford.nlp.ling.Label;
 import edu.uci.ics.texera.api.schema.Attribute;
 import edu.uci.ics.texera.api.utils.Utils;
 import edu.uci.ics.texera.dataflow.utils.DataflowUtils;
+
 
 class SpanListSummary{
 	public int startMin;
@@ -408,16 +408,16 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         }
         Schema inputSchema = inputOperator.getOutputSchema();
 
-        this.addResultAttribute = predicate.getSpanListName() != null;
+        this.addResultAttribute = mainRegexPredicate.getSpanListName() != null;
         
-        Schema.checkAttributeExists(inputSchema, predicate.getAttributeNames());
+        Schema.checkAttributeExists(inputSchema, mainRegexPredicate.getAttributeNames());
         if (addResultAttribute) { 
-            Schema.checkAttributeNotExists(inputSchema, predicate.getSpanListName());
+            Schema.checkAttributeNotExists(inputSchema, mainRegexPredicate.getSpanListName());
         }
         
         Schema.Builder outputSchemaBuilder = new Schema.Builder(inputOperator.getOutputSchema());
         if (addResultAttribute) { 
-            outputSchemaBuilder.add(predicate.getSpanListName(), AttributeType.LIST);
+            outputSchemaBuilder.add(mainRegexPredicate.getSpanListName(), AttributeType.LIST);
         }
         outputSchema = outputSchemaBuilder.build();
 

@@ -31,6 +31,10 @@ public class RegexPredicate extends PredicateBase {
     public RegexPredicate(String regex, List<String> attributeNames, String spanListName) {
         this(regex, attributeNames, null, spanListName);
     }
+    
+    public RegexPredicate(RegexPredicate that) {
+    	this(that.regex, that.attributeNames, that.ignoreCase, that.spanListName);
+    }
 
     /**
      * RegexPredicate is used to create a RegexMatcher.
@@ -68,6 +72,9 @@ public class RegexPredicate extends PredicateBase {
     public String getRegex() {
         return this.regex;
     }
+    public void setRegex(String regex) {
+    	this.regex = regex;
+    }
 
     @JsonProperty(PropertyNameConstants.ATTRIBUTE_NAMES)
     public List<String> getAttributeNames() {
@@ -77,6 +84,9 @@ public class RegexPredicate extends PredicateBase {
     @JsonProperty(PropertyNameConstants.SPAN_LIST_NAME)
     public String getSpanListName() {
         return this.spanListName;
+    }
+    public void setSpanListName(String spanListName){
+    	this.spanListName = spanListName;
     }
     
     @JsonProperty(PropertyNameConstants.REGEX_IGNORE_CASE)

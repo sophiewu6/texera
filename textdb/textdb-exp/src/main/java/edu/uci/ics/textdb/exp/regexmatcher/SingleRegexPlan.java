@@ -147,5 +147,10 @@ public class SingleRegexPlan extends QueryPlan{
 	public double getExpectedCost() {
 		return regex.getExpectedCost() * regex.stats.matchingSrcAvgLen;
 	}
+	
+	@Override
+	public String report() {
+		return getProcessedTupleCounter() + "";
+	}
 
 }

@@ -29,6 +29,8 @@ public class MultiRegexPlan extends QueryPlan{
 	private List<QueryGraphNode> subPlanQueryGraphNodes = new ArrayList<>();
 	
 	private Map<String, Integer> usedPlans = new HashMap<>(); //TODO: just for testing, remove.
+	public int countTuplesRejectedInVerification = 0;
+	public int countTuplesRejectedInJoin = 0;
 	private void recordUsedPlan(String plan){
 		if(! usedPlans.containsKey(plan)){
 			usedPlans.put(plan, 0);
@@ -177,6 +179,7 @@ public class MultiRegexPlan extends QueryPlan{
 			}
 			if(spans == null || spans.isEmpty()){
 				recordUsedPlan(usedPlan); // TODO: remove
+				countTuplesRejectedInVerification++;
 				return null;
 			}
 		}
@@ -288,6 +291,9 @@ public class MultiRegexPlan extends QueryPlan{
 		List<List<Span>> tupleSubPlanVerificationResults = new ArrayList<>();
 		subsForVerification.stream().forEach(subPlan -> tupleSubPlanVerificationResults.add(subPlan.getSubSeq().getLatestMatchingSpanList()));
 		warmUpFullSelectionResults.get(warmUpFullSelectionResults.size() - 1).addAll(tupleSubPlanVerificationResults);
+		if(! verificationPassed){
+			countTuplesRejectedInVerification++;
+		}
 		return verificationPassed;
 	}
 	
@@ -354,6 +360,9 @@ public class MultiRegexPlan extends QueryPlan{
 			}
 			expandingSpanList.clear();
 			expandingSpanList.addAll(newExpandingList);
+		}
+		if(expandingSpanList.isEmpty()){
+			countTuplesRejectedInJoin++;
 		}
 		return expandingSpanList;
 	}
@@ -755,6 +764,13 @@ public class MultiRegexPlan extends QueryPlan{
 				System.out.println(outNode.getSubPlan().getSubSeq().toStringShort() + " -> " + outEdges.get(outNode));
 			}
 		}
+	}
+
+	@Override
+	public String report() {
+		return getProcessedTupleCounter() + "(" 
+				+ (countTuplesRejectedInVerification*1.0/getProcessedTupleCounter()) + "," 
+				+ (countTuplesRejectedInJoin*1.0/getProcessedTupleCounter()) + ")";
 	}
 
 }

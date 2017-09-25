@@ -240,15 +240,18 @@ public class RegexMatcherUtils {
     	if(start < 0 || start >= src.length()){
     		return new ArrayList<>();
     	}
-    	Matcher matcher = subRegex.startWithRegexPattern.matcher(src.substring(start));
+    	Matcher matcher = subRegex.startWithRegexPattern.matcher();
+    	matcher.setTarget(src, start, src.length());
     	List<Span> matchingResults = new ArrayList<>();
     	boolean hasMore = findAll? matcher.proceed(): matcher.find();
+//    	System.out.println(src.length() + "/" + start + "/");
     	while(hasMore){
+//        	System.out.println(matcher.start() + "/" + matcher.end());
     		matchingResults.add(new Span(attributeName, 
-    				matcher.start() + start , 
-    				matcher.end() + start, 
+    				(matcher.start() == src.length())? matcher.start() : matcher.start() + start , 
+    				(matcher.end() == src.length())? matcher.end():  matcher.end() + start, 
     				subRegex.regex.getRegex(), 
-    				src.substring(matcher.start() + start , matcher.end() + start)));
+    				src.substring(matcher.start() + start , (matcher.end() == src.length())? matcher.end():  matcher.end() + start)));
     		hasMore = findAll? matcher.proceed(): matcher.find();
     	}
     	return matchingResults;
@@ -320,7 +323,8 @@ public class RegexMatcherUtils {
     	
 //    	System.out.println(src.substring(start, end));
 //    	System.out.println(subRegex.toString());
-    	Matcher matcher = subRegex.startToEndRegexPattern.matcher(src.substring(start, end));
+    	Matcher matcher = subRegex.startToEndRegexPattern.matcher();
+    	matcher.setTarget(src, start, end);
     	return matcher.find();
     }
     

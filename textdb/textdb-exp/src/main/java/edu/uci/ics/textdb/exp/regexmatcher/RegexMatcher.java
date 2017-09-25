@@ -553,6 +553,10 @@ public class RegexMatcher extends AbstractSingleInputOperator {
 //        	System.out.println("Labeled regex operator closed.");
         }
 //        System.out.println("First phase time : " + firstPhaseTime * 1.0 / 1000000000);
+        for(QueryPlan plan: queryPlans){
+        	System.out.print(plan.report() + "/");
+        }
+        System.out.println();
     }
 
     public RegexPredicate getPredicate() {
@@ -647,11 +651,11 @@ public class RegexMatcher extends AbstractSingleInputOperator {
         if(numberOfCoreSubRegexes != coreSubSequences.size()){
         	System.out.println("Something wrong. The content of coreSubRegexes is not as expected."); // TODO maybe never happens 
         }
-        System.out.println("---------------------------------------");
-        for(SubSequence sub: coreSubSequences){
-        	System.out.println(sub.toString());
-        }
-        System.out.println("---------------------------------------");
+//        System.out.println("---------------------------------------");
+//        for(SubSequence sub: coreSubSequences){
+//        	System.out.println(sub.toString());
+//        }
+//        System.out.println("---------------------------------------");
     }
     
     private SubRegex.ComplexityLevel getRegexComplexity(PublicRegexp re){

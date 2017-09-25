@@ -45,4 +45,6 @@ public abstract class QueryPlan {
 		return processedTupleCounter;
 	}
 	
+	public abstract String report();
+	
 }

@@ -31,6 +31,9 @@ import edu.uci.ics.textdb.perftest.wikipedia.WikipediaIndexWriter;
 import edu.uci.ics.textdb.storage.DataWriter;
 import edu.uci.ics.textdb.storage.RelationManager;
 import edu.uci.ics.textdb.storage.constants.LuceneAnalyzerConstants;
+import jregex.Matcher;
+import jregex.Pattern;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import sun.misc.Perf;
@@ -90,6 +93,13 @@ public class WikipediaExtraction {
 //       writeSampleIndex();
        System.out.println(number);
        String regex;
+//       regex = "(#?\\d+\\s+\\w+\\s+(st|dr|rd|blvd|Street)\\.?,\\s*)(San Francisco\\s*,? CA,\\s*\\d{5})"; // => 29.7 -> 26.9
+//       regex = "((http|ftp)://www)((\\.\\w+)+)(\\.gov)";
+       regex = "(http://(\\w+\\.)+edu)(:\\d{1,5})";
+//       regex = "(\\w+\\s+([a-z]\\.\\s+)?)(Washington)";
+     SCAN_REGEX_SINK("("+regex+")"); // 26s
+     SCAN_REGEX_SINK(regex); // 27s
+       
        regex = "(\\{\\{Cite book\\| last = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| first = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
        		+ "title = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| publisher = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| "
        		+ "location = )([A-Z][A-Za-z0-9\\-\\s]+)(\\| year = \\d{4} )(\\| isbn = \\d-\\d{1,10}-\\d{1,10}-\\d )(\\|page=\\d+)(\\}\\})";
@@ -311,11 +321,11 @@ public class WikipediaExtraction {
 //      SCAN_REGEX_SINK(regex);
       
       regex = "((book|film|movie|story|company|magazine) )([^\\}\\{]+ )((written|made|built) by )(\\[\\[)(\\w+)(\\]\\])";
-      SCAN_REGEX_SINK("(" + regex + ")");
-      SCAN_REGEX_SINK(regex);
+//      SCAN_REGEX_SINK("(" + regex + ")");
+//      SCAN_REGEX_SINK(regex);
       
       regex = "<<test_product_type_label>> ([^\\}\\{]+ )((written|made|built) by )(\\[\\[)(\\w+)(\\]\\])";
-      SCAN_LABELS_REGEX_SINK(regex, "test_product_type_label");
+//      SCAN_LABELS_REGEX_SINK(regex, "test_product_type_label");
       
       /// movie => 364 results in 1000 tuples
       /// 
@@ -336,6 +346,48 @@ public class WikipediaExtraction {
       		+ " <<test_verb_label>>( (an|\\[[^\\[\\]]+\\]|vulnerable|all|that|a strong|to|different|certain|the|on))";
 //      SCAN_REGEX_SINK("(" + regex + ")"); // 1 results in 1000 records
 //      SCAN_LABELS_REGEX_SINK(regex, "test_subject_label", "test_verb_label");
+      
+      regex = "(Philippa|Pippa|Poppy|Priscilla|Quentin|Quintus|Rebecca|Reynold|Riley|"
+		      		+ "Rosaleen|Rosalie|Rosie|Ruby|Ruth|Sanford|Sara|Sarah|Savannah|Scarlett|Sharon|Sheridan|"
+		      		+ "Shiloh|Simone|Stacy|Sylvia|Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+		      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried|.+)"
+		      		+ "(\\{\\{)"
+		      		+ "(Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+		      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried|[^\\{\\}]*)"
+		      		+ "(\\}\\})"
+		      		+ "(Rosaleen|Rosalie|Rosie|Ruby|Ruth|Sanford|Sara|Sarah|Savannah|Scarlett|Sharon|Sheridan|"
+		      		+ "Shiloh|Simone|Stacy|Sylvia|Tabitha|Tammy|Thaddeus|Timothy|Travis|Trent|Tyler|"
+		      		+ "Velma|Vicary|Vince|Virginia|Whitney|Whittaker|Wilfried|.+)";
+//    SCAN_REGEX_SINK(regex);
+      
+//      regex = "(he|she) went";
+//      regex = "(he|she)";
+//      regex = "[^z]*";
+//      Pattern p = new Pattern(regex);
+//      Matcher m = p.matcher();
+//      m.setTarget("zzzdabc", 3, 7);
+//      while(m.proceed()){
+//    	  System.out.print("(" + m.start() + "," + m.end() + "),");
+//      }
+      
+      
+      /*
+       * 0
+The original regex is not breakable.
+<<test_product_type_label>> ([^\}\{]+ )((written|made|built) by )(\[\[)(\w+)(\]\])####7####44.291
+The original regex is not breakable.
+The original regex is not breakable.
+<<movie>>\w+ (was|is) made by <<director>> in \d{4}\.####0####6841.605
+The original regex is not breakable.
+<<movie>>####6363####599.866
+The original regex is not breakable.
+The original regex is not breakable.
+<<entity>> <<verb>> <<entity>> in <<date>>####0####81.75
+From the <<entity>> until <<entity>>####0####3.278
+The original regex is not breakable.
+The original regex is not breakable.
+However,( in \d{4},)? <<test_subject_label>>( (has always|do|was|is|only|would|has been|will|were|will be))? <<test_verb_label>>( (an|\[[^\[\]]+\]|vulnerable|all|that|a strong|to|different|certain|the|on))####4####58.544
+       */
     }
 
 

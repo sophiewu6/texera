@@ -90,12 +90,9 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
         System.out.println("Finished writing twitter index");
         
         System.out.println("Ingesting twitter");
-        AsterixTwitterIngest.ingestKeywords("twitter_police_violence", "PoliceBrutality PoliceViolence BlackLivesMatter PhilandoCastile AltonSterling LawEnforcement PoliceState BlueLivesMatter PoliceLivesMatter BackTheBlue AllLivesMatter", null, null);
-        AsterixTwitterIngest.ingestKeywords("twitter_immigration_policy", "MuslimBan TravelBan RefugeeBan ImmigrantsMakeAmericaGreatBuildTheWall MexicanWall NoBanNoWall NoRefugees immigration DACA dreamers HereToStay DreamAct immigrationpolicy", null, null);
         AsterixTwitterIngest.ingestKeywords("twitter_press_freedom", "FreedomOfThePress FreedomOfPress PressFreedom PressBlackOut FakeNews FakeNewsMedia Journalism FreedomOfSpeech FirstAmendment 1stAmendment FreeSpeech ProtectThePress censorship orwellian mediabias", null, null);
         AsterixTwitterIngest.ingestKeywords("twitter_gun_control", "guncontrol gunviolence guns NRA prayforvegas LasVegasShooting planoshooting OrlandoShooting SandyShooting BronxLebanonShooting CascadeMallShooting DallasPoliceShooting PikeCountyShooting gunownersofamerica BatonRougeshooting", null, null);
         AsterixTwitterIngest.ingestKeywords("twitter_nfl_protest", "TakeAKnee NFLBoycott BoycottTheNFL NFLBurnNotice TakeAKneeNFL NationalAnthem NoFansLeft TakeAStandNotAKnee TakeTheKnee KneelNFL", null, null);
-        AsterixTwitterIngest.ingestKeywords("twitter_russia", "russia putin", null, null);
         System.out.println("finished");
         
         new TexeraWebApplication().run(args);

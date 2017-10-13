@@ -45,6 +45,9 @@ public class AsterixSource implements ISourceOperator {
             return;
         }
         try {
+            // disable timeout because data could be large
+            
+            Unirest.setTimeouts(0, 0);
             String asterixAddress = "http://" + predicate.getHost() + ":" + predicate.getPort() + 
                     "/query/service";
             String asterixQuery = generateAsterixQuery(predicate);

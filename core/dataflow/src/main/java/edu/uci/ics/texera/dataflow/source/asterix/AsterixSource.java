@@ -84,7 +84,7 @@ public class AsterixSource implements ISourceOperator {
                     "]";
             String asterixField = "`" + predicate.getField() + "`";
             sb.append("and ftcontains(" + asDataset + "." + asterixField + ", ");
-            sb.append(asterixKeyword + ", " + "{\"mode\":\"all\"}" + ")").append("\n");
+            sb.append(asterixKeyword + ", " + "{\"mode\":\"any\"}" + ")").append("\n");
         }
         if(predicate.getStartDate() != null){
         	String startDate = predicate.getStartDate();

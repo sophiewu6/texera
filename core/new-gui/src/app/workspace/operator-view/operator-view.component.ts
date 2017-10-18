@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
+import OperatorSchema from '../model/operator-schema';
 import { OperatorMetadataService } from '../service/operator-metadata/operator-metadata.service';
 
 @Component({
@@ -9,12 +10,13 @@ import { OperatorMetadataService } from '../service/operator-metadata/operator-m
 })
 export class OperatorViewComponent implements OnInit {
 
-  public test: any;
+  public operatorMetadataList: OperatorSchema[] = [];
 
   constructor(private operatorMetadataService: OperatorMetadataService) { }
 
   ngOnInit() {
-    this.operatorMetadataService.getOperatorMetadataMap().subscribe(result => this.test = result.get('ScanSource').userFriendlyName);
+    this.operatorMetadataService.getOperatorMetadataList().subscribe(
+      result => this.operatorMetadataList = result);
   }
 
 }

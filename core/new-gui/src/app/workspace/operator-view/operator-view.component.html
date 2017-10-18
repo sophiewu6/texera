@@ -1,4 +1,8 @@
-<p>
-  operator-view works!
-</p>
-<div>hi {{test}} end</div>
+<div>
+  Operators:
+</div>
+<ul>
+  <li *ngFor="let operatorSchema of operatorMetadataList">
+    <div>{{operatorSchema.userFriendlyName}}</div>
+  </li>
+</ul>

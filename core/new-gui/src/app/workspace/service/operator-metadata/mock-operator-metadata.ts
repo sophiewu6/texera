@@ -5,7 +5,8 @@ export const OPERATOR_METADATA: OperatorSchema[] = [
     new OperatorSchema(
         'ScanSource',
         'Source: Scan',
-        [ new PropertySchema('tableName', 'string') ]
+        [ new PropertySchema('tableName', 'string') ],
+        'Read records from a table one by one'
     ),
     new OperatorSchema(
         'ViewResults',
@@ -13,6 +14,7 @@ export const OPERATOR_METADATA: OperatorSchema[] = [
         [
             new PropertySchema('limit', 'integer', 10),
             new PropertySchema('offset', 'integer', 0)
-        ]
+        ],
+        'View the results of a workflow'
     )
 ];

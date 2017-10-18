@@ -1,11 +1,15 @@
-<div fxLayout="column">
-  <texera-navigation></texera-navigation>
-  <div fxLayout="row" fxLayoutAlign="center center">
-    <texera-operator-view></texera-operator-view>
-    <div fxLayout="column">
-      <texera-workflow-editor></texera-workflow-editor>
-      <texera-result-view></texera-result-view>
+<div fxLayout="column" fxFlexFill>
+  <texera-navigation fxFlex="10%"></texera-navigation>
+  <div fxFlex="90%">
+    <div class="texera-workspace-main-view-container" fxLayout="row" fxLayoutAlign="space-around stretch" fxFlexFill>
+      <texera-operator-view fxFlexOrder=1 fxFlex="15em"></texera-operator-view>
+      <texera-property-editor fxFlexOrder=3 fxFlex="15em"></texera-property-editor>      
+      <div fxFlexOrder=2 fxFlex="1 0 auto" fxLayout="column">
+        <div class="texera-workspace-mid-column-container" fxLayout="column" fxFlexFill>
+          <texera-workflow-editor fxFlex="80%"></texera-workflow-editor>
+          <texera-result-view fxFlex="20%"></texera-result-view>
+        </div> 
+      </div>
     </div>
-    <texera-property-editor></texera-property-editor>
   </div>
 </div>

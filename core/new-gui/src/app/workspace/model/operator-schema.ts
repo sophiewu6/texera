@@ -11,8 +11,4 @@ export default class OperatorSchema {
     ) {
     }
 
-    foo(): string {
-        return 'hello world';
-    }
-
 }

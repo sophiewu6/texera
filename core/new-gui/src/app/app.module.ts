@@ -4,6 +4,7 @@ import { HttpModule } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { CustomNgMaterialModule } from './custom-ng-material.module';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -28,7 +29,9 @@ import { ResultViewComponent } from './workspace/result-view/result-view.compone
     BrowserModule,
     AppRoutingModule,
     HttpModule,
-    FlexLayoutModule
+
+    FlexLayoutModule,
+    CustomNgMaterialModule
   ],
   providers: [],
   bootstrap: [AppComponent]

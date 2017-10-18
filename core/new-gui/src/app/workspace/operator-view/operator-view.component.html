@@ -1,7 +1,8 @@
 <div class="texera-workspace-operator-view-container">
-  <ul>
-    <li *ngFor="let operatorSchema of operatorMetadataList">
-      <div>{{operatorSchema.userFriendlyName}}</div>
-    </li>
-  </ul>
+  <md-list>
+    <h3 md-subheader>Operators</h3>
+    <md-list-item *ngFor="let operatorSchema of operatorMetadataList">
+      <h4 md-line>{{operatorSchema.userFriendlyName}}</h4>
+    </md-list-item>
+  </md-list>
 </div>

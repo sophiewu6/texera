@@ -1,5 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpModule } from '@angular/http';
+import { Observable } from 'rxjs/Rx';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
 
@@ -25,6 +27,7 @@ import { ResultViewComponent } from './workspace/result-view/result-view.compone
   imports: [
     BrowserModule,
     AppRoutingModule,
+    HttpModule,
     FlexLayoutModule
   ],
   providers: [],

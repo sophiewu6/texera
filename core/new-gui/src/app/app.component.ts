@@ -1,8 +1,12 @@
 import { Component } from '@angular/core';
 
+import { WorkspaceComponent } from './workspace/workspace.component';
+
 @Component({
   selector: 'texera-root',
-  templateUrl: './app.component.html',
+  template: `
+    <texera-workspace></texera-workspace>
+  `,
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {

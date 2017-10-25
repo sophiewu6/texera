@@ -19,9 +19,17 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "texera",
       "styles": [
-        "styles.scss"
+        "styles.scss",
+        "../node_modules/jointjs/css/layout.css",
+        "../node_modules/jointjs/css/themes/material.css",
+        "../node_modules/jointjs/css/themes/default.css"
       ],
-      "scripts": [],
+      "scripts": [
+        "../node_modules/jquery/dist/jquery.js",
+        "../node_modules/lodash/index.js",
+        "../node_modules/backbone/backbone.js",
+        "../node_modules/jointjs/dist/joint.js"
+      ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

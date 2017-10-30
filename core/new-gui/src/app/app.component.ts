@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { WorkspaceComponent } from './workspace/workspace.component';
+import { WorkspaceComponent } from './workspace/component/workspace.component';
 
 @Component({
   selector: 'texera-root',

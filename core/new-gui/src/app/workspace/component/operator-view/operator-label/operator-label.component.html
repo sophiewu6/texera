@@ -1,0 +1,9 @@
+<h4 [attr.id]="operatorLabelID">
+  {{operator.userFriendlyName}}
+</h4>
+
+<div class="texera-operator-ghost-container" [attr.id]="operatorGhostID">
+  <div *ngIf="isDragging">
+    Dragging
+  </div>
+</div>

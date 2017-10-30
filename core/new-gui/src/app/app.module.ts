@@ -4,16 +4,17 @@ import { HttpModule } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { CustomNgMaterialModule } from './custom-ng-material.module';
+import { CustomNgMaterialModule } from './common/custom-ng-material.module';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { WorkspaceComponent } from './workspace/workspace.component';
-import { WorkflowEditorComponent } from './workspace/workflow-editor/workflow-editor.component';
-import { NavigationComponent } from './workspace/navigation/navigation.component';
-import { PropertyEditorComponent } from './workspace/property-editor/property-editor.component';
-import { OperatorViewComponent } from './workspace/operator-view/operator-view.component';
-import { ResultViewComponent } from './workspace/result-view/result-view.component';
+import { WorkspaceComponent } from './workspace/component/workspace.component';
+import { WorkflowEditorComponent } from './workspace/component/workflow-editor/workflow-editor.component';
+import { NavigationComponent } from './workspace/component/navigation/navigation.component';
+import { PropertyEditorComponent } from './workspace/component/property-editor/property-editor.component';
+import { OperatorViewComponent } from './workspace/component/operator-view/operator-view.component';
+import { ResultViewComponent } from './workspace/component/result-view/result-view.component';
+import { OperatorLabelComponent } from './workspace/component/operator-view/operator-label/operator-label.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { ResultViewComponent } from './workspace/result-view/result-view.compone
     NavigationComponent,
     PropertyEditorComponent,
     OperatorViewComponent,
-    ResultViewComponent
+    ResultViewComponent,
+    OperatorLabelComponent
   ],
   imports: [
     BrowserModule,
@@ -31,7 +33,7 @@ import { ResultViewComponent } from './workspace/result-view/result-view.compone
     HttpModule,
 
     FlexLayoutModule,
-    CustomNgMaterialModule
+    CustomNgMaterialModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

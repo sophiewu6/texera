@@ -1,4 +1,4 @@
-export default class OperatorLink {
+export class OperatorLink {
     constructor(
         public origin: string,
         public dest: string

@@ -1,6 +1,6 @@
-import PropertySchema from './property-schema';
+import { PropertySchema } from './property-schema';
 
-export default class OperatorSchema {
+export class OperatorSchema {
     constructor(
         public readonly operatorType: string,
         public readonly userFriendlyName: string,

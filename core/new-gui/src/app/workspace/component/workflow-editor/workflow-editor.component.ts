@@ -6,7 +6,8 @@ import * as _ from 'lodash';
 import * as backbone from 'backbone';
 import * as joint from 'jointjs';
 
-import { CurrentWorkflowService } from '../../service/current-workflow/current-workflow.service';
+import { WorkflowDataService } from '../../service/current-workflow/workflow-data.service';
+import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
 
 @Component({
   selector: 'texera-workflow-editor',
@@ -17,7 +18,7 @@ export class WorkflowEditorComponent implements OnInit {
 
   paper: joint.dia.Paper;
 
-  constructor(private currentWorkflowService: CurrentWorkflowService) {
+  constructor(private workflowDataService: WorkflowDataService, private operatorDragDropService: OperatorDragDropService) {
 
   }
 
@@ -26,22 +27,15 @@ export class WorkflowEditorComponent implements OnInit {
       el: $('#workflow-holder'),
       width: 600,
       height: 200,
-      model: this.currentWorkflowService.workflowUI,
+      model: this.workflowDataService.workflowUI,
       gridSize: 1
     });
 
     jQuery('#workflow-holder').droppable({
-      drop: (event, ui) => this.createNewOperator(event, ui)
-    });
-  }
-
-  private createNewOperator(event: Event, ui: JQueryUI.DroppableEventUIParam) {
-    const operatorUIElement = new joint.shapes.basic.Rect({
-      position: { x: ui.offset.left - this.paper.pageOffset().x, y: ui.offset.top - this.paper.pageOffset().y },
-      size: { width: 100, height: 30 },
-      attrs: { rect: { fill: 'blue' }, text: { text: 'my box', fill: 'white' } }
+      drop: (event, ui) => this.operatorDragDropService.onOperatorDrop(event, ui)
     });
 
-    this.currentWorkflowService.workflowUI.addCell(operatorUIElement);
+    this.workflowDataService.registerWorkflowPaper(this.paper);
   }
+
 }

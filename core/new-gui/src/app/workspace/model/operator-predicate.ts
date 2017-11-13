@@ -1,4 +1,4 @@
-export default class OperatorPredicate {
+export class OperatorPredicate {
     constructor(
         public operatorID: string,
         public operatorType: string,

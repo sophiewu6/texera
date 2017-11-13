@@ -1,7 +1,7 @@
-import OperatorPredicate from './operator-predicate';
-import OperatorLink from './operator-link';
+import { OperatorPredicate } from './operator-predicate';
+import { OperatorLink } from './operator-link';
 
-export default class WorkflowLogicalPlan {
+export class WorkflowLogicalPlan {
 
     operatorIDMap = new Map<string, OperatorPredicate>();
 

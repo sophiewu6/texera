@@ -3,7 +3,7 @@ import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
-import OperatorSchema from '../../model/operator-schema';
+import { OperatorSchema } from '../../model/operator-schema';
 import { OPERATOR_METADATA } from './mock-operator-metadata';
 
 @Injectable()

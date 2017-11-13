@@ -1,4 +1,4 @@
-export default class PropertySchema {
+export class PropertySchema {
     constructor(
         public readonly propertyName: string,
         public readonly propertyType: string,

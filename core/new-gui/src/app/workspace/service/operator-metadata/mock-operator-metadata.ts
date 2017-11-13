@@ -1,5 +1,5 @@
-import PropertySchema from '../../model/property-schema';
-import OperatorSchema from '../../model/operator-schema';
+import { PropertySchema } from '../../model/property-schema';
+import { OperatorSchema } from '../../model/operator-schema';
 
 export const OPERATOR_METADATA: OperatorSchema[] = [
     new OperatorSchema(

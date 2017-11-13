@@ -2,25 +2,30 @@ import { Injectable, ElementRef } from '@angular/core';
 
 import { Observable, Subject } from 'rxjs/Rx';
 
-import { CurrentWorkflowService } from '../current-workflow/current-workflow.service';
+import { WorkflowDataService } from '../current-workflow/workflow-data.service';
+import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
 
 import * as joint from 'jointjs';
 
 @Injectable()
 export class OperatorDragDropService {
 
-  private tempGhostCounter = 0;
+  private currentOperatorType = '';
 
-  constructor(private currentWorkflowService: CurrentWorkflowService) { }
+  constructor(
+    private workflowDataService: WorkflowDataService,
+    private operatorUIElementService: OperatorUIElementService) { }
 
-  createNewOperatorBox() {
+  createNewOperatorUIElement(operatorType: string) {
+    this.currentOperatorType = operatorType;
 
-    console.log('creating a temp ghost');
-
-    this.tempGhostCounter++;
-    const tempGhostID = 'tempGhost-' + this.tempGhostCounter.toString();
+    // create a temporary ghost element
     jQuery('body').append('<div id="flyPaper" style="position:fixed;z-index:100;;pointer-event:none;"></div>');
 
+    // get the UI element of the operator
+    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType);
+
+    // create the jointjs model and paper of the ghost element
     const tempGhostModel = new joint.dia.Graph();
 
     const tempGhostPaper = new joint.dia.Paper({
@@ -31,17 +36,14 @@ export class OperatorDragDropService {
       gridSize: 1
     });
 
-    console.log('creating a temp graph');
-
-    const operatorUIElement = new joint.shapes.basic.Rect({
-      position: { x: 0, y: 0 },
-      size: { width: 100, height: 30 },
-      attrs: { rect: { fill: 'blue' }, text: { text: 'my box', fill: 'white' } }
-    });
 
     tempGhostModel.addCell(operatorUIElement);
 
     return jQuery('#flyPaper');
+  }
+
+  onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam) {
+    this.workflowDataService.addOperator(ui.offset.left, ui.offset.top, this.currentOperatorType);
   }
 
 }

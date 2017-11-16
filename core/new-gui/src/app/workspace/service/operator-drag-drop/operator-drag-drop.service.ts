@@ -23,7 +23,7 @@ export class OperatorDragDropService {
     jQuery('body').append('<div id="flyPaper" style="position:fixed;z-index:100;;pointer-event:none;"></div>');
 
     // get the UI element of the operator
-    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType);
+    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement('dragDropGhost', operatorType);
 
     // create the jointjs model and paper of the ghost element
     const tempGhostModel = new joint.dia.Graph();

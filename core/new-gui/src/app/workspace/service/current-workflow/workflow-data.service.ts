@@ -3,9 +3,6 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
-declare var $: JQueryStatic;
-import * as _ from 'lodash';
-import * as backbone from 'backbone';
 import * as joint from 'jointjs';
 
 import { OperatorPredicate } from '../../model/operator-predicate';
@@ -25,28 +22,51 @@ export class WorkflowDataService {
   workflowUI = new joint.dia.Graph();
   workflowPaper: joint.dia.Paper = undefined;
 
+  currentSelectedOperator: string = undefined;
+
   constructor(private operatorUIElementService: OperatorUIElementService) { }
 
-  registerWorkflowPaper(workflowPaper: joint.dia.Paper) {
+  registerWorkflowPaper(workflowPaper: joint.dia.Paper): void {
     this.workflowPaper = workflowPaper;
   }
 
-  private operatorAddedSubject = new Subject<[OperatorPredicate, joint.shapes.basic.Rect]>();
+  private operatorAddedSubject = new Subject<[OperatorPredicate, joint.dia.Cell]>();
   operatorAdded$ = this.operatorAddedSubject.asObservable();
 
-  addOperator(xOffset: number, yOffset: number, operatorType: string, operatorPredicate?: OperatorPredicate) {
-    const operatorID = (++this.maxOperatorID).toString();
+  addOperator(xOffset: number, yOffset: number, operatorType: string, operatorPredicate?: OperatorPredicate): void {
+    this.maxOperatorID++;
+    const operatorID = 'operator-' + this.maxOperatorID.toString();
+
+    if (! operatorPredicate) {
+      operatorPredicate = new OperatorPredicate(operatorID, operatorType, {});
+    }
 
     // add operator to workflow data model
     this.workflowData.addOperator(operatorID, operatorType, operatorPredicate);
 
     // get operaotr UI element and change its position
-    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType);
+    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorID, operatorType);
     operatorUIElement.position(xOffset - this.workflowPaper.pageOffset().x, yOffset - this.workflowPaper.pageOffset().y);
     // add the operator UI element to the UI model
     this.workflowUI.addCell(operatorUIElement);
 
-    this.operatorAddedSubject.next([this.workflowData.operatorIDMap[operatorID], operatorUIElement]);
+    this.operatorAddedSubject.next([operatorPredicate, operatorUIElement]);
+
+    this.selectOperator(operatorID);
+  }
+
+  operatorPropertyChangedSubject = new Subject<Object>();
+
+
+  private operatorSelectedSubject = new Subject<[OperatorPredicate, joint.dia.Cell]>();
+  operatorSelected$ = this.operatorSelectedSubject.asObservable();
+
+  selectOperator(operatorID: string): void {
+    if (operatorID === this.currentSelectedOperator) {
+      return;
+    }
+    this.currentSelectedOperator = operatorID;
+    this.operatorSelectedSubject.next([this.workflowData.operatorIDMap[operatorID], this.workflowUI.getCell(operatorID)]);
   }
 
 

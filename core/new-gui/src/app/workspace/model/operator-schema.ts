@@ -11,4 +11,13 @@ export class OperatorSchema {
     ) {
     }
 
+    generateSchemaObject(): Object {
+        const schemaProperties = {};
+        this.properties.forEach(x => schemaProperties[x.propertyName] = {'type': x.propertyType});
+        return {
+            'type': 'object',
+            'properties': schemaProperties
+        };
+    }
+
 }

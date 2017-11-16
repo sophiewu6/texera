@@ -18,7 +18,7 @@ export class OperatorViewComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.operatorMetadataService.getOperatorMetadataList().subscribe(
+    this.operatorMetadataService.getOperatorMetadataList().then(
       result => this.operatorMetadataList = result);
   }
 

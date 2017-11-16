@@ -16,7 +16,7 @@ import { OperatorDragDropService } from '../../service/operator-drag-drop/operat
 })
 export class WorkflowEditorComponent implements OnInit {
 
-  paper: joint.dia.Paper;
+  private paper: joint.dia.Paper;
 
   constructor(private workflowDataService: WorkflowDataService, private operatorDragDropService: OperatorDragDropService) {
 
@@ -36,6 +36,10 @@ export class WorkflowEditorComponent implements OnInit {
     });
 
     this.workflowDataService.registerWorkflowPaper(this.paper);
+
+    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowDataService.selectOperator(cellView.model.id));
   }
+
+
 
 }

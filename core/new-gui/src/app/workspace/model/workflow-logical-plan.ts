@@ -14,14 +14,7 @@ export class WorkflowLogicalPlan {
         }
      }
 
-     addOperator(operatorID: string, operatorType: string, operatorPredicate?: OperatorPredicate) {
-         if (! operatorPredicate) {
-             operatorPredicate = new OperatorPredicate(operatorID, operatorType, this.generateOperatorProperty(operatorType));
-         }
+     addOperator(operatorID: string, operatorType: string, operatorPredicate: OperatorPredicate) {
          this.operatorIDMap[operatorID] = operatorPredicate;
-     }
-
-     private generateOperatorProperty(operatorType: string) {
-         return {'testProperty': 'testValue'};
      }
 }

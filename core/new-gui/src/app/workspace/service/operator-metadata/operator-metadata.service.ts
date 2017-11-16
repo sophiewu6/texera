@@ -3,7 +3,10 @@ import { Http } from '@angular/http';
 import { Observable } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
+import * as _ from 'lodash';
+
 import { OperatorSchema } from '../../model/operator-schema';
+import { OperatorPredicate } from '../../model/operator-predicate';
 import { OPERATOR_METADATA } from './mock-operator-metadata';
 
 @Injectable()
@@ -13,18 +16,21 @@ export class OperatorMetadataService {
 
   constructor(private http: Http) { }
 
-  private fetchAllOperatorMetadata(): Observable<OperatorSchema[]> {
-    return Observable.of(OPERATOR_METADATA);
+  private fetchAllOperatorMetadata(): Promise<OperatorSchema[]> {
+    return Observable.of(OPERATOR_METADATA).toPromise();
   }
 
-  getOperatorMetadataList(): Observable<OperatorSchema[]> {
+  async getOperatorMetadataList(): Promise<OperatorSchema[]> {
     if (! this.operatorMetadataList) {
-      const resultObservable = this.fetchAllOperatorMetadata();
-      resultObservable.subscribe(result => this.operatorMetadataList = result);
-
-      return resultObservable;
+      this.operatorMetadataList = await this.fetchAllOperatorMetadata();
+      return this.operatorMetadataList;
     }
-    return Observable.of(this.operatorMetadataList);
+    return Observable.of(this.operatorMetadataList).toPromise();
+  }
+
+  async getOperatorMetadata(operatorType: string): Promise<OperatorSchema> {
+    const operatorMetadataList = await this.getOperatorMetadataList();
+    return operatorMetadataList.find(x => x.operatorType === operatorType);
   }
 
 }

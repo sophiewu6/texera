@@ -6,7 +6,19 @@ export const OPERATOR_METADATA: OperatorSchema[] = [
         'ScanSource',
         'Source: Scan',
         [ new PropertySchema('tableName', 'string') ],
+        0, 1,
         'Read records from a table one by one'
+    ),
+    new OperatorSchema(
+        'RegexMatcher',
+        'Match Regex',
+        [
+            new PropertySchema('regex', 'string'),
+            new PropertySchema('attribute', 'string'),
+            new PropertySchema('spanListName', 'string')
+        ],
+        1, 1,
+        'Search Regex'
     ),
     new OperatorSchema(
         'ViewResults',
@@ -15,6 +27,7 @@ export const OPERATOR_METADATA: OperatorSchema[] = [
             new PropertySchema('limit', 'integer', 10),
             new PropertySchema('offset', 'integer', 0)
         ],
+        1, 0,
         'View the results of a workflow'
     )
 ];

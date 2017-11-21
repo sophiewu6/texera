@@ -11,38 +11,49 @@ import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
 
 import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
 
-/* tslint:disable: member-ordering */
 @Injectable()
 export class WorkflowDataService {
 
   maxOperatorID = 0;
 
-  workflowData = new WorkflowLogicalPlan();
+  workflowLogicalPlan = new WorkflowLogicalPlan();
 
   workflowUI = new joint.dia.Graph();
   workflowPaper: joint.dia.Paper = undefined;
 
-  currentSelectedOperator: string = undefined;
+  private operatorAddedSubject = new Subject<[OperatorPredicate, joint.dia.Cell]>();
+  operatorAdded$ = this.operatorAddedSubject.asObservable();
 
-  constructor(private operatorUIElementService: OperatorUIElementService) { }
+  private linkAddedSubject = new Subject<OperatorLink>();
+  linkAdded$ = this.linkAddedSubject.asObservable();
+
+  private operatorPropertyChangedSubject = new Subject<[string, OperatorPredicate]>();
+  operatorPropertyChanged$ = this.operatorPropertyChangedSubject.asObservable();
+
+  constructor(private operatorUIElementService: OperatorUIElementService) {
+    this.workflowUI.on('change:source change:target', (link) => {
+      const originID: string = link.get('source').id;
+      const destID: string = link.get('target').id;
+      if (originID && destID) {
+        this.onLinkAdded(originID, destID);
+      }
+    });
+  }
 
   registerWorkflowPaper(workflowPaper: joint.dia.Paper): void {
     this.workflowPaper = workflowPaper;
   }
 
-  private operatorAddedSubject = new Subject<[OperatorPredicate, joint.dia.Cell]>();
-  operatorAdded$ = this.operatorAddedSubject.asObservable();
-
-  addOperator(xOffset: number, yOffset: number, operatorType: string, operatorPredicate?: OperatorPredicate): void {
+  addOperator(xOffset: number, yOffset: number, operatorType: string, operatorPredicate?: OperatorPredicate): string {
     this.maxOperatorID++;
     const operatorID = 'operator-' + this.maxOperatorID.toString();
 
-    if (! operatorPredicate) {
-      operatorPredicate = new OperatorPredicate(operatorID, operatorType, {});
+    if (!operatorPredicate) {
+      operatorPredicate = new OperatorPredicate(operatorID, operatorType, []);
     }
 
     // add operator to workflow data model
-    this.workflowData.addOperator(operatorID, operatorType, operatorPredicate);
+    this.workflowLogicalPlan.addOperator(operatorID, operatorType, operatorPredicate);
 
     // get operaotr UI element and change its position
     const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorID, operatorType);
@@ -52,23 +63,21 @@ export class WorkflowDataService {
 
     this.operatorAddedSubject.next([operatorPredicate, operatorUIElement]);
 
-    this.selectOperator(operatorID);
+    return operatorID;
   }
 
-  operatorPropertyChangedSubject = new Subject<Object>();
+  changeOperatorProperty(operatorID: string, properties: Object[]): void {
+    this.workflowLogicalPlan.getOperator(operatorID).operatorProperties = properties;
+    this.operatorPropertyChangedSubject.next([operatorID, this.workflowLogicalPlan.getOperator(operatorID)]);
+  }
 
-
-  private operatorSelectedSubject = new Subject<[OperatorPredicate, joint.dia.Cell]>();
-  operatorSelected$ = this.operatorSelectedSubject.asObservable();
-
-  selectOperator(operatorID: string): void {
-    if (operatorID === this.currentSelectedOperator) {
+  private onLinkAdded(origin: string, dest: string): void {
+    if (! (this.workflowLogicalPlan.hasOperator(origin) && this.workflowLogicalPlan.hasOperator(dest))) {
       return;
     }
-    this.currentSelectedOperator = operatorID;
-    this.operatorSelectedSubject.next([this.workflowData.operatorIDMap[operatorID], this.workflowUI.getCell(operatorID)]);
+    const operatorLink = new OperatorLink(origin, dest);
+    this.workflowLogicalPlan.addLink(operatorLink);
+    this.linkAddedSubject.next(operatorLink);
   }
-
-
 
 }

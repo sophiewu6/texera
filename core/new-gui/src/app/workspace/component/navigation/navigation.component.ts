@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { ExecuteWorkflowService } from '../../service/execute-workflow/execute-workflow.service';
+
 @Component({
   selector: 'texera-navigation',
   templateUrl: './navigation.component.html',
@@ -7,9 +9,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NavigationComponent implements OnInit {
 
-  constructor() { }
+  constructor(private executeWorkflowService: ExecuteWorkflowService) { }
 
   ngOnInit() {
+  }
+
+  onClickRun() {
+    this.executeWorkflowService.executeWorkflow();
   }
 
 }

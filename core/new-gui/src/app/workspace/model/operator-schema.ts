@@ -5,6 +5,8 @@ export class OperatorSchema {
         public readonly operatorType: string,
         public readonly userFriendlyName: string,
         public readonly properties: PropertySchema[],
+        public readonly numInputPorts: number,
+        public readonly numOutputPorts: number,
         public readonly operatorDescription?: string,
         public readonly requiredProperties?: string[],
         public readonly advancedOptions?: string[]

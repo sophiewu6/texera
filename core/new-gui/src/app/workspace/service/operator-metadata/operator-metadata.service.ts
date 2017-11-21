@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
-import { Observable } from 'rxjs/Rx';
+import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
 import * as _ from 'lodash';
@@ -12,25 +12,29 @@ import { OPERATOR_METADATA } from './mock-operator-metadata';
 @Injectable()
 export class OperatorMetadataService {
 
-  private operatorMetadataList: OperatorSchema[];
+  private operatorMetadataList: OperatorSchema[] = [];
 
   constructor(private http: Http) { }
 
-  private fetchAllOperatorMetadata(): Promise<OperatorSchema[]> {
-    return Observable.of(OPERATOR_METADATA).toPromise();
+  private onMetadataChangedSubject = new Subject<OperatorSchema[]>();
+  metadataChanged$ = this.onMetadataChangedSubject.asObservable();
+
+  private fetchAllOperatorMetadata(): void {
+    Observable.of(OPERATOR_METADATA).subscribe(x => {
+      this.operatorMetadataList = x;
+      this.onMetadataChangedSubject.next(x);
+    });
   }
 
-  async getOperatorMetadataList(): Promise<OperatorSchema[]> {
-    if (! this.operatorMetadataList) {
-      this.operatorMetadataList = await this.fetchAllOperatorMetadata();
-      return this.operatorMetadataList;
+  getOperatorMetadataList(): OperatorSchema[] {
+    if (this.operatorMetadataList.length === 0) {
+      this.fetchAllOperatorMetadata();
     }
-    return Observable.of(this.operatorMetadataList).toPromise();
+    return this.operatorMetadataList;
   }
 
-  async getOperatorMetadata(operatorType: string): Promise<OperatorSchema> {
-    const operatorMetadataList = await this.getOperatorMetadataList();
-    return operatorMetadataList.find(x => x.operatorType === operatorType);
+  getOperatorMetadata(operatorType: string): OperatorSchema {
+    return this.getOperatorMetadataList().find(x => x.operatorType === operatorType);
   }
 
 }

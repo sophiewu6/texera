@@ -6,6 +6,7 @@ import { WorkflowDataService } from '../current-workflow/workflow-data.service';
 import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
 
 import * as joint from 'jointjs';
+import { WorkflowUIService } from '../current-workflow/workflow-ui.service';
 
 @Injectable()
 export class OperatorDragDropService {
@@ -14,9 +15,10 @@ export class OperatorDragDropService {
 
   constructor(
     private workflowDataService: WorkflowDataService,
+    private workflowUIService: WorkflowUIService,
     private operatorUIElementService: OperatorUIElementService) { }
 
-  createNewOperatorUIElement(operatorType: string) {
+  createNewOperatorUIElement(operatorType: string): JQuery<HTMLElement> {
     this.currentOperatorType = operatorType;
 
     // create a temporary ghost element
@@ -36,14 +38,14 @@ export class OperatorDragDropService {
       gridSize: 1
     });
 
-
     tempGhostModel.addCell(operatorUIElement);
 
     return jQuery('#flyPaper');
   }
 
-  onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam) {
-    this.workflowDataService.addOperator(ui.offset.left, ui.offset.top, this.currentOperatorType);
+  onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam): void {
+    const operatorID = this.workflowDataService.addOperator(ui.offset.left, ui.offset.top, this.currentOperatorType);
+    this.workflowUIService.selectOperator(operatorID);
   }
 
 }

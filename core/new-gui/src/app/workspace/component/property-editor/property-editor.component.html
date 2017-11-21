@@ -1,9 +1,9 @@
 <div class="texera-workspace-property-editor-container" fxFlexFill>
-  <div *ngIf="initialPredicate">
+  <div *ngIf="currentPredicate">
       <h3 md-subheader>{{currentSchema.userFriendlyName}}</h3>
       <json-schema-form
         [schema]="jsonSchemaObject"
-        [data]="currentPredicate.operatorProperties"
+        [(data)]="currentPredicate.operatorProperties"
         (onChanges)="onFormChanges($event)">
       </json-schema-form>
   </div>

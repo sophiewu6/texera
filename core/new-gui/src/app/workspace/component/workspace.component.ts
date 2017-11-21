@@ -8,6 +8,8 @@ import { PropertyEditorComponent } from './property-editor/property-editor.compo
 
 import { OperatorMetadataService } from '../service/operator-metadata/operator-metadata.service';
 import { WorkflowDataService } from '../service/current-workflow/workflow-data.service';
+import { WorkflowUIService } from '../service/current-workflow/workflow-ui.service';
+import { ExecuteWorkflowService } from '../service/execute-workflow/execute-workflow.service';
 import { OperatorDragDropService } from '../service/operator-drag-drop/operator-drag-drop.service';
 import { OperatorUIElementService } from '../service/operator-ui-element/operator-ui-element.service';
 
@@ -18,6 +20,8 @@ import { OperatorUIElementService } from '../service/operator-ui-element/operato
   providers: [
     OperatorMetadataService,
     WorkflowDataService,
+    WorkflowUIService,
+    ExecuteWorkflowService,
     OperatorDragDropService,
     OperatorUIElementService
   ]

@@ -7,6 +7,7 @@ import * as backbone from 'backbone';
 import * as joint from 'jointjs';
 
 import { WorkflowDataService } from '../../service/current-workflow/workflow-data.service';
+import { WorkflowUIService } from '../../service/current-workflow/workflow-ui.service';
 import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
 
 @Component({
@@ -18,7 +19,8 @@ export class WorkflowEditorComponent implements OnInit {
 
   private paper: joint.dia.Paper;
 
-  constructor(private workflowDataService: WorkflowDataService, private operatorDragDropService: OperatorDragDropService) {
+  constructor(private workflowDataService: WorkflowDataService,
+    private workflowUIService: WorkflowUIService, private operatorDragDropService: OperatorDragDropService) {
 
   }
 
@@ -28,7 +30,12 @@ export class WorkflowEditorComponent implements OnInit {
       width: 600,
       height: 200,
       model: this.workflowDataService.workflowUI,
-      gridSize: 1
+      gridSize: 1,
+      snapLinks: true,
+      linkPinning: false,
+      validateConnection: function (sourceView, sourceMagnet, targetView, targetMagnet) {
+        return sourceMagnet !== targetMagnet;
+      }
     });
 
     jQuery('#workflow-holder').droppable({
@@ -37,7 +44,7 @@ export class WorkflowEditorComponent implements OnInit {
 
     this.workflowDataService.registerWorkflowPaper(this.paper);
 
-    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowDataService.selectOperator(cellView.model.id));
+    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowUIService.selectOperator(cellView.model.id));
   }
 
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
@@ -9,6 +9,7 @@ import { OperatorPredicate } from '../../model/operator-predicate';
 import { WorkflowDataService } from '../../service/current-workflow/workflow-data.service';
 import { OperatorSchema } from '../../model/operator-schema';
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
+import { WorkflowUIService } from '../../service/current-workflow/workflow-ui.service';
 
 @Component({
   selector: 'texera-property-editor',
@@ -27,27 +28,27 @@ export class PropertyEditorComponent implements OnInit {
   jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
 
-  private formChangedSubject = new Subject<Object>();
-  formChanged$ = this.formChangedSubject.asObservable();
-
-  constructor(private workflowDataService: WorkflowDataService, private operatorMetadataService: OperatorMetadataService) {
-    this.workflowDataService.operatorSelected$.subscribe(x => this.changePropertyEditor(x[0]));
-    this.formChanged$.debounceTime(100).distinctUntilChanged((a, b) => _.isEqual(a, b)).subscribe(x => this.formChanged(x));
+  constructor(private workflowDataService: WorkflowDataService,
+    private workflowUIService: WorkflowUIService, private operatorMetadataService: OperatorMetadataService,
+    private changeDetectorRef: ChangeDetectorRef) {
+    this.workflowUIService.operatorSelected$.subscribe(x => this.changePropertyEditor(x));
   }
 
   ngOnInit() {
   }
 
-  async changePropertyEditor(operatorPredicate: OperatorPredicate) {
-    this.currentPredicate = operatorPredicate;
-    this.currentSchema = await this.operatorMetadataService.getOperatorMetadata(operatorPredicate.operatorType);
+  changePropertyEditor(operatorID: string) {
+    // console.log('changePropertyEditor called');
+    this.currentPredicate = this.workflowDataService.workflowLogicalPlan.getOperator(operatorID);
+    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
     this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
+    this.changeDetectorRef.detectChanges();
   }
 
   // layout for the form
   generateFormLayout(): Object {
     // hide the submit button
-    console.log('generate form layout');
+    // console.log('generate form layout');
     return [
       '*',
       { type: 'submit', display: false }
@@ -55,11 +56,9 @@ export class PropertyEditorComponent implements OnInit {
   }
 
   onFormChanges(event: Object) {
-    this.formChangedSubject.next(event);
-  }
-
-  formChanged(change: Object) {
-    console.log(change);
+    // console.log('onform changes called');
+    console.log(event);
+    // this.workflowDataService.changeOperatorProperty(this.currentPredicate.operatorID, event);
   }
 
 }

@@ -15,11 +15,11 @@ export class OperatorViewComponent implements OnInit {
   public operatorMetadataList: OperatorSchema[] = [];
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
+    operatorMetadataService.metadataChanged$.subscribe(x => this.operatorMetadataList = x);
   }
 
   ngOnInit() {
-    this.operatorMetadataService.getOperatorMetadataList().then(
-      result => this.operatorMetadataList = result);
+    this.operatorMetadataList  = this.operatorMetadataService.getOperatorMetadataList();
   }
 
 }

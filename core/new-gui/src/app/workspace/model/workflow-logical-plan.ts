@@ -9,12 +9,33 @@ export class WorkflowLogicalPlan {
         public operatorPredicates?: OperatorPredicate[],
         public operatorLinks?: OperatorLink[]
     ) {
-        if (operatorPredicates) {
-            operatorPredicates.forEach(op => this.operatorIDMap[op.operatorID] = op);
+        if (!operatorPredicates) {
+            this.operatorPredicates = [];
         }
-     }
+        if (!operatorLinks) {
+            this.operatorLinks = [];
+        }
+        this.operatorPredicates.forEach(op => this.operatorIDMap[op.operatorID] = op);
+    }
 
-     addOperator(operatorID: string, operatorType: string, operatorPredicate: OperatorPredicate) {
-         this.operatorIDMap[operatorID] = operatorPredicate;
-     }
+    getOperator(operatorID: string): OperatorPredicate {
+        return this.operatorIDMap.get(operatorID);
+    }
+
+    addOperator(operatorID: string, operatorType: string, operatorPredicate: OperatorPredicate): void {
+        this.operatorIDMap.set(operatorID, operatorPredicate);
+        this.operatorPredicates.push(operatorPredicate);
+    }
+
+    hasOperator(operatorID: string): boolean {
+        return this.operatorIDMap.has(operatorID);
+    }
+
+    addLink(operatorLink: OperatorLink): void {
+        this.operatorLinks.push(operatorLink);
+    }
+
+    deleteOperator(operatorID: string) {
+        // TODO
+    }
 }

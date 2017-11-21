@@ -57,8 +57,8 @@ export class PropertyEditorComponent implements OnInit {
 
   onFormChanges(event: Object) {
     // console.log('onform changes called');
-    console.log(event);
-    // this.workflowDataService.changeOperatorProperty(this.currentPredicate.operatorID, event);
+    // console.log(event);
+    this.workflowDataService.changeOperatorProperty(this.currentPredicate.operatorID, event);
   }
 
 }

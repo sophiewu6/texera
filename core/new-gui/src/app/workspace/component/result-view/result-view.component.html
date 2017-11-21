@@ -3,21 +3,19 @@
     <p>{{ message }}</p>
   </div>
 
-  <ng-template #elseBlock>
-      <div *ngIf="currentColumns">
-          <mat-table #table [dataSource]="currentDataSource">
-      
-            <ng-container *ngFor="let column of currentColumns" [cdkColumnDef]="column.columnDef">
-              <mat-header-cell *cdkHeaderCellDef>{{ column.header }}</mat-header-cell>
-              <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
-            </ng-container>
-      
-            <mat-header-row *cdkHeaderRowDef="currentDisplayColumns"></mat-header-row>
-            <mat-row *cdkRowDef="let row; columns: currentDisplayColumns;"></mat-row>
-      
-          </mat-table>
-      
-        </div>
-  </ng-template>
+  <div *ngIf="currentColumns && !showMessage">
+    <mat-table #table [dataSource]="currentDataSource">
+
+      <ng-container *ngFor="let column of currentColumns" [cdkColumnDef]="column.columnDef">
+        <mat-header-cell *cdkHeaderCellDef>{{ column.header }}</mat-header-cell>
+        <mat-cell *cdkCellDef="let row">{{ column.cell(row) }}</mat-cell>
+      </ng-container>
+
+      <mat-header-row *cdkHeaderRowDef="currentDisplayColumns"></mat-header-row>
+      <mat-row *cdkRowDef="let row; columns: currentDisplayColumns;"></mat-row>
+
+    </mat-table>
+
+  </div>
 
 </div>

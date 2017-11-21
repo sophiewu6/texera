@@ -36,9 +36,10 @@ export class ResultViewComponent implements OnInit {
     }
     this.showMessage = false;
     // generate columnDef from first row
-    this.currentDisplayColumns = Object.keys(resultData[0]);
+    this.currentDisplayColumns = Object.keys(resultData[0]).filter(x => x !== '_id');
     this.currentColumns = this.generateColumns(this.currentDisplayColumns);
     this.currentDataSource = new ResultDataSource(resultData);
+    console.log(this.currentDisplayColumns);
   }
 
   private generateColumns(columnNames: string[]): TableColumn[] {

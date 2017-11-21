@@ -49,7 +49,7 @@ export class WorkflowDataService {
     const operatorID = 'operator-' + this.maxOperatorID.toString();
 
     if (!operatorPredicate) {
-      operatorPredicate = new OperatorPredicate(operatorID, operatorType, []);
+      operatorPredicate = new OperatorPredicate(operatorID, operatorType, {});
     }
 
     // add operator to workflow data model
@@ -66,7 +66,7 @@ export class WorkflowDataService {
     return operatorID;
   }
 
-  changeOperatorProperty(operatorID: string, properties: Object[]): void {
+  changeOperatorProperty(operatorID: string, properties: Object): void {
     this.workflowLogicalPlan.getOperator(operatorID).operatorProperties = properties;
     this.operatorPropertyChangedSubject.next([operatorID, this.workflowLogicalPlan.getOperator(operatorID)]);
   }

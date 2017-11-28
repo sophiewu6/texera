@@ -1,6 +1,5 @@
 import { Component, OnInit, Input, AfterViewInit } from '@angular/core';
 
-declare var jQuery: JQueryStatic;
 import { OperatorSchema } from '../../../model/operator-schema';
 import { OperatorDragDropService } from '../../../service/operator-drag-drop/operator-drag-drop.service';
 
@@ -23,19 +22,7 @@ export class OperatorLabelComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.initializeDragDrop();
-  }
-
-  private initializeDragDrop() {
-    jQuery('#' + this.operatorLabelID).draggable(
-      {
-        helper: () => this.createDragHelper()
-      }
-    );
-  }
-
-  private createDragHelper() {
-    return this.operatorDragDropService.createNewOperatorUIElement(this.operator.operatorType);
+    this.operatorDragDropService.registerDrag(this.operatorLabelID, this.operator.operatorType);
   }
 
 }

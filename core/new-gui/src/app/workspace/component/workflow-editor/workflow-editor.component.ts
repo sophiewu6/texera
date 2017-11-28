@@ -10,6 +10,7 @@ import { WorkflowDataService } from '../../service/current-workflow/workflow-dat
 import { WorkflowUIService } from '../../service/current-workflow/workflow-ui.service';
 import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
 
+
 @Component({
   selector: 'texera-workflow-editor',
   templateUrl: './workflow-editor.component.html',
@@ -17,6 +18,8 @@ import { OperatorDragDropService } from '../../service/operator-drag-drop/operat
 })
 export class WorkflowEditorComponent implements OnInit {
 
+  // the id in HTML must also be changed whenever this is changed
+  readonly WORKFLOW_EDITOR_ID = 'texera-workflow-holder';
   private paper: joint.dia.Paper;
 
   constructor(private workflowDataService: WorkflowDataService,
@@ -26,7 +29,7 @@ export class WorkflowEditorComponent implements OnInit {
 
   ngOnInit() {
     this.paper = new joint.dia.Paper({
-      el: $('#workflow-holder'),
+      el: $('#' + this.WORKFLOW_EDITOR_ID),
       width: 600,
       height: 200,
       model: this.workflowDataService.workflowUI,
@@ -38,15 +41,12 @@ export class WorkflowEditorComponent implements OnInit {
       }
     });
 
-    jQuery('#workflow-holder').droppable({
-      drop: (event, ui) => this.operatorDragDropService.onOperatorDrop(event, ui)
-    });
+    this.operatorDragDropService.registerDrop(this.WORKFLOW_EDITOR_ID);
 
     this.workflowDataService.registerWorkflowPaper(this.paper);
 
     this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowUIService.selectOperator(cellView.model.id));
   }
-
 
 
 }

@@ -5,20 +5,40 @@ import { Observable, Subject } from 'rxjs/Rx';
 import { WorkflowDataService } from '../current-workflow/workflow-data.service';
 import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
 
+declare var jQuery: JQueryStatic;
 import * as joint from 'jointjs';
 import { WorkflowUIService } from '../current-workflow/workflow-ui.service';
 
 @Injectable()
 export class OperatorDragDropService {
 
+  private registeredOperatorLabelMap = new Map<string, string>();
   private currentOperatorType = '';
 
   constructor(
     private workflowDataService: WorkflowDataService,
     private workflowUIService: WorkflowUIService,
-    private operatorUIElementService: OperatorUIElementService) { }
+    private operatorUIElementService: OperatorUIElementService) {
+  }
 
-  createNewOperatorUIElement(operatorType: string): JQuery<HTMLElement> {
+  // register drag for the operator label
+  registerDrag(dragElementID: string, operatorType: string) {
+    this.registeredOperatorLabelMap.set(dragElementID, operatorType);
+
+    // register callback functions for jquery UI
+    jQuery('#' + dragElementID).draggable({
+        helper: () => this.createNewOperatorUIElement(operatorType)
+    });
+  }
+
+  // register drop for the workflow editor area
+  registerDrop(dropElementID) {
+    jQuery('#' + dropElementID).droppable({
+      drop: (event, ui) => this.onOperatorDrop(event, ui)
+    });
+  }
+
+  private createNewOperatorUIElement(operatorType: string): JQuery<HTMLElement> {
     this.currentOperatorType = operatorType;
 
     // create a temporary ghost element
@@ -43,7 +63,7 @@ export class OperatorDragDropService {
     return jQuery('#flyPaper');
   }
 
-  onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam): void {
+  private onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam): void {
     const operatorID = this.workflowDataService.addOperator(ui.offset.left, ui.offset.top, this.currentOperatorType);
     this.workflowUIService.selectOperator(operatorID);
   }

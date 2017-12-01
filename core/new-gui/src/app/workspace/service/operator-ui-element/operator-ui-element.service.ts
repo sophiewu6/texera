@@ -8,15 +8,13 @@ export class OperatorUIElementService {
 
   constructor(private operatorMetadataService: OperatorMetadataService) { }
 
-  getOperatorUIElement(operatorID: string, operatorType: string): joint.dia.Element {
+  getOperatorUIElement(operatorType: string): joint.dia.Element {
     const operatorSchema = this.operatorMetadataService.getOperatorMetadata(operatorType);
     const operatorElement = new joint.shapes.devs.Model({
       position: { x: 0, y: 0 },
       size: { width: 100, height: 30 },
       attrs: { rect: { fill: 'grey' }, text: { text: operatorType, fill: 'black' } }
     });
-    // set operatorID
-    operatorElement.set('id', operatorID);
     // set input ports
     for (let i = 0; i < operatorSchema.numInputPorts; i++) {
       operatorElement.addInPort(`in${i}`);

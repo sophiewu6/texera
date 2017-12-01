@@ -2,12 +2,12 @@ import { Injectable, ElementRef } from '@angular/core';
 
 import { Observable, Subject } from 'rxjs/Rx';
 
-import { WorkflowDataService } from '../current-workflow/workflow-data.service';
 import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
 
 declare var jQuery: JQueryStatic;
 import * as joint from 'jointjs';
-import { WorkflowUIService } from '../current-workflow/workflow-ui.service';
+import { WorkflowUIChangeService } from '../workflow-graph/workflow-ui-change.service';
+import { WorkflowModelService } from '../workflow-graph/workflow-model.service';
 
 @Injectable()
 export class OperatorDragDropService {
@@ -16,8 +16,8 @@ export class OperatorDragDropService {
   private currentOperatorType = '';
 
   constructor(
-    private workflowDataService: WorkflowDataService,
-    private workflowUIService: WorkflowUIService,
+    private workflowModelSerivce: WorkflowModelService,
+    private workflowUIChangeSerivce: WorkflowUIChangeService,
     private operatorUIElementService: OperatorUIElementService) {
   }
 
@@ -45,7 +45,7 @@ export class OperatorDragDropService {
     jQuery('body').append('<div id="flyPaper" style="position:fixed;z-index:100;;pointer-event:none;"></div>');
 
     // get the UI element of the operator
-    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement('dragDropGhost', operatorType);
+    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType);
 
     // create the jointjs model and paper of the ghost element
     const tempGhostModel = new joint.dia.Graph();
@@ -64,8 +64,10 @@ export class OperatorDragDropService {
   }
 
   private onOperatorDrop(event: Event, ui: JQueryUI.DroppableEventUIParam): void {
-    const operatorID = this.workflowDataService.addOperator(ui.offset.left, ui.offset.top, this.currentOperatorType);
-    this.workflowUIService.selectOperator(operatorID);
+    const operatorPredicate = this.workflowModelSerivce.getNewOperatorPredicate(this.currentOperatorType);
+    const operatorID = this.workflowUIChangeSerivce.addOperator(
+      operatorPredicate, ui.offset.left, ui.offset.top);
+    this.workflowUIChangeSerivce.selectOperator(operatorPredicate.operatorID);
   }
 
 }

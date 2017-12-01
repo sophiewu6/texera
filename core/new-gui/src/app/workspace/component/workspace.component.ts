@@ -7,11 +7,12 @@ import { ResultViewComponent } from './result-view/result-view.component';
 import { PropertyEditorComponent } from './property-editor/property-editor.component';
 
 import { OperatorMetadataService } from '../service/operator-metadata/operator-metadata.service';
-import { WorkflowDataService } from '../service/current-workflow/workflow-data.service';
-import { WorkflowUIService } from '../service/current-workflow/workflow-ui.service';
 import { ExecuteWorkflowService } from '../service/execute-workflow/execute-workflow.service';
 import { OperatorDragDropService } from '../service/operator-drag-drop/operator-drag-drop.service';
 import { OperatorUIElementService } from '../service/operator-ui-element/operator-ui-element.service';
+import { WorkflowModelService } from '../service/workflow-graph/workflow-model.service';
+import { WorkflowDataChangeService } from '../service/workflow-graph/workflow-data-change.service';
+import { WorkflowUIChangeService } from '../service/workflow-graph/workflow-ui-change.service';
 
 @Component({
   selector: 'texera-workspace',
@@ -19,8 +20,9 @@ import { OperatorUIElementService } from '../service/operator-ui-element/operato
   styleUrls: ['./workspace.component.scss'],
   providers: [
     OperatorMetadataService,
-    WorkflowDataService,
-    WorkflowUIService,
+    WorkflowModelService,
+    WorkflowUIChangeService,
+    WorkflowDataChangeService,
     ExecuteWorkflowService,
     OperatorDragDropService,
     OperatorUIElementService

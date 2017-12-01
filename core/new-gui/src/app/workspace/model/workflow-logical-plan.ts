@@ -22,9 +22,9 @@ export class WorkflowLogicalPlan {
         return this.operatorIDMap.get(operatorID);
     }
 
-    addOperator(operatorID: string, operatorType: string, operatorPredicate: OperatorPredicate): void {
-        this.operatorIDMap.set(operatorID, operatorPredicate);
-        this.operatorPredicates.push(operatorPredicate);
+    addOperator(operator: OperatorPredicate): void {
+        this.operatorIDMap.set(operator.operatorID, operator);
+        this.operatorPredicates.push(operator);
     }
 
     hasOperator(operatorID: string): boolean {

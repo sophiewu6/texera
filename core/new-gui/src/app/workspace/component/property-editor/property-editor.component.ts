@@ -6,10 +6,12 @@ import '../../../common/rxjs-operators.ts';
 import * as _ from 'lodash';
 
 import { OperatorPredicate } from '../../model/operator-predicate';
-import { WorkflowDataService } from '../../service/current-workflow/workflow-data.service';
 import { OperatorSchema } from '../../model/operator-schema';
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
-import { WorkflowUIService } from '../../service/current-workflow/workflow-ui.service';
+import { WorkflowModelService } from '../../service/workflow-graph/workflow-model.service';
+import { WorkflowUIChangeService } from '../../service/workflow-graph/workflow-ui-change.service';
+import { WorkflowDataChangeService } from '../../service/workflow-graph/workflow-data-change.service';
+
 
 @Component({
   selector: 'texera-property-editor',
@@ -28,10 +30,14 @@ export class PropertyEditorComponent implements OnInit {
   jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
 
-  constructor(private workflowDataService: WorkflowDataService,
-    private workflowUIService: WorkflowUIService, private operatorMetadataService: OperatorMetadataService,
+  constructor(
+    private operatorMetadataService: OperatorMetadataService,
+    private workflowModelSerivce: WorkflowModelService,
+    private workflowUIChangeService: WorkflowUIChangeService,
+    private workflowDataChangeService: WorkflowDataChangeService,
     private changeDetectorRef: ChangeDetectorRef) {
-    this.workflowUIService.operatorSelected$.subscribe(x => this.changePropertyEditor(x));
+
+    this.workflowUIChangeService.operatorSelected$.subscribe(x => this.changePropertyEditor(x));
   }
 
   ngOnInit() {
@@ -39,7 +45,7 @@ export class PropertyEditorComponent implements OnInit {
 
   changePropertyEditor(operatorID: string) {
     // console.log('changePropertyEditor called');
-    this.currentPredicate = this.workflowDataService.workflowLogicalPlan.getOperator(operatorID);
+    this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
     this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
     this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
     this.changeDetectorRef.detectChanges();
@@ -58,7 +64,7 @@ export class PropertyEditorComponent implements OnInit {
   onFormChanges(event: Object) {
     // console.log('onform changes called');
     // console.log(event);
-    this.workflowDataService.changeOperatorProperty(this.currentPredicate.operatorID, event);
+    this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
   }
 
 }

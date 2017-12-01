@@ -6,9 +6,9 @@ import * as _ from 'lodash';
 import * as backbone from 'backbone';
 import * as joint from 'jointjs';
 
-import { WorkflowDataService } from '../../service/current-workflow/workflow-data.service';
-import { WorkflowUIService } from '../../service/current-workflow/workflow-ui.service';
 import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
+import { WorkflowModelService } from '../../service/workflow-graph/workflow-model.service';
+import { WorkflowUIChangeService } from '../../service/workflow-graph/workflow-ui-change.service';
 
 
 @Component({
@@ -22,8 +22,10 @@ export class WorkflowEditorComponent implements OnInit {
   readonly WORKFLOW_EDITOR_ID = 'texera-workflow-holder';
   private paper: joint.dia.Paper;
 
-  constructor(private workflowDataService: WorkflowDataService,
-    private workflowUIService: WorkflowUIService, private operatorDragDropService: OperatorDragDropService) {
+  constructor(
+    private workflowModelSerivce: WorkflowModelService,
+    private workflowUIChangeService: WorkflowUIChangeService,
+    private operatorDragDropService: OperatorDragDropService) {
 
   }
 
@@ -32,7 +34,7 @@ export class WorkflowEditorComponent implements OnInit {
       el: $('#' + this.WORKFLOW_EDITOR_ID),
       width: 600,
       height: 200,
-      model: this.workflowDataService.workflowUI,
+      model: this.workflowModelSerivce.uiGraph,
       gridSize: 1,
       snapLinks: true,
       linkPinning: false,
@@ -43,9 +45,9 @@ export class WorkflowEditorComponent implements OnInit {
 
     this.operatorDragDropService.registerDrop(this.WORKFLOW_EDITOR_ID);
 
-    this.workflowDataService.registerWorkflowPaper(this.paper);
+    this.workflowModelSerivce.registerWorkflowPaper(this.paper);
 
-    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowUIService.selectOperator(cellView.model.id));
+    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowUIChangeService.selectOperator(cellView.model.id));
   }
 
 

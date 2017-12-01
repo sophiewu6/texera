@@ -17,10 +17,12 @@ export class WorkflowModelService {
 
   constructor() { }
 
+  // register the workflow paper to the service
   registerWorkflowPaper(workflowPaper: joint.dia.Paper): void {
     this.uiPaper = workflowPaper;
   }
 
+  // generate a new operator ID
   getNextAvailableID(): string {
     this.nextAvailableID++;
     return 'operator-' + this.nextAvailableID.toString();

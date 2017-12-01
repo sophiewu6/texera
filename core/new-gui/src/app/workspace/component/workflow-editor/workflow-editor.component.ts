@@ -47,7 +47,9 @@ export class WorkflowEditorComponent implements OnInit {
 
     this.workflowModelSerivce.registerWorkflowPaper(this.paper);
 
-    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.workflowUIChangeService.selectOperator(cellView.model.id));
+    this.paper.on('cell:pointerdown', (cellView, evt, x, y) => {
+      this.workflowUIChangeService.selectOperator(cellView.model.id);
+    });
   }
 
 

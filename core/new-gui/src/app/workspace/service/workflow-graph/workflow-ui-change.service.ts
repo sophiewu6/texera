@@ -25,9 +25,9 @@ export class WorkflowUIChangeService {
 
   constructor(private workflowModelService: WorkflowModelService, private operatorUIElementService: OperatorUIElementService) {
     // register callback function for on link added from UI
-    this.workflowModelService.uiGraph.on('change:source change:target', (link) => {
-      const originID: string = link.get('source').id;
-      const destID: string = link.get('target').id;
+    this.workflowModelService.uiGraph.on('change:source change:target', (event) => {
+      const originID: string = event.get('source').id;
+      const destID: string = event.get('target').id;
       if (originID && destID) {
         this.onLinkAddedFromUI(new OperatorLink(originID, destID));
       }

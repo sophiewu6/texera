@@ -30,6 +30,8 @@ export class PropertyEditorComponent implements OnInit {
   jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
 
+  formChangeTimes = 0;
+
   constructor(
     private operatorMetadataService: OperatorMetadataService,
     private workflowModelSerivce: WorkflowModelService,
@@ -62,8 +64,10 @@ export class PropertyEditorComponent implements OnInit {
   }
 
   onFormChanges(event: Object) {
-    // console.log('onform changes called');
-    // console.log(event);
+    this.formChangeTimes++;
+    console.log('onform changes called');
+    console.log(event);
+    console.log('called ' + this.formChangeTimes.toString() + ' times');
     this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
   }
 

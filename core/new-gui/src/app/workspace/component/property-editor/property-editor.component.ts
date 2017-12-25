@@ -32,6 +32,8 @@ export class PropertyEditorComponent implements OnInit {
 
   formChangeTimes = 0;
 
+  // private onFormChange$ = Observable.of(this.onFormChanges);
+
   constructor(
     private operatorMetadataService: OperatorMetadataService,
     private workflowModelSerivce: WorkflowModelService,
@@ -39,18 +41,19 @@ export class PropertyEditorComponent implements OnInit {
     private workflowDataChangeService: WorkflowDataChangeService,
     private changeDetectorRef: ChangeDetectorRef) {
 
-    this.workflowUIChangeService.operatorSelected$.subscribe(x => this.changePropertyEditor(x));
+    this.workflowUIChangeService.operatorSelected$.distinctUntilChanged().subscribe(x => this.changePropertyEditor(x));
+    // this.onFormChange$.debounceTime(100).distinctUntilChanged().subscribe(event => this.changeFormProperty(event));
   }
 
   ngOnInit() {
   }
 
   changePropertyEditor(operatorID: string) {
-    // console.log('changePropertyEditor called');
+    console.log('changePropertyEditor called');
     this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
     this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
     this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
-    this.changeDetectorRef.detectChanges();
+    // this.changeDetectorRef.detectChanges();
   }
 
   // layout for the form
@@ -68,7 +71,15 @@ export class PropertyEditorComponent implements OnInit {
     console.log('onform changes called');
     console.log(event);
     console.log('called ' + this.formChangeTimes.toString() + ' times');
-    this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
+    return event;
+  }
+
+  changeFormProperty(event: Object) {
+    if (this.currentPredicate) {
+      console.log('changeFormProperty called: ');
+      console.log(event);
+      this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
+    }
   }
 
 }

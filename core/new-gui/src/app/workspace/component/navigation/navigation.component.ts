@@ -15,7 +15,7 @@ export class NavigationComponent implements OnInit {
   }
 
   onClickRun() {
-    this.executeWorkflowService.executeWorkflow();
+    this.executeWorkflowService.onExecuteWorkflowRequested();
   }
 
 }

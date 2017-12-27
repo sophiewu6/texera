@@ -32,7 +32,6 @@ export class PropertyEditorComponent implements OnInit {
 
   formChangeTimes = 0;
 
-  // private onFormChange$ = Observable.of(this.onFormChanges);
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
@@ -42,7 +41,6 @@ export class PropertyEditorComponent implements OnInit {
     private changeDetectorRef: ChangeDetectorRef) {
 
     this.workflowUIChangeService.operatorSelected$.distinctUntilChanged().subscribe(x => this.changePropertyEditor(x));
-    // this.onFormChange$.debounceTime(100).distinctUntilChanged().subscribe(event => this.changeFormProperty(event));
   }
 
   ngOnInit() {
@@ -71,15 +69,7 @@ export class PropertyEditorComponent implements OnInit {
     console.log('onform changes called');
     console.log(event);
     console.log('called ' + this.formChangeTimes.toString() + ' times');
-    return event;
-  }
-
-  changeFormProperty(event: Object) {
-    if (this.currentPredicate) {
-      console.log('changeFormProperty called: ');
-      console.log(event);
-      this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
-    }
+    this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
   }
 
 }

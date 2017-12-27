@@ -4,6 +4,7 @@ import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
 import { MOCK_RESULT_DATA } from './mock-result-data';
+import { MOCK_WORKFLOW_PLAN } from './mock-workflow-plan';
 import { AppSettings } from '../../../common/app-setting';
 import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
 import { OperatorPredicate } from '../../model/operator-predicate';
@@ -17,33 +18,40 @@ export class ExecuteWorkflowService {
 
   constructor(private workflowModelService: WorkflowModelService, private http: HttpClient) { }
 
+  // observable and subject for execution start
   private onExecuteStartedSubject = new Subject<string>();
   executeStarted$ = this.onExecuteStartedSubject.asObservable();
 
+  // observable and subject for execution finish
   private onExecuteFinishedSubject = new Subject<Object[]>();
   executeFinished$ = this.onExecuteFinishedSubject.asObservable();
 
-  executeWorkflow(): void {
+  // main entry function, called when the user requests to execute a workflow
+  onExecuteWorkflowRequested(): void {
     console.log('execute workflow plan');
     console.log(this.workflowModelService.logicalPlan);
-    this.executeRealWorkflow();
+    this.executeRealPlan();
   }
 
-  private executeMockWorkflow(): void {
+  // show the mock result data without sending request to server
+  private showMockResultData(): void {
     this.onExecuteStartedSubject.next('started');
     this.onExecuteFinishedSubject.next(MOCK_RESULT_DATA);
   }
 
-  private executeRealWorkflow(): void {
-    // const mockLogicalPlan = new WorkflowLogicalPlan();
-    // mockLogicalPlan.addOperator('operator-1', 'ScanSource',
-    //   new OperatorPredicate('operator-1', 'ScanSource', { 'tableName': 'twitter_sample' }));
-    // mockLogicalPlan.addOperator('operator-2', 'ViewResults',
-    //   new OperatorPredicate('operator-2', 'ViewResults', { 'limit': 10, 'offset': 0 }));
-    // mockLogicalPlan.addLink(new OperatorLink('operator-1', 'operator-2'));
-    // const body = this.getLogicalPlanRequest(mockLogicalPlan);
+  // send a mock workflow plan to the server: ScanSource(twitter_sample) -> ViewResults
+  private executeMockPlan(): void {
+    this.executeWorkflowPlan(MOCK_WORKFLOW_PLAN);
+  }
 
-    const body = this.getLogicalPlanRequest(this.workflowModelService.logicalPlan);
+  // send the real workflow plan to the server
+  private executeRealPlan(): void {
+    this.executeWorkflowPlan(this.workflowModelService.logicalPlan);
+  }
+
+  // handle sending a HTTP request of a workflow plan to the server
+  private executeWorkflowPlan(workflowPlan: WorkflowLogicalPlan): void {
+    const body = this.getLogicalPlanRequest(workflowPlan);
     this.http.post(`${AppSettings.API_ENDPOINT}/${EXECUTE_WORKFLOW_ENDPOINT}`, body).subscribe(
       value => this.handleExecuteResult(value),
       error => this.handleExecuteError(error)
@@ -62,6 +70,7 @@ export class ExecuteWorkflowService {
     this.onExecuteFinishedSubject.error(error['message']);
   }
 
+  // transform a LogicalPlan object to the HTTP request body according to the backend API
   private getLogicalPlanRequest(logicalPlan: WorkflowLogicalPlan): Object {
     const logicalPlanJson = { 'operators': [], 'links': [] };
     logicalPlan.operatorPredicates.forEach(

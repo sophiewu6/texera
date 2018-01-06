@@ -30,7 +30,7 @@ export class ExecuteWorkflowService {
   onExecuteWorkflowRequested(): void {
     console.log('execute workflow plan');
     console.log(this.workflowModelService.logicalPlan);
-    this.executeRealPlan();
+    this.showMockResultData();
   }
 
   // show the mock result data without sending request to server

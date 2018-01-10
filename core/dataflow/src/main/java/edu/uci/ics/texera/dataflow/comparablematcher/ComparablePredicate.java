@@ -1,9 +1,11 @@
 package edu.uci.ics.texera.dataflow.comparablematcher;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMap;
 
-import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
@@ -47,8 +49,16 @@ public class ComparablePredicate extends PredicateBase {
     }
 
     @Override
-    public IOperator newOperator() {
+    public ComparableMatcher newOperator() {
         return new ComparableMatcher(this);
+    }
+    
+    public static Map<String, Object> getOperatorMetadata() {
+        return ImmutableMap.<String, Object>builder()
+            .put(PropertyNameConstants.USER_FRIENDLY_NAME, "Comparison")
+            .put(PropertyNameConstants.OPERATOR_DESCRIPTION, "Select data based on a condition (>, <, =, ..)")
+            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, "Other")
+            .build();
     }
 
 }

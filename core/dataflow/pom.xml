@@ -61,9 +61,9 @@
             <version>1.4.9</version>
         </dependency>
 		<dependency>
-    		<groupId>mysql</groupId>
-    		<artifactId>mysql-connector-java</artifactId>
-    		<version>5.1.42</version>
+    		  <groupId>mysql</groupId>
+    		  <artifactId>mysql-connector-java</artifactId>
+    		  <version>5.1.42</version>
 		</dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -84,6 +84,16 @@
             <groupId>com.twitter</groupId>
             <artifactId>hbc-core</artifactId> <!-- or hbc-twitter4j -->
             <version>2.2.0</version> <!-- or whatever the latest version is -->
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jsonSchema</artifactId>
+            <version>2.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.java-json-tools</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>2.2.8</version>
         </dependency>
     </dependencies>
 

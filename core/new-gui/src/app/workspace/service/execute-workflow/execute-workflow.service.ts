@@ -30,7 +30,7 @@ export class ExecuteWorkflowService {
   onExecuteWorkflowRequested(): void {
     console.log('execute workflow plan');
     console.log(this.workflowModelService.logicalPlan);
-    this.showMockResultData();
+    this.executeRealPlan();
   }
 
   // show the mock result data without sending request to server
@@ -52,7 +52,8 @@ export class ExecuteWorkflowService {
   // handle sending a HTTP request of a workflow plan to the server
   private executeWorkflowPlan(workflowPlan: WorkflowLogicalPlan): void {
     const body = this.getLogicalPlanRequest(workflowPlan);
-    this.http.post(`${AppSettings.API_ENDPOINT}/${EXECUTE_WORKFLOW_ENDPOINT}`, body).subscribe(
+    this.http.post(`${AppSettings.API_ENDPOINT}/${EXECUTE_WORKFLOW_ENDPOINT}`, JSON.stringify(body),
+      {headers: {'Content-Type': 'application/json'}}).subscribe(
       value => this.handleExecuteResult(value),
       error => this.handleExecuteError(error)
     );

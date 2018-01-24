@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import edu.uci.ics.texera.api.dataflow.IOperator;
+import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
@@ -24,6 +25,7 @@ public class NlpEntityPredicate extends PredicateBase {
             List<String> attributeNames,
             @JsonProperty(value = PropertyNameConstants.SPAN_LIST_NAME, required = true)
             String spanListName) {
+        
         this.nlpEntityType = nlpEntityType;
         this.attributeNames = attributeNames;
         if (spanListName == null || spanListName.trim().isEmpty()) {

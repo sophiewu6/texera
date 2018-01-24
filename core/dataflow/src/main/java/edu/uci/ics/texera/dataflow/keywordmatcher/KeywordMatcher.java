@@ -107,8 +107,7 @@ public class KeywordMatcher extends AbstractSingleInputOperator {
             matchingResults = appendPhraseMatchingSpans(inputTuple, predicate.getAttributeNames(), queryTokenList, queryTokenWithStopwordsList, predicate.getQuery());
         }
         if (this.predicate.getMatchingType() == KeywordMatchingType.SUBSTRING_SCANBASED) {
-            matchingResults = new ArrayList<>();
-            DataflowUtils.appendSubstringMatchingSpans(inputTuple, predicate.getAttributeNames(), predicate.getQuery(), matchingResults);
+            matchingResults = appendSubstringMatchingSpans(inputTuple, predicate.getAttributeNames(), predicate.getQuery());
         }
         
         if (matchingResults.isEmpty()) {
@@ -195,6 +194,44 @@ public class KeywordMatcher extends AbstractSingleInputOperator {
                         .collect(Collectors.toList());
                 if (DataflowUtils.isAllQueryTokensPresent(fieldSpanList, queryTokenSet)) {
                     matchingResults.addAll(fieldSpanList);
+                }
+
+            }
+        }
+        return matchingResults;
+    }
+
+    private List<Span> appendSubstringMatchingSpans(Tuple inputTuple, List<String> attributeNames, String queryKeyword) throws DataflowException {
+        List<Span> matchingResults = new ArrayList<>();
+        for (String attributeName : attributeNames) {
+            //  AttributeType attributeType = this.inputSchema.getAttribute(attributeName).getAttributeType();
+            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
+            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
+            // types other than TEXT and STRING: throw Exception for now
+            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
+                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
+            }
+
+            // for STRING type, the query should match the fieldValue completely
+            if (attributeType == AttributeType.STRING) {
+                if (fieldValue.equals(queryKeyword)) {
+                    matchingResults.add(new Span(attributeName, 0, queryKeyword.length(), queryKeyword, fieldValue));
+                }
+            }
+
+            if (attributeType == AttributeType.TEXT) {
+
+                String fieldValueLowerCase = fieldValue.toLowerCase();
+                String queryKeywordLowerCase = queryKeyword.toLowerCase();
+                for (int i = 0; i < fieldValueLowerCase.length(); i++) {
+                    int index = -1;
+                    if ((index = fieldValueLowerCase.indexOf(queryKeywordLowerCase, i)) != -1) {
+                        matchingResults.add(new Span(attributeName, index, index + queryKeyword.length(), queryKeyword,
+                                fieldValue.substring(index, index + queryKeyword.length())));
+                        i = index + 1;
+                    } else {
+                        break;
+                    }
                 }
 
             }

@@ -1236,6 +1236,5 @@ public class DictionaryMatcherTest {
         Assert.assertTrue(contains);
     }
 
-
 }
 

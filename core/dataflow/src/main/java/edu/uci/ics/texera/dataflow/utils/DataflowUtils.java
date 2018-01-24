@@ -138,49 +138,6 @@ public class DataflowUtils {
         return payload;
     }
 
-    /***
-     *
-     * @param inputTuple
-     * @param attributeNames
-     * @param queryKeyword
-     * @param matchingResults
-     * @throws DataflowException
-     */
-    public static void appendSubstringMatchingSpans(Tuple inputTuple, List<String> attributeNames, String queryKeyword, List<Span> matchingResults) throws DataflowException {
-        for (String attributeName : attributeNames) {
-            //  AttributeType attributeType = this.inputSchema.getAttribute(attributeName).getAttributeType();
-            String fieldValue = inputTuple.getField(attributeName).getValue().toString();
-            AttributeType attributeType = inputTuple.getSchema().getAttribute(attributeName).getType();
-            // types other than TEXT and STRING: throw Exception for now
-            if (attributeType != AttributeType.STRING && attributeType != AttributeType.TEXT) {
-                throw new DataflowException("KeywordMatcher: Fields other than STRING and TEXT are not supported yet");
-            }
-
-            // for STRING type, the query should match the fieldValue completely
-            if (attributeType == AttributeType.STRING) {
-                if (fieldValue.equals(queryKeyword)) {
-                    matchingResults.add(new Span(attributeName, 0, queryKeyword.length(), queryKeyword, fieldValue));
-                }
-            }
-
-            if (attributeType == AttributeType.TEXT) {
-
-                String fieldValueLowerCase = fieldValue.toLowerCase();
-                String queryKeywordLowerCase = queryKeyword.toLowerCase();
-                for (int i = 0; i < fieldValueLowerCase.length(); i++) {
-                    int index = -1;
-                    if ((index = fieldValueLowerCase.indexOf(queryKeywordLowerCase, i)) != -1) {
-                        matchingResults.add(new Span(attributeName, index, index + queryKeyword.length(), queryKeyword,
-                                fieldValue.substring(index, index + queryKeyword.length())));
-                        i = index + 1;
-                    } else {
-                        break;
-                    }
-                }
-
-            }
-        }
-    }
 
     /**
      * This function is used to generate the SpanList for phrase matching type in both dictionarymatcher and keywordmatcher.

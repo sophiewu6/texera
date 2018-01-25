@@ -86,7 +86,7 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
 
     public static void main(String args[]) throws Exception {
         System.out.println("Writing twitter index");
-        TwitterSample.writeTwitterIndex();
+//        TwitterSample.writeTwitterIndex();
         System.out.println("Finished writing twitter index");
         
         System.out.println("Ingesting twitter");

@@ -26,7 +26,7 @@ public class AsterixTwitterIngest {
                 keywords,
                 startDate,
                 endDate,
-                null);
+                10);
         
         AsterixSource asterixSource = asterixSourcePredicate.newOperator();
         
@@ -50,6 +50,7 @@ public class AsterixTwitterIngest {
         Tuple tuple;
         while ((tuple = tupleSink.getNextTuple()) != null) {
             dataWriter.insertTuple(tuple);
+            System.out.println(tuple);
         }
         
         dataWriter.close();

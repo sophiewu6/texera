@@ -30,6 +30,11 @@ import edu.uci.ics.texera.api.schema.AttributeType;
 
 public class StorageUtils {
     
+    public static void main(String[] args) throws Exception {
+        String s = "2017-02-08T11:00:58";
+        System.out.println(DateTools.stringToDate(s));
+    }
+    
     public static IField getField(AttributeType attributeType, String fieldValue) throws ParseException {
         IField field = null;
         switch (attributeType) {

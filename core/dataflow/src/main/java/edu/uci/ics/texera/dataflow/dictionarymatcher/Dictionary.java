@@ -71,6 +71,53 @@ public class Dictionary {
         this.patternList = null;
     }
 
+    /**
+     @param entry New entry to be added
+     @return True if entry no already present, false otherwise
+     */
+    @JsonIgnore
+    public boolean addEntry(String entry) {
+        entry = entry.trim();
+        if (dictionaryEntries.contains(entry)) {
+            return false;
+        }
+        dictionaryEntries.add(entry);
+        return true;
+    }
+
+    /**
+     @param entry Existing entry to be removed
+     @return True if entry exist, false otherwise
+     */
+    @JsonIgnore
+    public boolean removeEntry(String entry) {
+        entry = entry.trim();
+        if (!dictionaryEntries.contains(entry)) {
+            return false;
+        }
+        dictionaryEntries.remove(entry);
+        return true;
+    }
+
+    /**
+     @param entry Target entry to be checked
+     @return True if entry exist, false otherwise
+     */
+    @JsonIgnore
+    public boolean containsEntry(String entry) {
+        return dictionaryEntries.contains(entry.trim());
+    }
+
+    /**
+     @param oldEntry Target entry to be updated
+     @param newEntry New entry to be added
+     @return True if old entry exist and new entry not exist, false otherwise
+     */
+    @JsonIgnore
+    public boolean updateEntry(String oldEntry, String newEntry) {
+        return removeEntry(oldEntry) && addEntry(newEntry);
+    }
+
     @JsonProperty(value = PropertyNameConstants.DICTIONARY_ENTRIES)
     public ArrayList<String> getDictionaryEntries() {
         return this.dictionaryEntries;

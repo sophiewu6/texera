@@ -21,6 +21,7 @@ import edu.uci.ics.texera.api.dataflow.ISink;
 import edu.uci.ics.texera.api.engine.Plan;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.PlanGenException;
+import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
@@ -124,11 +125,8 @@ public class LogicalPlan {
         }
 
         IOperator currentOperator = operatorObjectMap.get(operatorID);
-        Schema operatorSchema = new Schema();
-        // Use try statement here in case the currentOperator is not
-        // an instance of AbstractSingleInputOperator
         currentOperator.open();
-        operatorSchema = currentOperator.getOutputSchema();
+        Schema operatorSchema = currentOperator.getOutputSchema();
         currentOperator.close();
 
         return operatorSchema;
@@ -141,7 +139,7 @@ public class LogicalPlan {
             Schema currentSchema = null;
             try {
                 currentSchema = getOperatorOutputSchema(operatorID);
-            } catch(DataflowException e) {
+            } catch(TexeraException e) {
                 if (!e.getMessage().equals(ErrorMessages.INPUT_OPERATOR_NOT_SPECIFIED)) {
                     throw e;
                 }

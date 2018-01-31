@@ -108,16 +108,6 @@ public class Dictionary {
         return dictionaryEntries.contains(entry.trim());
     }
 
-    /**
-     @param oldEntry Target entry to be updated
-     @param newEntry New entry to be added
-     @return True if old entry exist and new entry not exist, false otherwise
-     */
-    @JsonIgnore
-    public boolean updateEntry(String oldEntry, String newEntry) {
-        return removeEntry(oldEntry) && addEntry(newEntry);
-    }
-
     @JsonProperty(value = PropertyNameConstants.DICTIONARY_ENTRIES)
     public ArrayList<String> getDictionaryEntries() {
         return this.dictionaryEntries;

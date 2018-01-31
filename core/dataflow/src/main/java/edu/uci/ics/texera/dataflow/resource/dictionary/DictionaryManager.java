@@ -88,6 +88,17 @@ public class DictionaryManager {
         
         return null;
     }
+
+    public boolean removeDictionary(String fileName) throws StorageException{
+        // write metadata info
+        DataWriter dataWriter = relationManager.getTableDataWriter(DictionaryManagerConstants.TABLE_NAME);
+        dataWriter.open();
+
+        // clean up the dictionary metadata if it already exists in dictionary table
+        dataWriter.deleteTuple(new TermQuery(new Term(DictionaryManagerConstants.NAME, fileName)));
+        dataWriter.close();
+        return removeFile(fileName);
+    }
     
     /**
      * Write uploaded file at the given location (if the file exists, remove it and write a new one.)
@@ -106,7 +117,16 @@ public class DictionaryManager {
             throw new StorageException("Error occurred whlie uploading dictionary");
         }
     }
-    
+
+    private boolean removeFile(String fileName) {
+        try {
+            Path filePath = DictionaryManagerConstants.DICTIONARY_DIR_PATH.resolve(fileName);;
+            return Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            return false;
+
+        }
+    }
     public List<String> getDictionaries() throws StorageException {
         List<String> dictionaries = new ArrayList<>();
         
@@ -127,6 +147,7 @@ public class DictionaryManager {
                 new TermQuery(new Term(DictionaryManagerConstants.NAME, dictionaryName)));
         dataReader.open();
         if (dataReader.getNextTuple() == null) {
+            dataReader.close();
             throw new StorageException("Dictionary " + dictionaryName + "does not exist");
         }
         dataReader.close();

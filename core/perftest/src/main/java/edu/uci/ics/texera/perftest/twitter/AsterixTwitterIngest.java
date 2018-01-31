@@ -26,7 +26,7 @@ public class AsterixTwitterIngest {
                 keywords,
                 startDate,
                 endDate,
-                10);
+                null);
         
         AsterixSource asterixSource = asterixSourcePredicate.newOperator();
         

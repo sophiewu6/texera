@@ -48,8 +48,17 @@ export class WorkflowEditorComponent implements OnInit {
     this.workflowModelSerivce.registerWorkflowPaper(this.paper);
 
     this.paper.on('cell:pointerdown', (cellView, evt, x, y) => {
+      console.log("Cell pointer down occurrs");
       this.workflowUIChangeService.selectOperator(cellView.model.id);
     });
+
+
+    // test delete action
+    this.paper.on('element:delete', (cellView, evt, x, y) => {
+      evt.stopPropagation();
+      console.log("Element delete!!!");
+      cellView.model.remove();
+    })
   }
 
 

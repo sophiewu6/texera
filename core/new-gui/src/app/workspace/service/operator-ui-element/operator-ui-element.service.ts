@@ -10,12 +10,47 @@ export class OperatorUIElementService {
 
   getOperatorUIElement(operatorType: string): joint.dia.Element {
     const operatorSchema = this.operatorMetadataService.getOperatorMetadata(operatorType);
-    const operatorElement = new joint.shapes.devs.Model({
-      position: { x: 0, y: 0 },
-      size: { width: 100, height: 30 },
-      attrs: { rect: { fill: 'grey' }, text: { text: operatorType, fill: 'black' } }
+
+
+    joint.shapes.devs["TexeraModel"] = joint.shapes.devs.Model.extend({
+      type: "devs.TexeraModel",
+      markup : '<g class="element-node">'+
+             '<rect class="body" stroke-width="2" stroke="blue" rx="5px" ry="5px"></rect>'+
+             '<svg class="delete-button" fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">' +
+                 '<path d="M0 0h24v24H0z" fill="none" pointer-events="visible" />' +
+                 '<path d="M14.59 8L12 10.59 9.41 8 8 9.41 10.59 12 8 14.59 9.41 16 12 13.41 14.59 16 16 14.59 13.41 12 16 9.41 14.59 8zM12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>' +
+             '</svg>' +
+            '<text>'+
+            '</text>'+
+          '<g class="inPorts"/>' +
+          '<g class="outPorts"/>' +
+        '</g>'
     });
+
+
+    const operatorElement = new joint.shapes.devs["TexeraModel"]({
+      position: { x: 0, y: 0 },
+      size: { width: 120, height: 50 },
+      attrs: {
+        'rect': { fill: '#80deea' , 'follow-scale': true },
+        'text': { text: operatorType, fill: 'black', 'font-size': '16.5px',
+        'ref-x': 0.5, 'ref-y' : 0.5, ref: "rect",  'y-alignment': 'middle', 'x-alignment': 'middle' },
+        '.delete-button' : { x : 120, y : -15, cursor : 'pointer',
+        fill : 'red', event: 'element:delete'}
+      }
+    });
+
+
+    // operatorElement.attr({
+    //   '.delete-button' : {
+    //     fill : "grey",
+    //     event: 'element:delete'
+    //   }
+    // });
     // set input ports
+
+
+
     for (let i = 0; i < operatorSchema.numInputPorts; i++) {
       operatorElement.addInPort(`in${i}`);
     }

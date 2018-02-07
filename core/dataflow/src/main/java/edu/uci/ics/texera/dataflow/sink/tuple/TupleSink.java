@@ -68,7 +68,7 @@ public class TupleSink implements ISink {
             return;
         }
         if (inputOperator == null) {
-            throw new DataflowException(ErrorMessages.INPUT_OPERATOR_NOT_SPECIFIED);
+            throw new TexeraException(ErrorMessages.INPUT_OPERATOR_NOT_SPECIFIED);
         }
         inputOperator.open();
         inputSchema = inputOperator.getOutputSchema();

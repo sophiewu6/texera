@@ -36,7 +36,7 @@ export class ResultViewComponent implements OnInit {
       console.log('show success data');
       this.showMessage = false;
       // generate columnDef from first row
-      const resultData: Object[] = response.result;
+      const resultData: Objegct[] = response.result;
       this.currentDisplayColumns = Object.keys(resultData[0]).filter(x => x !== '_id');
       this.currentColumns = this.generateColumns(this.currentDisplayColumns);
       this.currentDataSource = new ResultDataSource(resultData);

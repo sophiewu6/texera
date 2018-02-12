@@ -27,37 +27,65 @@ export class PropertyEditorComponent implements OnInit {
   */
   currentPredicate: OperatorPredicate = undefined;
   currentSchema: OperatorSchema = undefined;
-  jsonSchemaObject: Object = undefined;
+  jsonSchemaObject: any = undefined;
   formLayout: object = this.generateFormLayout();
 
   formChangeTimes = 0;
+
+
+  exampleSchema = {
+    'type': 'object', 'id': 'urn:jsonschema:edu:uci:ics:texera:dataflow:keywordmatcher:KeywordPredicate',
+    'properties': {
+      'query': { 'type': 'string' },
+      'attributes': { 'type': 'array', 'items': { 'type': 'string' } },
+      'luceneAnalyzer': { 'type': 'string' },
+      'matchingType': { 'type': 'string', 'enum': ['scan', 'conjunction', 'phrase', 'regex'] },
+      'spanListName': { 'type': 'string' }
+    },
+    'operatorType': 'KeywordMatcher', 'inputNumber': 1, 'outputNumber': 1,
+    'userFriendlyName': 'Keyword Search',
+    'operatorDescription': 'Search the documents using a keyword',
+    'operatorGroupName': 'Search', 'required': ['query', 'attributes', 'matchingType'], 'advancedOptions': []
+  };
 
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
     private workflowModelSerivce: WorkflowModelService,
     private workflowUIChangeService: WorkflowUIChangeService,
-    private workflowDataChangeService: WorkflowDataChangeService,
-    private changeDetectorRef: ChangeDetectorRef) {
+    private workflowDataChangeService: WorkflowDataChangeService) {
 
     this.workflowUIChangeService.operatorSelected$.distinctUntilChanged().subscribe(x => this.changePropertyEditor(x));
   }
 
   ngOnInit() {
+    this.currentPredicate = Object();
+    this.jsonSchemaObject = {
+      'type': 'object', 'id': 'urn:jsonschema:edu:uci:ics:texera:dataflow:keywordmatcher:KeywordPredicate',
+      'properties': {
+        'query': { 'type': 'string' },
+        'attributes': { 'type': 'array', 'items': { 'type': 'string' } },
+        'luceneAnalyzer': { 'type': 'string' },
+        'matchingType': { 'type': 'string', 'enum': ['scan', 'conjunction', 'phrase', 'regex'] },
+        'spanListName': { 'type': 'string' }
+      },
+      'operatorType': 'KeywordMatcher', 'inputNumber': 1, 'outputNumber': 1,
+      'userFriendlyName': 'Keyword Search',
+      'operatorDescription': 'Search the documents using a keyword',
+      'operatorGroupName': 'Search', 'required': ['query', 'attributes', 'matchingType'], 'advancedOptions': []
+    };
   }
 
   changePropertyEditor(operatorID: string) {
     console.log('changePropertyEditor called');
-    this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
-    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
-    this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
-    // this.changeDetectorRef.detectChanges();
+    // this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
+    // this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
+    // this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
   }
 
   // layout for the form
   generateFormLayout(): Object {
-    // hide the submit button
-    // console.log('generate form layout');
+    // hide submit button
     return [
       '*',
       { type: 'submit', display: false }

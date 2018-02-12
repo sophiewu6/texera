@@ -7,7 +7,10 @@ import { Observable } from 'rxjs/Rx';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { CustomNgMaterialModule } from './common/custom-ng-material.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { JsonSchemaFormModule } from 'angular2-json-schema-form';
+
+import {
+  JsonSchemaFormModule, MaterialDesignFrameworkModule
+} from 'angular2-json-schema-form';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -39,7 +42,9 @@ import { OperatorLabelComponent } from './workspace/component/operator-view/oper
     FlexLayoutModule,
     CustomNgMaterialModule,
     BrowserAnimationsModule,
-    JsonSchemaFormModule,
+
+    MaterialDesignFrameworkModule,
+    JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
   ],
   providers: [ HttpClientModule ],
   bootstrap: [AppComponent]

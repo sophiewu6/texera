@@ -1,8 +1,125 @@
 <div class="texera-workspace-operator-view-container">
-  <h3 md-subheader>Operators</h3>    
-  <mat-list>
-    <mat-list-item *ngFor="let operatorSchema of operatorMetadataList">
-      <texera-operator-label [operator]="operatorSchema"></texera-operator-label>
-    </mat-list-item>
-  </mat-list>
+    <h3 md-subheader>Operators</h3> 
+
+    <form class="search-area">
+      <mat-form-field class="search-area-full-width">
+        <input type="text" placeholder="Search Operators" aria-label="OperatorSchema" matInput [formControl]="operatorCtrl" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let option of filteredOptions | async" (click)="HighlightSelection(option)" [value]="option.userFriendlyName">
+            {{option.userFriendlyName}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </form>
+
+<mat-accordion multi="true">
+    <mat-expansion-panel>
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+              Sources
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'KeywordSource' 
+                || operatorSchema.operatorType == 'TwitterFeed'
+                || operatorSchema.operatorType == 'FileSource'
+                || operatorSchema.operatorType == 'RegexSource'
+                || operatorSchema.operatorType == 'DictionarySource'
+                || operatorSchema.operatorType == 'FuzzyTokenSource'
+                || operatorSchema.operatorType == 'WordCountIndexSource'
+                || operatorSchema.operatorType == 'ScanSource'
+                || operatorSchema.operatorType == 'AsterixSource'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Search
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'FuzzyTokenMatcher' 
+                || operatorSchema.operatorType == 'RegexMatcher'
+                || operatorSchema.operatorType == 'KeywordMatcher'
+                || operatorSchema.operatorType == 'DictionaryMatcher'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Analyze
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'NltkSentiment' 
+                || operatorSchema.operatorType == 'EmojiSentiment'
+                || operatorSchema.operatorType == 'RegexSplit'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Split
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'RegexSplit' 
+                || operatorSchema.operatorType == 'NlpEntity'
+                || operatorSchema.operatorType == 'NlpSentiment'
+                || operatorSchema.operatorType == 'NlpSplit'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Join
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'SimilarityJoin' 
+                || operatorSchema.operatorType == 'JoinDistance'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Other
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'Projection' 
+                || operatorSchema.operatorType == 'TwitterConverter'
+                || operatorSchema.operatorType == 'Sampler'
+                || operatorSchema.operatorType == 'WordCount'
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              Write Database
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'MysqlSink' 
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+            <mat-panel-title>
+              View Results
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+            <div *ngFor="let operatorSchema of operatorMetadataList">
+                <texera-operator-label  *ngIf="operatorSchema.operatorType == 'ViewResults' 
+                " [operator]="operatorSchema"></texera-operator-label>
+            </div>
+    </mat-expansion-panel> 
+</mat-accordion>
 </div>

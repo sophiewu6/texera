@@ -51,7 +51,8 @@ export class OperatorMetadataService {
           op['outputNumber'],
           op['operatorDescription'],
           op['required'],
-          op['advancedOptions']
+          op['advancedOptions'],
+          op['operatorGroupName']
         ))
     );
     return operatorSchema;

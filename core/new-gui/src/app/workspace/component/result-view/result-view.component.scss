@@ -1,6 +1,34 @@
 .texera-workspace-result-view-container {
-    width: 100%;
-    height: 100%;
     border-style: solid;
     overflow: auto;
+    width: 100%;
+}
+
+#result-table {
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+}
+
+
+.mat-table {
+    display: table;
+    width: 100%;
+
+    > .mat-header-row, > .mat-row {
+        display: table-row;
+        border: none;
+
+        > .mat-header-cell, > .mat-cell {
+            display: table-cell;
+            height: 48px;
+            padding: 0px 10px;
+            vertical-align: middle;
+            max-width: 200px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+            border-right: 1px solid rgba(0, 0, 0, 0.12);
+        }
+    }
 }

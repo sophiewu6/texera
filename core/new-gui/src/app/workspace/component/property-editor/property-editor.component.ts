@@ -25,7 +25,9 @@ export class PropertyEditorComponent implements OnInit {
     to prevent "onChanges" event fired continously.
     currentPredicate won't change as the form value changes
   */
-  currentPredicate: OperatorPredicate = undefined;
+
+  operatorID: string = undefined;
+  initialData: Object = undefined;
   currentSchema: OperatorSchema = undefined;
   jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
@@ -47,9 +49,14 @@ export class PropertyEditorComponent implements OnInit {
 
   changePropertyEditor(operatorID: string) {
     console.log('changePropertyEditor called');
-    this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
-    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
+    this.operatorID = operatorID;
+    const operatorPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
+    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(operatorPredicate.operatorType);
+    // make a copy of the property data
+    this.initialData = Object.assign({}, operatorPredicate.operatorProperties);
     this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
+    console.log('current predicate properties: ');
+    console.log(this.initialData);
   }
 
   // layout for the form
@@ -66,7 +73,7 @@ export class PropertyEditorComponent implements OnInit {
     console.log('onform changes called');
     console.log(event);
     console.log('called ' + this.formChangeTimes.toString() + ' times');
-    this.workflowDataChangeService.changeProperty(this.currentPredicate.operatorID, event);
+    this.workflowDataChangeService.changeProperty(this.operatorID, event);
   }
 
 }

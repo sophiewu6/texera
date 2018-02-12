@@ -24,28 +24,28 @@ export class ResultViewComponent implements OnInit {
   // displayedColumns = this.columns.map(x => x.columnDef);
 
   constructor(private executeWorkflowService: ExecuteWorkflowService, private changeDetectorRef: ChangeDetectorRef) {
-    executeWorkflowService.executeFinished$.subscribe(
+    this.executeWorkflowService.executeFinished$.subscribe(
       value => this.handleResultData(value),
-      error => this.handleError(error)
     );
   }
 
-  private handleResultData(resultData: any): void {
-    if (! resultData || resultData.length === 0) {
-      this.handleError('No result');
-      return;
+  private handleResultData(response: any): void {
+    console.log('view result compoenent, ');
+    console.log(response);
+    if (response.code === 0) {
+      console.log('show success data');
+      this.showMessage = false;
+      // generate columnDef from first row
+      const resultData: Object[] = response.result;
+      this.currentDisplayColumns = Object.keys(resultData[0]).filter(x => x !== '_id');
+      this.currentColumns = this.generateColumns(this.currentDisplayColumns);
+      this.currentDataSource = new ResultDataSource(resultData);
+      console.log(this.currentDisplayColumns);
+    } else {
+      console.log('show fail message');
+      this.showMessage = true;
+      this.message = JSON.stringify(response.message);
     }
-    this.showMessage = false;
-    // generate columnDef from first row
-    console.log(resultData);
-    this.currentDisplayColumns = Object.keys(resultData[0]).filter(x => x !== '_id');
-
-    // this.currentDisplayColumns = ['test','position', 'name', 'weight', 'symbol'];
-
-    this.currentColumns = this.generateColumns(this.currentDisplayColumns);
-    this.currentDataSource = new ResultDataSource(resultData);
-    console.log(this.currentDisplayColumns);
-    console.log(this.currentDataSource);
   }
 
   private generateColumns(columnNames: string[]): TableColumn[] {
@@ -53,11 +53,6 @@ export class ResultViewComponent implements OnInit {
     columnNames.forEach(col => columns.push(new TableColumn(col, col, (row) => `${row[col]}`)));
     console.log(columns);
     return columns;
-  }
-
-  private handleError(error: any): void {
-    this.showMessage = true;
-    this.message = JSON.stringify(error);
   }
 
   ngOnInit() {

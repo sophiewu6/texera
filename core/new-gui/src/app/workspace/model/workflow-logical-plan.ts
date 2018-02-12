@@ -36,6 +36,50 @@ export class WorkflowLogicalPlan {
     }
 
     deleteOperator(operatorID: string) {
-        // TODO
+
+        // get predicate index and delete it from the list
+        const predicateIndex = this.getOperatorPredicateIndex(operatorID);
+        this.operatorPredicates.splice(predicateIndex, 1);
+
+        // delete operator links from this.operatorLinks
+
+        this.deleteLink(operatorID);
+
+        // delete operator from ID map
+        this.operatorIDMap.delete(operatorID);
+    }
+
+    deleteLink(operatorID: string) {
+
+        if (!this.hasOperator(operatorID)) {
+            return;
+        }
+
+        let deleteIndexList = [];
+        // find all the links related to the deleted operator
+        for (let i = 0; i < this.operatorLinks.length; ++i) {
+            const currentLink = this.operatorLinks[i];
+            if (currentLink.origin === operatorID || currentLink.destination === operatorID) {
+                deleteIndexList.push(i);
+            }
+        }
+        // delete from the end so index will not mess up when deleting
+        for (let i = deleteIndexList.length - 1; i >= 0; --i) {
+            this.operatorLinks.splice(deleteIndexList[i], 1);
+        }
+    }
+
+    getOperatorPredicateIndex(operatorID: string) {
+        let index = 0;
+        // find the index of the deleted operator in the predicate list
+        if (this.hasOperator(operatorID)) {
+            for (let i = 0; i < this.operatorPredicates.length; ++i) {
+                if (this.operatorPredicates[i].operatorID === operatorID) {
+                    index = i;
+                    break;
+                }
+            }
+        }
+        return index;
     }
 }

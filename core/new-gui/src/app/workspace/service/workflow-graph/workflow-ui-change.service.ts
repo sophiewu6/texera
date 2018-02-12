@@ -16,6 +16,9 @@ export class WorkflowUIChangeService {
   private operatorAddedSubject = new Subject<OperatorPredicate>();
   operatorAdded$ = this.operatorAddedSubject.asObservable();
 
+  private operatorDeletedSubject = new Subject<string>();
+  operatorDeleted$ = this.operatorDeletedSubject.asObservable();
+
   private linkAddedSubject = new Subject<OperatorLink>();
   linkAdded$ = this.linkAddedSubject.asObservable();
 
@@ -46,8 +49,12 @@ export class WorkflowUIChangeService {
 
     // add the operator UI element to the UI model
     this.workflowModelService.uiGraph.addCell(operatorUIElement);
-
     this.operatorAddedSubject.next(operator);
+  }
+
+
+  deleteOperator(operatorID: string): void {
+    this.operatorDeletedSubject.next(operatorID);
   }
 
   // API for adding link externally (not from user UI)

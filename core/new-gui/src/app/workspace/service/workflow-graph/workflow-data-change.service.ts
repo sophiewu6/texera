@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs/Rx';
+import { Observable, Subject, operators } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
 import { WorkflowModelService } from './workflow-model.service';
@@ -16,12 +16,17 @@ export class WorkflowDataChangeService {
   constructor(private workflowModelSerivce: WorkflowModelService,
     private workflowUIChangeService: WorkflowUIChangeService) {
       this.workflowUIChangeService.operatorAdded$.subscribe((operator) => this.addOperator(operator));
+      this.workflowUIChangeService.operatorDeleted$.subscribe((operatorId) => this.deleteOperator(operatorId));
       this.workflowUIChangeService.linkAdded$.subscribe((link) => this.addLink(link));
     }
 
 
   private addOperator(operator: OperatorPredicate): void {
     this.workflowModelSerivce.logicalPlan.addOperator(operator);
+  }
+
+  private deleteOperator(operatorId: string): void {
+    this.workflowModelSerivce.logicalPlan.deleteOperator(operatorId);
   }
 
   private addLink(link: OperatorLink): void {

@@ -39,7 +39,15 @@ export class WorkflowEditorComponent implements OnInit {
       snapLinks: true,
       linkPinning: false,
       validateConnection: function (sourceView, sourceMagnet, targetView, targetMagnet) {
-        return sourceMagnet !== targetMagnet;
+
+        // user cannot draw connection starting from the input port (left side)
+        if (sourceMagnet && sourceMagnet.getAttribute('port-group') === 'in') {return false; }
+
+        // user cannot connect to the output port (right side)
+        if (targetMagnet && targetMagnet.getAttribute('port-group') === 'out') {return false; }
+
+        return sourceView.id !== targetView.id;
+        // return sourceMagnet !== targetMagnet;
       }
     });
 
@@ -48,7 +56,19 @@ export class WorkflowEditorComponent implements OnInit {
     this.workflowModelSerivce.registerWorkflowPaper(this.paper);
 
     this.paper.on('cell:pointerdown', (cellView, evt, x, y) => {
+      console.log("Cell pointer down occurrs");
       this.workflowUIChangeService.selectOperator(cellView.model.id);
+    });
+
+
+    // test delete action
+    this.paper.on('element:delete', (cellView, evt, x, y) => {
+      evt.stopPropagation();
+      // delete the operator in the workflow data
+      this.workflowUIChangeService.deleteOperator(cellView.model.id);
+
+      // delete the operator on the cellView
+      cellView.model.remove();
     });
   }
 

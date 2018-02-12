@@ -15,7 +15,6 @@ export class ResultViewComponent implements OnInit {
   showMessage: boolean = false;
   message: string = '';
 
-  test = [1,2,3];
   currentColumns: TableColumn[] = undefined;
   currentDisplayColumns: string[] = undefined;
   currentDataSource: ResultDataSource = undefined;
@@ -36,7 +35,7 @@ export class ResultViewComponent implements OnInit {
       console.log('show success data');
       this.showMessage = false;
       // generate columnDef from first row
-      const resultData: Objegct[] = response.result;
+      const resultData: Object[] = response.result;
       this.currentDisplayColumns = Object.keys(resultData[0]).filter(x => x !== '_id');
       this.currentColumns = this.generateColumns(this.currentDisplayColumns);
       this.currentDataSource = new ResultDataSource(resultData);
@@ -84,18 +83,3 @@ export class ResultDataSource extends DataSource<Object> {
 
 }
 
-
-
-export interface Element {
-  name: string;
-  position: number;
-  weight: number;
-  symbol: string;
-  test: string;
-}
-
-const ELEMENT_DATA: Element[] = [
-  {test: "HEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHEHE", position: 4, name: 'BerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBeryllium', weight: 9.0122, symbol: 'Be'},
-  {test: "HEHEHEHEHEHE", position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'BerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBeryllium'},
-  {test: "HEHEHEHEHEHE", position: 12, name: 'BerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBerylliumBeryllium', weight: 24.305, symbol: 'Mg'}
-];

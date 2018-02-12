@@ -52,23 +52,28 @@ export class ExecuteWorkflowService {
   // handle sending a HTTP request of a workflow plan to the server
   private executeWorkflowPlan(workflowPlan: WorkflowLogicalPlan): void {
     const body = this.getLogicalPlanRequest(workflowPlan);
+    console.log('making http post request to backend');
+    console.log('body is:');
+    console.log(body);
     this.http.post(`${AppSettings.API_ENDPOINT}/${EXECUTE_WORKFLOW_ENDPOINT}`, JSON.stringify(body),
       {headers: {'Content-Type': 'application/json'}}).subscribe(
-      value => this.handleExecuteResult(value),
-      error => this.handleExecuteError(error)
+        response => this.handleExecuteResult(response),
+        errorResponse => this.handleExecuteError(errorResponse)
     );
   }
 
-  private handleExecuteResult(value: any): void {
-    if (value && value['code'] === 0) {
-      this.onExecuteFinishedSubject.next(value['result']);
-    } else {
-      this.onExecuteFinishedSubject.error(value);
-    }
+  private handleExecuteResult(response: any): void {
+    console.log('handling success result ');
+    console.log('result value is:');
+    console.log(response);
+    this.onExecuteFinishedSubject.next(response);
   }
 
-  private handleExecuteError(error: any): void {
-    this.onExecuteFinishedSubject.error(error['message']);
+  private handleExecuteError(errorResponse: any): void {
+    console.log('handling error result ');
+    console.log('error value is:');
+    console.log(errorResponse);
+    this.onExecuteFinishedSubject.next(errorResponse.error);
   }
 
   // transform a LogicalPlan object to the HTTP request body according to the backend API

@@ -36,8 +36,6 @@ import { map } from 'rxjs/operators/map';
     OperatorViewComponent,
     ResultViewComponent,
     OperatorLabelComponent,
-
-    
   ],
   imports: [
     BrowserModule,
@@ -50,7 +48,7 @@ import { map } from 'rxjs/operators/map';
     BrowserAnimationsModule,
 
     MaterialDesignFrameworkModule,
-    JsonSchemaFormModule,
+    JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
     ReactiveFormsModule,
     FormsModule,
   ],

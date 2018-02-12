@@ -27,26 +27,10 @@ export class PropertyEditorComponent implements OnInit {
   */
   currentPredicate: OperatorPredicate = undefined;
   currentSchema: OperatorSchema = undefined;
-  jsonSchemaObject: any = undefined;
+  jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
 
   formChangeTimes = 0;
-
-
-  exampleSchema = {
-    'type': 'object', 'id': 'urn:jsonschema:edu:uci:ics:texera:dataflow:keywordmatcher:KeywordPredicate',
-    'properties': {
-      'query': { 'type': 'string' },
-      'attributes': { 'type': 'array', 'items': { 'type': 'string' } },
-      'luceneAnalyzer': { 'type': 'string' },
-      'matchingType': { 'type': 'string', 'enum': ['scan', 'conjunction', 'phrase', 'regex'] },
-      'spanListName': { 'type': 'string' }
-    },
-    'operatorType': 'KeywordMatcher', 'inputNumber': 1, 'outputNumber': 1,
-    'userFriendlyName': 'Keyword Search',
-    'operatorDescription': 'Search the documents using a keyword',
-    'operatorGroupName': 'Search', 'required': ['query', 'attributes', 'matchingType'], 'advancedOptions': []
-  };
 
 
   constructor(
@@ -59,28 +43,13 @@ export class PropertyEditorComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.currentPredicate = Object();
-    this.jsonSchemaObject = {
-      'type': 'object', 'id': 'urn:jsonschema:edu:uci:ics:texera:dataflow:keywordmatcher:KeywordPredicate',
-      'properties': {
-        'query': { 'type': 'string' },
-        'attributes': { 'type': 'array', 'items': { 'type': 'string' } },
-        'luceneAnalyzer': { 'type': 'string' },
-        'matchingType': { 'type': 'string', 'enum': ['scan', 'conjunction', 'phrase', 'regex'] },
-        'spanListName': { 'type': 'string' }
-      },
-      'operatorType': 'KeywordMatcher', 'inputNumber': 1, 'outputNumber': 1,
-      'userFriendlyName': 'Keyword Search',
-      'operatorDescription': 'Search the documents using a keyword',
-      'operatorGroupName': 'Search', 'required': ['query', 'attributes', 'matchingType'], 'advancedOptions': []
-    };
   }
 
   changePropertyEditor(operatorID: string) {
     console.log('changePropertyEditor called');
-    // this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
-    // this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
-    // this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
+    this.currentPredicate = this.workflowModelSerivce.logicalPlan.getOperator(operatorID);
+    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(this.currentPredicate.operatorType);
+    this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
   }
 
   // layout for the form

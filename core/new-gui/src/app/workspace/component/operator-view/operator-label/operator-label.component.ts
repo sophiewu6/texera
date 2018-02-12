@@ -11,14 +11,14 @@ import { OperatorDragDropService } from '../../../service/operator-drag-drop/ope
 export class OperatorLabelComponent implements OnInit, AfterViewInit {
 
   @Input() operator: OperatorSchema;
-
   operatorLabelID: string;
 
   constructor(private operatorDragDropService: OperatorDragDropService) {
   }
 
   ngOnInit() {
-    this.operatorLabelID = 'texera-operator-label-' + this.operator.operatorType;
+    this.operatorLabelID = 'texera-operator-label-'  + this.operator.operatorType;
+    
   }
 
   ngAfterViewInit() {

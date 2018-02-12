@@ -9,7 +9,8 @@ export class OperatorSchema {
         public readonly numOutputPorts: number,
         public readonly operatorDescription?: string,
         public readonly requiredProperties?: string[],
-        public readonly advancedOptions?: string[]
+        public readonly advancedOptions?: string[],
+        public readonly operatorGroupName?: string
     ) {
     }
 

@@ -38,31 +38,7 @@ export class WorkflowUIChangeService {
     });
   }
 
-  addOperator(operator: OperatorPredicate, xOffset: number, yOffset: number): void {
-    // get operaotr UI element and change its position
-    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operator.operatorType);
-    // set ID
-    operatorUIElement.set('id', operator.operatorID);
-    // set position
-    operatorUIElement.position(
-      xOffset - this.workflowModelService.uiPaper.pageOffset().x,
-      yOffset - this.workflowModelService.uiPaper.pageOffset().y);
 
-    // add the operator UI element to the UI model
-    this.workflowModelService.uiGraph.addCell(operatorUIElement);
-    this.operatorAddedSubject.next(operator);
-  }
-
-
-  deleteOperator(operatorID: string): void {
-    this.operatorDeletedSubject.next(operatorID);
-  }
-
-  // API for adding link externally (not from user UI)
-  addLink(link: OperatorLink): void {
-    // TODO: finish this function when write loading a plan to frontend
-    this.linkAddedSubject.next(link);
-  }
 
   private onLinkAddedFromUI(link: OperatorLink): void {
     if (!(this.workflowModelService.logicalPlan.hasOperator(link.origin)

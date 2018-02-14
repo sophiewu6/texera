@@ -2,14 +2,20 @@ import { Injectable } from '@angular/core';
 
 import * as joint from 'jointjs';
 
-import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
+import { WorkflowLogicalPlan } from '../../../model/workflow-logical-plan';
 
+/*
+  WorkflowModelService contains the global logicalPlan and uiGraph object of the current workflow
+  Important: logicalPlan and uiGraph is only allowed to be accessed, not modified.
+    All other components and services other than services inside workflow-graph folder
+      can only call "get" methods of them.
+*/
 @Injectable()
 export class WorkflowModelService {
 
   private nextAvailableID = 0;
 
-  logicalPlan = new WorkflowLogicalPlan();
+  logicalPlan = new WorkflowLogicalPlan([], []);
 
   uiGraph = new joint.dia.Graph();
   uiPaper: joint.dia.Paper = undefined;

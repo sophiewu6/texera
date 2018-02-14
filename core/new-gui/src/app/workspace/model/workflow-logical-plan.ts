@@ -1,6 +1,3 @@
-import { OperatorPredicate } from './operator-predicate';
-import { OperatorLink } from './operator-link';
-
 export class WorkflowLogicalPlan {
 
     operatorIDMap = new Map<string, OperatorPredicate>();
@@ -55,7 +52,7 @@ export class WorkflowLogicalPlan {
             return;
         }
 
-        let deleteIndexList = [];
+        const deleteIndexList = [];
         // find all the links related to the deleted operator
         for (let i = 0; i < this.operatorLinks.length; ++i) {
             const currentLink = this.operatorLinks[i];

@@ -7,8 +7,6 @@ import { MOCK_RESULT_DATA } from './mock-result-data';
 import { MOCK_WORKFLOW_PLAN } from './mock-workflow-plan';
 import { AppSettings } from '../../../common/app-setting';
 import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
-import { OperatorPredicate } from '../../model/operator-predicate';
-import { OperatorLink } from '../../model/operator-link';
 import { WorkflowModelService } from '../workflow-graph/workflow-model.service';
 
 export const EXECUTE_WORKFLOW_ENDPOINT = 'queryplan/execute';

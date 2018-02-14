@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import * as joint from 'jointjs';
 
 import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
-import { OperatorPredicate } from '../../model/operator-predicate';
 
 @Injectable()
 export class WorkflowModelService {
@@ -30,7 +29,11 @@ export class WorkflowModelService {
 
   // return a new OperatorPredicate with a new ID and default intial properties
   getNewOperatorPredicate(operatorType: string): OperatorPredicate {
-    return new OperatorPredicate(this.getNextAvailableID(), operatorType, {});
+    return {
+      'operatorID': this.getNextAvailableID(),
+      'operatorType': operatorType,
+      'operatorProperties': {}
+    };
   }
 
 }

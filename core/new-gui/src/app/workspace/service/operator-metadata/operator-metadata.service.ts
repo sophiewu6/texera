@@ -5,11 +5,8 @@ import '../../../common/rxjs-operators.ts';
 
 import * as _ from 'lodash';
 
-import { OperatorSchema } from '../../model/operator-schema';
-import { OperatorPredicate } from '../../model/operator-predicate';
 import { OPERATOR_METADATA } from './mock-operator-metadata';
 import { AppSettings } from '../../../common/app-setting';
-import { PropertySchema } from '../../model/property-schema';
 
 export const OPERATOR_METADATA_ENDPOINT = 'resources/operator-metadata';
 
@@ -31,43 +28,10 @@ export class OperatorMetadataService {
 
     this.http.get(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
       value => {
-        this.operatorMetadataList = this.transformOperatorSchema(value.json());
+        this.operatorMetadataList = value.json();
         this.onMetadataChangedSubject.next(this.operatorMetadataList);
       }
     );
-  }
-
-  private transformOperatorSchema(value: Object[]): OperatorSchema[] {
-    console.log(value);
-
-    const operatorSchema: OperatorSchema[] = [];
-    value.forEach(
-      op => operatorSchema.push(
-        new OperatorSchema(
-          op['operatorType'],
-          op['userFriendlyName'],
-          this.transformPropertySchema(op['properties']),
-          op['inputNumber'],
-          op['outputNumber'],
-          op['operatorDescription'],
-          op['required'],
-          op['advancedOptions'],
-          op['operatorGroupName']
-        ))
-    );
-    return operatorSchema;
-  }
-
-  private transformPropertySchema(properties: Object): PropertySchema[] {
-    const propertySchema: PropertySchema[] = [];
-    Object.keys(properties).forEach(
-      property => propertySchema.push(
-        new PropertySchema(
-          property,
-          properties[property]['type']
-        ))
-    );
-    return propertySchema;
   }
 
   getOperatorMetadataList(): OperatorSchema[] {

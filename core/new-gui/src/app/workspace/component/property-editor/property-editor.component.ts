@@ -5,8 +5,6 @@ import '../../../common/rxjs-operators.ts';
 
 import * as _ from 'lodash';
 
-import { OperatorPredicate } from '../../model/operator-predicate';
-import { OperatorSchema } from '../../model/operator-schema';
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
 import { WorkflowModelService } from '../../service/workflow-graph/workflow-model.service';
 import { WorkflowUIChangeService } from '../../service/workflow-graph/workflow-ui-change.service';
@@ -29,7 +27,6 @@ export class PropertyEditorComponent implements OnInit {
   operatorID: string = undefined;
   initialData: Object = undefined;
   currentSchema: OperatorSchema = undefined;
-  jsonSchemaObject: Object = undefined;
   formLayout: object = this.generateFormLayout();
 
   formChangeTimes = 0;
@@ -54,9 +51,10 @@ export class PropertyEditorComponent implements OnInit {
     this.currentSchema = this.operatorMetadataService.getOperatorMetadata(operatorPredicate.operatorType);
     // make a copy of the property data
     this.initialData = Object.assign({}, operatorPredicate.operatorProperties);
-    this.jsonSchemaObject = this.currentSchema.generateSchemaObject();
     console.log('current predicate properties: ');
     console.log(this.initialData);
+    console.log('current json schema');
+    console.log(this.currentSchema.jsonSchema);
   }
 
   // layout for the form

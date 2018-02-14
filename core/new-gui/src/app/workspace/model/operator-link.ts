@@ -1,6 +1,4 @@
-export class OperatorLink {
-    constructor(
-        public origin: string,
-        public destination: string
-    ) {}
+interface OperatorLink {
+    origin: string;
+    destination: string;
 }

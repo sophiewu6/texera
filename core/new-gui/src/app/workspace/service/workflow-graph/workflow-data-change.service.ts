@@ -4,8 +4,6 @@ import '../../../common/rxjs-operators.ts';
 
 import { WorkflowModelService } from './workflow-model.service';
 import { WorkflowUIChangeService } from './workflow-ui-change.service';
-import { OperatorPredicate } from '../../model/operator-predicate';
-import { OperatorLink } from '../../model/operator-link';
 
 @Injectable()
 export class WorkflowDataChangeService {

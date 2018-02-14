@@ -1,26 +1,14 @@
-import { PropertySchema } from './property-schema';
+interface OperatorAdditionalMetadata {
+    userFriendlyName: string;
+    numInputPorts: number;
+    numOutputPorts: number;
+    advancedOptions?: string[];
+    operatorGroupName?: string;
+    operatorDescription?: string;
+}
 
-export class OperatorSchema {
-    constructor(
-        public readonly operatorType: string,
-        public readonly userFriendlyName: string,
-        public readonly properties: PropertySchema[],
-        public readonly numInputPorts: number,
-        public readonly numOutputPorts: number,
-        public readonly operatorDescription?: string,
-        public readonly requiredProperties?: string[],
-        public readonly advancedOptions?: string[],
-        public readonly operatorGroupName?: string
-    ) {
-    }
-
-    generateSchemaObject(): Object {
-        const schemaProperties = {};
-        this.properties.forEach(x => schemaProperties[x.propertyName] = {'type': x.propertyType});
-        return {
-            'type': 'object',
-            'properties': schemaProperties
-        };
-    }
-
+interface OperatorSchema {
+    operatorType: string;
+    jsonSchema: Object;
+    additionalMetadata: OperatorAdditionalMetadata;
 }

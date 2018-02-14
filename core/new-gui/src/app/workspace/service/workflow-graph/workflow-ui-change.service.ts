@@ -4,8 +4,6 @@ import '../../../common/rxjs-operators.ts';
 
 import { WorkflowModelService } from './workflow-model.service';
 
-import { OperatorPredicate } from '../../model/operator-predicate';
-import { OperatorLink } from '../../model/operator-link';
 import { WorkflowLogicalPlan } from '../../model/workflow-logical-plan';
 import { Operator } from 'rxjs/Operator';
 import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
@@ -32,7 +30,10 @@ export class WorkflowUIChangeService {
       const originID: string = event.get('source').id;
       const destID: string = event.get('target').id;
       if (originID && destID) {
-        this.onLinkAddedFromUI(new OperatorLink(originID, destID));
+        this.onLinkAddedFromUI({
+          'origin': originID,
+          'destination': destID
+        });
       }
     });
   }

@@ -1,6 +1,9 @@
 .texera-workspace-result-view-container {
-    border-style: solid;
-    overflow: auto;
+    // border-style: solid;
+    // overflow: auto;
+    // padding: 1px;
+    border-bottom: 0.5px solid black;
+    height: 100%;
     width: 100%;
 }
 

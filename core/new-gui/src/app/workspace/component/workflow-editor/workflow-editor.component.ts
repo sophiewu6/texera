@@ -56,7 +56,7 @@ export class WorkflowEditorComponent implements OnInit {
     this.workflowModelSerivce.registerWorkflowPaper(this.paper);
 
     this.paper.on('cell:pointerdown', (cellView, evt, x, y) => {
-      console.log("Cell pointer down occurrs");
+      console.log('Cell pointer down occurrs');
       this.workflowUIChangeService.selectOperator(cellView.model.id);
     });
 

@@ -3,17 +3,17 @@
 
     <form class="search-area">
       <mat-form-field class="search-area-full-width">
-        <input type="text" placeholder="Search Operators" aria-label="OperatorSchema" matInput [formControl]="operatorCtrl" [matAutocomplete]="auto">
+        <input type="text" placeholder="Search Operators" aria-label="OperatorSchema" matInput [formControl]="operatorCtrl" [matAutocomplete]="auto" >
         <mat-autocomplete #auto="matAutocomplete">
-          <mat-option *ngFor="let option of filteredOptions | async" (click)="HighlightSelection(option)" [value]="option.userFriendlyName">
-            {{option.userFriendlyName}}
+          <mat-option *ngFor="let option of filteredOptions | async" (onSelectionChange)="HighlightSelection(option)" [value]="option.additionalMetadata.userFriendlyName">
+            {{option.additionalMetadata.userFriendlyName}}
           </mat-option>
         </mat-autocomplete>
       </mat-form-field>
     </form>
 
-<mat-accordion multi="true">
-    <mat-expansion-panel>
+<mat-accordion multi="false">
+    <mat-expansion-panel [expanded] = "expandCurrent('source')">
         <mat-expansion-panel-header>
             <mat-panel-title>
               Sources
@@ -24,7 +24,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('search')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Search
@@ -35,7 +35,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('analysis')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Analysis
@@ -46,7 +46,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('split')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Split
@@ -57,7 +57,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('join')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Join
@@ -68,7 +68,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('other')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Other
@@ -79,7 +79,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('write database')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               Write Database
@@ -90,7 +90,7 @@
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
     </mat-expansion-panel> 
-    <mat-expansion-panel>
+    <mat-expansion-panel [expanded] = "expandCurrent('standalone')">
       <mat-expansion-panel-header>
             <mat-panel-title>
               View Results

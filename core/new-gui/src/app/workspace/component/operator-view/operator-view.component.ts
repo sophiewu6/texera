@@ -23,6 +23,7 @@ export class OperatorViewComponent implements OnInit {
 
   optionId: string;
 
+  currentExpand: string;
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
     operatorMetadataService.metadataChanged$.subscribe(x => {
@@ -42,7 +43,7 @@ export class OperatorViewComponent implements OnInit {
 
   filterOptions(name: string) {
     return this.operatorMetadataList.filter(option =>
-      option.additionalMetadata.userFriendlyName.toLowerCase().indexOf(name.toLowerCase()) !== -1);
+      option.additionalMetadata.userFriendlyName.toLowerCase().indexOf(name.toLowerCase()) !== -1 && name.length > 0);
   }
 
   ngOnInit() {
@@ -51,17 +52,21 @@ export class OperatorViewComponent implements OnInit {
 
 
   HighlightSelection(option) {
-    console.log(option.operatorGroupName);
     const operatorLabelID = 'texera-operator-label-'  + option.operatorType;
     if (this.optionId) {
-      document.getElementById(this.optionId).style.color = 'black';
+
+      document.getElementById(this.optionId).style.backgroundColor = '';
     }
-    document.getElementById(operatorLabelID).style.color = 'red';
+    document.getElementById(operatorLabelID).style.backgroundColor = 'red';
 
     this.optionId = operatorLabelID;
+    this.currentExpand = option.additionalMetadata.operatorGroupName.toLowerCase();
 
   }
 
+  expandCurrent(group : string) {
+    return this.currentExpand === group;
+  }
 
 
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
@@ -18,22 +18,43 @@ import { WorkflowUIChangeService } from '../../service/workflow-graph/workflow-u
   templateUrl: './workflow-editor.component.html',
   styleUrls: ['./workflow-editor.component.scss']
 })
-export class WorkflowEditorComponent implements OnInit {
+export class WorkflowEditorComponent implements AfterViewInit {
 
   // the DOM element ID of the main editor
   // the id in the corresponding html file must also be changed whenever this is changed
   readonly WORKFLOW_EDITOR_ID = 'texera-workflow-holder';
+  // the jointJS
   private paper: joint.dia.Paper = this.createJointjsPaper();
 
-  // private elementSelectedInEditor$ = Observable.fromEventPattern(
-  //   this.paper.on(cell:pointerdown)
-  // )
 
-  public operatorSelectedInEditor = new Subject<string>();
-  public operatorDeletedInEditor = new Subject<string>();
+  /*
+    The Workflow Editor Component (the main editor) wraps the JointJS event as Obserables.
+    It listens to the events on JointJS paper and push the events to the corresponding Subject.
+    Subjects are private because only this component can push events to the subject, and
+      observables are public so that outside modules can subscribe
 
-  public linkSelectedInEditor = new Subject<string>();
-  public linkDeletedInEditor = new Subject<string>();
+    Currently the following events are provided as Observable:
+      - operator selected in editor
+      - link selected in editor
+      - operator deleted in editor
+      - link deleted in editor
+      - link added in editor
+  */
+
+  private operatorSelectedInEditor = new Subject<string>();
+  public operatorSelectedInEditor$ = this.operatorSelectedInEditor.asObservable();
+
+  private linkSelectedInEditor = new Subject<string>();
+  public linkSelectedInEditor$ = this.linkSelectedInEditor.asObservable();
+
+  private operatorDeletedInEditor = new Subject<string>();
+  public operatorDeletedInEditor$ = this.operatorDeletedInEditor.asObservable();
+
+  private linkDeletedInEditor = new Subject<string>();
+  public linkDeletedInEditor$ = this.linkDeletedInEditor$.asObservable();
+
+  private linkAddedInEditor = new Subject<string>();
+  public linkAddedInEditor$ = this.linkAddedInEditor.asObservable();
 
 
   constructor(
@@ -42,9 +63,9 @@ export class WorkflowEditorComponent implements OnInit {
     private operatorDragDropService: OperatorDragDropService) {
   }
 
-  ngOnInit() {
+  ngAfterViewInit() {
     // create the jointJS paper with custom configurations
-    // this.paper = this.createJointjsPaper();
+    this.paper = this.createJointjsPaper();
 
     // register the DOM element ID to drag and drop service
     this.operatorDragDropService.registerDrop(this.WORKFLOW_EDITOR_ID);
@@ -54,6 +75,7 @@ export class WorkflowEditorComponent implements OnInit {
     // handle jointJS events
     this.paper.on('cell:pointerdown', this.handleCellPointDown);
     this.paper.on('element:delete', this.handleElementDelete);
+
   }
 
   private createJointjsPaper(): joint.dia.Paper {
@@ -82,8 +104,19 @@ export class WorkflowEditorComponent implements OnInit {
     return sourceView.id !== targetView.id;
   }
 
-  private handleCellPointDown(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {
 
+  private handleCellPointDown(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {
+    // in jointJS, a cell can either be an operator or a link
+    if (this.workflowModelSerivce.logicalPlan.hasOperator(cellView.id)) {
+      // an operator cell is pointed down
+      // push the operator ID to the subject
+      this.operatorSelectedInEditor.next(cellView.id);
+    } else {
+      // a link cell is pointed down
+      // get the source and destination id first
+      // in jointJS, if an operator is removed, the links will be automatically removed as well
+      // therefore each existing link must have source and destination port
+    }
   }
 
   private handleElementDelete(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {

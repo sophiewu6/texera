@@ -27,7 +27,7 @@ export class WorkflowLogicalPlan {
     }
 
     hasLink(operatorLink: OperatorLink): boolean {
-        return this.operatorLinks.filter(link => link.origin === operatorLink.origin 
+        return this.operatorLinks.filter(link => link.origin === operatorLink.origin
             && link.destination === operatorLink.destination).length !== 0;
     }
 

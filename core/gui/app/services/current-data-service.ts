@@ -18,8 +18,9 @@ const texeraRunUrl = apiUrl + "/queryplan/execute";
 const texeraAutoRunUrl = apiUrl + "/queryplan/autocomplete";
 const metadataUrl = apiUrl + "/resources/metadata";
 const uploadDictionaryUrl = apiUrl + "/upload/dictionary";
+const updateDictionaryUrl = apiUrl + "/upload/dictionary/";
 const getDictionariesUrl = apiUrl + "/resources/dictionaries";
-const getDictionaryContentUrl = apiUrl + "/resources/dictionary?name=";
+const getDictionaryContentUrl = apiUrl + "/resources/dictionary/";
 const downloadExcelUrl = apiUrl + "/download/result?resultID=";
 
 const defaultData = {

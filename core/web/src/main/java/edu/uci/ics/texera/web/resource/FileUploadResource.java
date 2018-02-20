@@ -31,7 +31,7 @@ public class FileUploadResource {
 		} catch (IOException e) {
 			throw new TexeraWebException("Error occurred whlie uploading dictionary");
 		}
-		
+
 		String fileName = fileDetail.getFileName();
 
 		// save the dictionary
@@ -41,5 +41,6 @@ public class FileUploadResource {
 		return new TexeraWebResponse(0, "Dictionary is uploaded");
 	}
 
+	
 
 }

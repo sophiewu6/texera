@@ -11,7 +11,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,19 +18,14 @@ import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.dataflow.ISink;
 import edu.uci.ics.texera.api.engine.Plan;
-import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.PlanGenException;
 import edu.uci.ics.texera.api.exception.TexeraException;
-import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 import edu.uci.ics.texera.dataflow.connector.OneToNBroadcastConnector;
 import edu.uci.ics.texera.dataflow.join.IJoinPredicate;
 import edu.uci.ics.texera.dataflow.join.Join;
 import edu.uci.ics.texera.api.schema.Schema;
-import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordMatcher;
-import edu.uci.ics.texera.dataflow.sink.AbstractSink;
-import edu.uci.ics.texera.dataflow.sink.tuple.TupleSink;
 
 /**
  * A graph of operators representing a query plan.
@@ -115,15 +109,15 @@ public class LogicalPlan {
      * @param operatorID, the ID of an operator
      * @return Schema, which includes the attributes setting of the operator
      */
-    public Schema getOperatorOutputSchema(String operatorID) throws PlanGenException, DataflowException {
+    public Schema getOperatorOutputSchema(String operatorID) throws PlanGenException {
 
         if (UPDATED) {
             buildOperators();
             checkGraphCyclicity();
+            checkSourceOperator();
 
             connectOperators(operatorObjectMap);
         }
-
         IOperator currentOperator = operatorObjectMap.get(operatorID);
         currentOperator.open();
         Schema operatorSchema = currentOperator.getOutputSchema();
@@ -162,7 +156,7 @@ public class LogicalPlan {
         }
         return inputSchemas;
     }
-
+    
     /**
      * Adds a new operator to the logical plan.
      * @param operatorPredicate, the predicate of the operator

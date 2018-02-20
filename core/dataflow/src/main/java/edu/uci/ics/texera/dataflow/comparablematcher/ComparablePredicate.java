@@ -3,7 +3,7 @@ package edu.uci.ics.texera.dataflow.comparablematcher;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
@@ -26,9 +26,6 @@ public class ComparablePredicate extends PredicateBase {
             ComparisonType matchingType,
             @JsonProperty(value = PropertyNameConstants.COMPARE_TO_VALUE, required = true)
             Object compareToValue) {
-        if (attributeName == null || attributeName.trim().isEmpty()) {
-            throw new TexeraException("attribute cannot be empty");
-        }
         this.compareToValue = compareToValue;
         this.attributeName = attributeName;
         this.matchingType = matchingType;
@@ -50,7 +47,7 @@ public class ComparablePredicate extends PredicateBase {
     }
 
     @Override
-    public ComparableMatcher newOperator() {
+    public IOperator newOperator() {
         return new ComparableMatcher(this);
     }
 

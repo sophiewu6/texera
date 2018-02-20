@@ -18,14 +18,8 @@ export class WorkflowModelService {
   logicalPlan = new WorkflowLogicalPlan([], []);
 
   uiGraph = new joint.dia.Graph();
-  uiPaper: joint.dia.Paper = undefined;
 
   constructor() { }
-
-  // register the workflow paper to the service
-  registerWorkflowPaper(workflowPaper: joint.dia.Paper): void {
-    this.uiPaper = workflowPaper;
-  }
 
   // generate a new operator ID
   getNextAvailableID(): string {

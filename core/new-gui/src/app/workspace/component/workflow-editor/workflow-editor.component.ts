@@ -3,9 +3,6 @@ import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
 declare var $: JQueryStatic;
-
-import * as _ from 'lodash';
-import * as backbone from 'backbone';
 import * as joint from 'jointjs';
 
 import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
@@ -13,6 +10,16 @@ import { WorkflowModelService } from '../../service/workflow-graph/model/workflo
 import { WorkflowUIChangeService } from '../../service/workflow-graph/workflow-ui-change.service';
 
 
+/**
+ * WorkflowEditorComponent is the componenet for the main workflow editor part of the UI.
+ *
+ * This componenet is binded to a JointJS paper. JointJS will handle the operations of the main workflow.
+ * The JointJS UI events are wrapped into observables and exposed to other components / services.
+ *
+ * See JointJS documentation for the list of events that can be captured on the JointJS paper view.
+ * https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper.events
+ *
+*/
 @Component({
   selector: 'texera-workflow-editor',
   templateUrl: './workflow-editor.component.html',
@@ -56,6 +63,27 @@ export class WorkflowEditorComponent implements AfterViewInit {
   private linkAddedInEditor = new Subject<string>();
   public linkAddedInEditor$ = this.linkAddedInEditor.asObservable();
 
+  private pointerDownSubject = new Subject<{event: Event, x: number, y: number}>();
+  public pointerDownObservable = this.pointerDownSubject.asObservable();
+
+  private linkConnectedSubject = new Subject<{
+    linkView: joint.dia.LinkView,
+    evt: Event,
+    elementViewConnected: joint.dia.ElementView,
+    magnet: SVGElement,
+    arrowhead: any
+  }>();
+  public linkConnectedObservable = this.linkConnectedSubject.asObservable();
+
+  private linkDisconnectedSubject = new Subject<{
+    linkView: joint.dia.LinkView,
+    evt: Event,
+    elmentViewDisconnected: joint.dia.ElementView,
+    magnet: SVGElement,
+    arrowhead: any
+  }>();
+  public linkDisconnectedObservable = this.linkDisconnectedSubject.asObservable();
+
 
   constructor(
     private workflowModelSerivce: WorkflowModelService,
@@ -67,10 +95,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     // create the jointJS paper with custom configurations
     this.paper = this.createJointjsPaper();
 
-    // register the DOM element ID to drag and drop service
-    this.operatorDragDropService.registerDrop(this.WORKFLOW_EDITOR_ID);
-    // register the jointJS paper object to the workflow model
-    this.workflowModelSerivce.registerWorkflowPaper(this.paper);
+    // register the DOM element ID of this compoenent to drag and drop service
+    this.operatorDragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_ID);
 
     // handle jointJS events
     this.paper.on('cell:pointerdown', this.handleCellPointDown);
@@ -78,6 +104,12 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
   }
 
+  /**
+   * Creates a JointJS Paper object, which is the view that is responsible for
+   *  rendering the workflow cells and handle UI events.
+   *
+   * JointJS documentation about paper: https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper
+   */
   private createJointjsPaper(): joint.dia.Paper {
     const paper = new joint.dia.Paper({
       el: $('#' + this.WORKFLOW_EDITOR_ID),
@@ -93,6 +125,17 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return paper;
   }
 
+  /**
+   * This function is provided to JointJS to disable some invalid connections on the UI.
+   * If the connection is invalid, users are not able to connect the links on the UI.
+   *
+   * https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper.prototype.options.validateConnection
+   *
+   * @param sourceView
+   * @param sourceMagnet
+   * @param targetView
+   * @param targetMagnet
+   */
   private validateOperatorConnection(sourceView: joint.dia.CellView, sourceMagnet: SVGElement,
     targetView: joint.dia.CellView, targetMagnet: SVGElement): boolean {
     // user cannot draw connection starting from the input port (left side)
@@ -102,6 +145,26 @@ export class WorkflowEditorComponent implements AfterViewInit {
     if (targetMagnet && targetMagnet.getAttribute('port-group') === 'out') { return false; }
 
     return sourceView.id !== targetView.id;
+  }
+
+  private bindJointPaperEvents() {
+    this.paper.on('blank:pointerdown', (evt: Event, x: number, y: number) => {
+      this.pointerDownSubject.next({'event': evt, 'x': x, 'y': y});
+    });
+    this.paper.on('link:connect', (linkView, evt, elementViewConnected, magnet, arrowhead) => {
+      this.linkConnectedSubject.next({
+        linkView, evt, elementViewConnected, magnet, arrowhead
+      });
+    });
+
+    this.paper.on('link:disconnect', (linkView, evt, elementViewConnected, magnet, arrowhead) => {
+      this.linkConnectedSubject.next({
+        linkView, evt, elementViewConnected, magnet, arrowhead
+      });
+    });
+
+
+
   }
 
 

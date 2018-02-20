@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.constants.SchemaConstants;
 import edu.uci.ics.texera.api.dataflow.ISourceOperator;
 import edu.uci.ics.texera.api.exception.DataflowException;
@@ -170,4 +171,7 @@ public class FileSourceOperator implements ISourceOperator {
         return this.predicate;
     }
 
+    public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {
+        throw new TexeraException(ErrorMessages.INVALID_INPUT_SCHEMA_FOR_SOURCE);
+    }
 }

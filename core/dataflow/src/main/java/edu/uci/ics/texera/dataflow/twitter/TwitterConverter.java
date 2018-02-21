@@ -1,8 +1,5 @@
 package edu.uci.ics.texera.dataflow.twitter;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +12,6 @@ import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
-import edu.uci.ics.texera.api.field.DateTimeField;
 import edu.uci.ics.texera.api.field.IField;
 import edu.uci.ics.texera.api.field.IntegerField;
 import edu.uci.ics.texera.api.field.StringField;
@@ -97,10 +93,7 @@ public class TwitterConverter implements IOperator {
             String county = geoTagNode.get("countyName").asText();
             String city = geoTagNode.get("cityName").asText();
             String createAt = tweet.get("create_at").asText();
-            ZonedDateTime zonedCreateAt = ZonedDateTime.parse(createAt, DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault()));
-
             return Arrays.asList(
-                    new StringField(id.toString()),
                     new TextField(text),
                     new StringField(tweetLink),
                     new StringField(userLink),
@@ -112,7 +105,7 @@ public class TwitterConverter implements IOperator {
                     new TextField(state),
                     new TextField(county),
                     new TextField(city),
-                    new DateTimeField(zonedCreateAt.toLocalDateTime()));
+                    new StringField(createAt));
         } catch (Exception e) {
             return Arrays.asList();
         }

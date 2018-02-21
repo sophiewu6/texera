@@ -1,14 +1,12 @@
 package edu.uci.ics.texera.dataflow.comparablematcher;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
+import java.text.DateFormat;
+import java.util.Date;
 
 import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.field.DateField;
-import edu.uci.ics.texera.api.field.DateTimeField;
 import edu.uci.ics.texera.api.field.DoubleField;
 import edu.uci.ics.texera.api.field.IntegerField;
 import edu.uci.ics.texera.api.field.StringField;
@@ -62,9 +60,6 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
         case DATE:
             conditionSatisfied = compareDate(inputTuple);
             break;
-        case DATETIME:
-            conditionSatisfied = compareDateTime(inputTuple);
-            break;            
         case DOUBLE:
             conditionSatisfied = compareDouble(inputTuple);
             break;
@@ -85,40 +80,17 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
     }
 
     private boolean compareDate(Tuple inputTuple) throws DataflowException {     
-        LocalDate date = inputTuple.getField(predicate.getAttributeName(), DateField.class).getValue();
-        String compareToString = predicate.getCompareToValue().toString();
-        
-        // try to parse the input as date string first
-        try {
-            LocalDate compareToDate = LocalDate.parse(compareToString);
-            return compareValues(date, compareToDate, predicate.getComparisonType());
-        } catch (DateTimeParseException e) {
-            // if it fails, then try to parse as date time string 
+        if (predicate.getCompareToValue().getClass().equals(String.class)) {
             try {
-                LocalDateTime compareToDateTime = LocalDateTime.parse(compareToString);
-                return compareValues(date, compareToDateTime.toLocalDate(), predicate.getComparisonType());
-            } catch ( DateTimeParseException e2) {
-                throw new DataflowException("Unable to parse date or time: " + compareToString);
+                String compareTo = (String) predicate.getCompareToValue();
+                Date compareToDate = DateFormat.getDateInstance(DateFormat.MEDIUM).parse(compareTo);
+                Date date = inputTuple.getField(predicate.getAttributeName(), DateField.class).getValue();
+                return compareValues(date, compareToDate, predicate.getComparisonType());
+            } catch (java.text.ParseException e) {
+                throw new DataflowException("Unable to parse date: " + e.getMessage());
             }
-        }
-    }
-    
-    private boolean compareDateTime(Tuple inputTuple) throws DataflowException {
-        LocalDateTime dateTime = inputTuple.getField(predicate.getAttributeName(), DateTimeField.class).getValue();
-        String compareToString = predicate.getCompareToValue().toString();
-        
-        // try to parse the input as date time string first
-        try {
-            LocalDateTime compareToDateTime = LocalDateTime.parse(compareToString);
-            return compareValues(dateTime, compareToDateTime, predicate.getComparisonType());
-        } catch (DateTimeParseException e) {
-            // if it fails, then try to parse as date time string and compare on date
-            try {
-                LocalDate compareToDate = LocalDate.parse(compareToString);
-                return compareValues(dateTime.toLocalDate(), compareToDate, predicate.getComparisonType());
-            } catch ( DateTimeParseException e2) {
-                throw new DataflowException("Unable to parse date or time: " + compareToString);
-            }
+        } else {
+            throw new DataflowException("Value " + predicate.getCompareToValue() + " is not a string");
         }
     }
 
@@ -179,22 +151,22 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
             }
             break;
         case GREATER_THAN:
-            if (compareResult > 0) {
+            if (compareResult == 1) {
                 return true;
             }
             break;
         case GREATER_THAN_OR_EQUAL_TO:
-            if (compareResult >= 0) {
+            if (compareResult == 0 || compareResult == 1) {
                 return true;
             }
             break;
         case LESS_THAN:
-            if (compareResult < 0) {
+            if (compareResult == -1) {
                 return true;
             }
             break;
         case LESS_THAN_OR_EQUAL_TO:
-            if (compareResult <= 0) {
+            if (compareResult == 0 || compareResult == -1) {
                 return true;
             }
             break;

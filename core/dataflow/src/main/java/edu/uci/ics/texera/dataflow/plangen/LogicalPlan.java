@@ -1,25 +1,33 @@
 package edu.uci.ics.texera.dataflow.plangen;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.dataflow.ISink;
+import edu.uci.ics.texera.api.dataflow.ISourceOperator;
 import edu.uci.ics.texera.api.engine.Plan;
+import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.PlanGenException;
+import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 import edu.uci.ics.texera.dataflow.connector.OneToNBroadcastConnector;
+import edu.uci.ics.texera.dataflow.join.IJoinPredicate;
 import edu.uci.ics.texera.dataflow.join.Join;
 import edu.uci.ics.texera.api.schema.Schema;
+import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordMatcher;
+import edu.uci.ics.texera.dataflow.sink.AbstractSink;
+import edu.uci.ics.texera.dataflow.sink.tuple.TupleSink;
 
 /**
  * A graph of operators representing a query plan.
@@ -103,22 +111,89 @@ public class LogicalPlan {
      * @param operatorID, the ID of an operator
      * @return Schema, which includes the attributes setting of the operator
      */
-    public Schema getOperatorOutputSchema(String operatorID) throws PlanGenException {
+    public Schema getOperatorOutputSchema(String operatorID) throws PlanGenException, DataflowException {
 
         if (UPDATED) {
             buildOperators();
             checkGraphCyclicity();
-            checkSourceOperator();
 
             connectOperators(operatorObjectMap);
         }
-        IOperator currentOperator = operatorObjectMap.get(operatorID);
 
+        IOperator currentOperator = operatorObjectMap.get(operatorID);
         currentOperator.open();
         Schema operatorSchema = currentOperator.getOutputSchema();
         currentOperator.close();
 
         return operatorSchema;
+    }
+
+//    /**
+//     * Updates the current plan and fetch the schema from an operator
+//     * @param operatorID, the ID of an operator
+//     * @return Schema, which includes the attributes setting of the operator
+//     */
+//    public Schema getOperatorOutputSchema(String operatorID, Map<String, List<Schema>> inputSchemas)
+//            throws PlanGenException, DataflowException {
+//
+//        if (UPDATED) {
+//            buildOperators();
+//            checkGraphCyclicity();
+//
+//            connectOperators(operatorObjectMap);
+//        }
+//
+//        IOperator currentOperator = operatorObjectMap.get(operatorID);
+//        Schema outputSchema;
+//        if (currentOperator instanceof ISourceOperator) {
+//            List<Schema> inputSchema = inputSchemas.get(operatorID);
+//            outputSchema = currentOperator.transformToOutputScheam(inputSchema.toArray(new Schema[inputSchema.size()]));
+//        } else {
+//            outputSchema = currentOperator.getOutputSchema();
+//        }
+//        return outputSchema;
+//    }
+
+    public Map<String, List<Schema>> retrieveAllOperatorInputSchema() throws PlanGenException {
+        Map<String, Integer> inEdgeCount = new HashMap<>();
+        for (Map.Entry<String, LinkedHashSet<String>> entry: adjacencyList.entrySet()) {
+            inEdgeCount.putIfAbsent(entry.getKey(), 0);
+            for (String to: entry.getValue()) {
+                inEdgeCount.put(to, inEdgeCount.getOrDefault(to, 0));
+            }
+        }
+
+        Queue<String> queue = new LinkedList<>();
+        for (Map.Entry<String, Integer> entry: inEdgeCount.entrySet()) {
+            if (entry.getValue() == 0)
+                queue.add(entry.getKey());
+        }
+
+        Map<String, List<Schema>> inputSchemas = new HashMap<>();
+        while (!queue.isEmpty()) {
+            String origin = queue.poll();
+            Schema curOutputSchema = null;
+            try {
+                curOutputSchema = getOperatorOutputSchema(origin);
+            } catch(TexeraException e) {
+                if (!e.getMessage().equals(ErrorMessages.INPUT_OPERATOR_NOT_SPECIFIED)) {
+                    throw e;
+                }
+            }
+
+            if (curOutputSchema != null) {
+                for (String destination: adjacencyList.get(origin)) {
+                    inputSchemas.computeIfAbsent(destination, k -> new ArrayList<>()).add(curOutputSchema);
+                    inEdgeCount.put(destination, inEdgeCount.get(destination)-1);
+                    if (inEdgeCount.get(destination) == 0 && !(operatorObjectMap.get(destination) instanceof ISink))
+                    {
+                        inEdgeCount.remove(destination);
+                        queue.add(destination);
+                    }
+                }
+            }
+        }
+        return inputSchemas;
     }
 
     /**

@@ -259,7 +259,7 @@ public class QueryPlanResource {
                 String origin = linkNode.get(PropertyNameConstants.ORIGIN_OPERATOR_ID).textValue();
                 String dest = linkNode.get(PropertyNameConstants.DESTINATION_OPERATOR_ID).textValue();
 
-                Schema schema = logicalPlan.getOperatorOutputSchema(origin);
+                Schema schema = logicalPlan.getOperatorOutputSchema(origin, inputSchema);
                 inputSchema.computeIfAbsent(dest, k -> new ArrayList<>()).add(schema);
             }
 

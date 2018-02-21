@@ -176,7 +176,8 @@ export class SideBarComponent {
                 this.inputSchema = new Map();
                 for (var operator in data) {
                     let currentOperatorAttributes = [];
-                    for (var attribute in data[operator]) {
+                    for (var i = 0; i < data[operator].length; i++) {
+                        var attribute = data[operator][i];
                         if (!attribute.startsWith("_")) {
                             currentOperatorAttributes.push(attribute);
                         }

@@ -1,12 +1,7 @@
 package edu.uci.ics.texera.dataflow.plangen;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,6 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.dataflow.ISink;
+import edu.uci.ics.texera.api.dataflow.ISourceOperator;
 import edu.uci.ics.texera.api.engine.Plan;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.PlanGenException;
@@ -132,31 +128,68 @@ public class LogicalPlan {
         return operatorSchema;
     }
 
-    public ObjectNode retrieveAllOperatorInputSchema() throws PlanGenException {
-        ObjectNode inputSchemas = new ObjectMapper().createObjectNode();
+//    /**
+//     * Updates the current plan and fetch the schema from an operator
+//     * @param operatorID, the ID of an operator
+//     * @return Schema, which includes the attributes setting of the operator
+//     */
+//    public Schema getOperatorOutputSchema(String operatorID, Map<String, List<Schema>> inputSchemas)
+//            throws PlanGenException, DataflowException {
+//
+//        if (UPDATED) {
+//            buildOperators();
+//            checkGraphCyclicity();
+//
+//            connectOperators(operatorObjectMap);
+//        }
+//
+//        IOperator currentOperator = operatorObjectMap.get(operatorID);
+//        Schema outputSchema;
+//        if (currentOperator instanceof ISourceOperator) {
+//            List<Schema> inputSchema = inputSchemas.get(operatorID);
+//            outputSchema = currentOperator.transformToOutputScheam(inputSchema.toArray(new Schema[inputSchema.size()]));
+//        } else {
+//            outputSchema = currentOperator.getOutputSchema();
+//        }
+//        return outputSchema;
+//    }
 
-        for (String operatorID: operatorPredicateMap.keySet()) {
-            Schema currentSchema = null;
+    public Map<String, List<Schema>> retrieveAllOperatorInputSchema() throws PlanGenException {
+        Map<String, Integer> inEdgeCount = new HashMap<>();
+        for (Map.Entry<String, LinkedHashSet<String>> entry: adjacencyList.entrySet()) {
+            inEdgeCount.putIfAbsent(entry.getKey(), 0);
+            for (String to: entry.getValue()) {
+                inEdgeCount.put(to, inEdgeCount.getOrDefault(to, 0));
+            }
+        }
+
+        Queue<String> queue = new LinkedList<>();
+        for (Map.Entry<String, Integer> entry: inEdgeCount.entrySet()) {
+            if (entry.getValue() == 0)
+                queue.add(entry.getKey());
+        }
+
+        Map<String, List<Schema>> inputSchemas = new HashMap<>();
+        while (!queue.isEmpty()) {
+            String origin = queue.poll();
+            Schema curOutputSchema = null;
             try {
-                currentSchema = getOperatorOutputSchema(operatorID);
+                curOutputSchema = getOperatorOutputSchema(origin);
             } catch(TexeraException e) {
                 if (!e.getMessage().equals(ErrorMessages.INPUT_OPERATOR_NOT_SPECIFIED)) {
                     throw e;
                 }
             }
 
-            if (currentSchema != null) {
-                ObjectNode currentSchemaNode = new ObjectMapper().createObjectNode();
-                for (String attrName : currentSchema.getAttributeNames()) {
-                    currentSchemaNode.set(attrName, JsonNodeFactory.instance.pojoNode(currentSchema.getAttribute(attrName)));
-                }
-
-                for (String adjacentOperatorID : adjacencyList.get(operatorID)) {
-                    PredicateBase adjacentPredicate = operatorPredicateMap.get(adjacentOperatorID);
-                    if (adjacentPredicate instanceof IJoinPredicate) {
-                        continue;
+            if (curOutputSchema != null) {
+                for (String destination: adjacencyList.get(origin)) {
+                    inputSchemas.computeIfAbsent(destination, k -> new ArrayList<>()).add(curOutputSchema);
+                    inEdgeCount.put(destination, inEdgeCount.get(destination)-1);
+                    if (inEdgeCount.get(destination) == 0 && !(operatorObjectMap.get(destination) instanceof ISink))
+                    {
+                        inEdgeCount.remove(destination);
+                        queue.add(destination);
                     }
-                    inputSchemas.set(adjacentOperatorID, currentSchemaNode);
                 }
             }
         }

@@ -12,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -242,27 +243,8 @@ public class QueryPlanResource {
             ArrayNode linksEndWithInvalidDest = new ObjectMapper().createArrayNode();
 
             Set<String> validOperatorsId = new HashSet<>();
-
-            for (JsonNode operatorNode: operators) {
-                try {
-                    new ObjectMapper().treeToValue(operatorNode, PredicateBase.class);
-                    validOperators.add(operatorNode);
-                    validOperatorsId.add(operatorNode.get(PropertyNameConstants.OPERATOR_ID).textValue());
-                } catch (JsonMappingException e) {
-                    System.out.println(e);
-                }
-            }
-
-            for (JsonNode linkNode: links) {
-                String origin = linkNode.get(PropertyNameConstants.ORIGIN_OPERATOR_ID).textValue();
-                String dest = linkNode.get(PropertyNameConstants.DESTINATION_OPERATOR_ID).textValue();
-
-                if (validOperatorsId.contains(origin) && validOperatorsId.contains(dest)) {
-                    validLinks.add(linkNode);
-                } else if (!validOperatorsId.contains(dest)) {
-                    linksEndWithInvalidDest.add(linkNode);
-                }
-            }
+            getValidOperatorsAndLinks(operators, links, validOperators, validLinks,
+                                      linksEndWithInvalidDest, validOperatorsId);
 
             ((ObjectNode) logicalPlanNode).putArray(PropertyNameConstants.OPERATOR_LIST).addAll(validOperators);
             ((ObjectNode) logicalPlanNode).putArray(PropertyNameConstants.OPERATOR_LINK_LIST).addAll(validLinks);
@@ -270,19 +252,29 @@ public class QueryPlanResource {
             LogicalPlan logicalPlan = new ObjectMapper().treeToValue(logicalPlanNode, LogicalPlan.class);
             String resultID = UUID.randomUUID().toString();
 
-            ObjectNode result = logicalPlan.retrieveAllOperatorInputSchema();
+            // Get all input schema for valid operator with valid links
+            Map<String, List<Schema>> inputSchema = logicalPlan.retrieveAllOperatorInputSchema();
+            // Get all input schema for invalid operator with valid input operator
             for (JsonNode linkNode: linksEndWithInvalidDest) {
                 String origin = linkNode.get(PropertyNameConstants.ORIGIN_OPERATOR_ID).textValue();
                 String dest = linkNode.get(PropertyNameConstants.DESTINATION_OPERATOR_ID).textValue();
 
-                System.out.println(origin + " " + dest);
                 Schema schema = logicalPlan.getOperatorOutputSchema(origin);
-                ObjectNode currentSchemaNode = new ObjectMapper().createObjectNode();
-                for (String attrName: schema.getAttributeNames()) {
-                    currentSchemaNode.set(attrName, JsonNodeFactory.instance.pojoNode(schema.getAttribute(attrName)));
+                inputSchema.computeIfAbsent(dest, k -> new ArrayList<>()).add(schema);
+            }
+
+            ObjectNode result = new ObjectMapper().createObjectNode();
+            for (Map.Entry<String, List<Schema>> entry: inputSchema.entrySet()) {
+                Set<String> attributes = new HashSet<>();
+                for (Schema schema: entry.getValue()) {
+                    attributes.addAll(schema.getAttributeNames());
                 }
 
-                result.set(dest, currentSchemaNode);
+                ArrayNode currentSchemaNode = result.putArray(entry.getKey());
+                for (String attrName: attributes) {
+                    currentSchemaNode.add(attrName);
+                }
+
             }
 
             ObjectNode response = new ObjectMapper().createObjectNode();
@@ -341,6 +333,34 @@ public class QueryPlanResource {
     		java.nio.file.Path oldestFile = resultFiles.get(0);
     		Files.delete(oldestFile);
     }    
-    
+
+
+    private void getValidOperatorsAndLinks(ArrayNode operators, ArrayNode links,
+                                           ArrayNode validOperators, ArrayNode validLinks,
+                                           ArrayNode linksEndWithInvalidDest, Set<String> validOperatorsId) {
+        // Try to convert to valid operator
+        for (JsonNode operatorNode: operators) {
+            try {
+                new ObjectMapper().treeToValue(operatorNode, PredicateBase.class);
+                validOperators.add(operatorNode);
+                validOperatorsId.add(operatorNode.get(PropertyNameConstants.OPERATOR_ID).textValue());
+                // Fail
+            } catch (JsonProcessingException e) {
+                System.out.println(e);
+            }
+        }
+
+        // Only include edges that connect valid operators
+        for (JsonNode linkNode: links) {
+            String origin = linkNode.get(PropertyNameConstants.ORIGIN_OPERATOR_ID).textValue();
+            String dest = linkNode.get(PropertyNameConstants.DESTINATION_OPERATOR_ID).textValue();
+
+            if (validOperatorsId.contains(origin) && validOperatorsId.contains(dest)) {
+                validLinks.add(linkNode);
+            } else if (!validOperatorsId.contains(dest)) {
+                linksEndWithInvalidDest.add(linkNode);
+            }
+        }
+    }
 
 }

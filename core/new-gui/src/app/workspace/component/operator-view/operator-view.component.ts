@@ -57,7 +57,7 @@ export class OperatorViewComponent implements OnInit {
 
       document.getElementById(this.optionId).style.backgroundColor = '';
     }
-    document.getElementById(operatorLabelID).style.backgroundColor = 'red';
+    document.getElementById(operatorLabelID).style.backgroundColor = '#ed5281';
 
     this.optionId = operatorLabelID;
     this.currentExpand = option.additionalMetadata.operatorGroupName.toLowerCase();

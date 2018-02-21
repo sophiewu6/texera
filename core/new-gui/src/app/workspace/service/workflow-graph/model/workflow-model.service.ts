@@ -15,11 +15,17 @@ export class WorkflowModelService {
 
   private nextAvailableID = 0;
 
-  logicalPlan = new WorkflowLogicalPlan([], []);
+  public logicalPlan = new WorkflowLogicalPlan([], []);
 
-  uiGraph = new joint.dia.Graph();
+  public uiGraph = new joint.dia.Graph();
+  public uiPaper: joint.dia.Paper = null;
 
   constructor() { }
+
+  // register the workflow paper to the service
+  registerWorkflowPaper(workflowPaper: joint.dia.Paper): void {
+    this.uiPaper = workflowPaper;
+  }
 
   // generate a new operator ID
   getNextAvailableID(): string {

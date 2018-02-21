@@ -47,13 +47,13 @@ export class OperatorDragDropService {
 
 
   /** Subject for operator dragging is started */
-  private operatorDragStartedSubject = new Subject<{ 'operatorType': string }>();
+  private operatorDragStartedSubject = new Subject<{ operatorType: string }>();
   /**
    * Observable for operator dragging is started.
    * Contains an object with:
    *  - operatorType - the type of the operator dragged
    */
-  public operatorDragStartedObservable = this.operatorDragStartedSubject.asObservable();
+  public operatorDragStarted = this.operatorDragStartedSubject.asObservable();
 
 
   /** Subject for operator is dropped on the main workflow editor (equivalent to dragging is stopped) */
@@ -68,7 +68,7 @@ export class OperatorDragDropService {
    *  - xOffset - the x offset relative to document root
    *  - yOffset - the y offset relative to document root
    */
-  public operatorDroppedObservable = this.operatorDroppedSubject.asObservable();
+  public operatorDroppedInEditor = this.operatorDroppedSubject.asObservable();
 
   constructor(
     private operatorUIElementService: OperatorUIElementService) {
@@ -85,7 +85,7 @@ export class OperatorDragDropService {
    * @param dragElementID the DOM Element ID
    * @param operatorType the operator type that the element corresponds to
    */
-  public registerDrag(dragElementID: string, operatorType: string) {
+  public registerDrag(dragElementID: string, operatorType: string): void {
     this.elementOperatorTypeMap.set(dragElementID, operatorType);
 
     // register callback functions for jquery UI
@@ -100,7 +100,7 @@ export class OperatorDragDropService {
    * This function should be only used by the Workflow Editor Componenet
    *  to register itself as a droppable area.
   */
-  public registerWorkflowEditorDrop(dropElementID: string) {
+  public registerWorkflowEditorDrop(dropElementID: string): void {
     jQuery('#' + dropElementID).droppable({
       drop: (event, ui) => this.onOperatorDropped(event, ui)
     });

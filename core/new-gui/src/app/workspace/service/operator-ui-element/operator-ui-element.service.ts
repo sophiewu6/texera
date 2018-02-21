@@ -8,9 +8,8 @@ export class OperatorUIElementService {
 
   constructor(private operatorMetadataService: OperatorMetadataService) { }
 
-  getOperatorUIElement(operatorType: string): joint.dia.Element {
+  getOperatorUIElement(operatorType: string, operatorID: string): joint.dia.Element {
     const operatorSchema = this.operatorMetadataService.getOperatorMetadata(operatorType);
-
 
     joint.shapes.devs['TexeraModel'] = joint.shapes.devs.Model.extend({
       type: 'devs.TexeraModel',
@@ -28,8 +27,8 @@ export class OperatorUIElementService {
         '</g>'
     });
 
-
     const operatorElement = new joint.shapes.devs['TexeraModel']({
+      id: operatorID,
       position: { x: 0, y: 0 },
       size: { width: 120, height: 50 },
       attrs: {

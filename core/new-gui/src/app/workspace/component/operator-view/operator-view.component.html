@@ -12,94 +12,19 @@
       </mat-form-field>
     </form>
 
-<mat-accordion multi="false">
-    <mat-expansion-panel [expanded] = "expandCurrent('source')">
-        <mat-expansion-panel-header>
-            <mat-panel-title>
-              Sources
-            </mat-panel-title>
+  <mat-accordion multi="false">
+      <div *ngFor="let operatorType of operatorGroupName">
+      <mat-expansion-panel [expanded] = "expandCurrent(operatorType)">
+          <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{transferTitle(operatorType)}}
+              </mat-panel-title>
           </mat-expansion-panel-header>
             <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'source' 
+                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == operatorType.toLowerCase() 
                 " [operator]="operatorSchema"></texera-operator-label>
             </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('search')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Search
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'search' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('analysis')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Analysis
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'analysis' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('split')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Split
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'split' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('join')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Join
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'join' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('other')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Other
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'other' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('write database')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              Write Database
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'write database' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-    <mat-expansion-panel [expanded] = "expandCurrent('standalone')">
-      <mat-expansion-panel-header>
-            <mat-panel-title>
-              View Results
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == 'standalone' 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-    </mat-expansion-panel> 
-</mat-accordion>
+      </mat-expansion-panel> 
+      </div>
+  </mat-accordion> 
 </div>

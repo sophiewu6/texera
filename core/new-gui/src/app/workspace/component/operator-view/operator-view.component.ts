@@ -25,19 +25,18 @@ export class OperatorViewComponent implements OnInit {
 
   currentExpand: string;
 
+  operatorGroupName: string[] = ['source', 'Search', 'Analysis', 'Split', 'Join', 'Other', 'Write Database', 'standalone'];
+
   constructor(private operatorMetadataService: OperatorMetadataService) {
     operatorMetadataService.metadataChanged$.subscribe(x => {
       this.operatorMetadataList = x;
+      console.log(this.operatorMetadataList);
       this.operatorCtrl = new FormControl();
-      console.log('Filter Options ? ');
-      console.log(this.filteredOptions);
       this.filteredOptions = this.operatorCtrl.valueChanges
         .pipe(
           startWith(''),
           map(option => this.filterOptions(option))
         );
-      console.log('Current filter op ');
-      console.log(this.filteredOptions);
     });
   }
 
@@ -54,7 +53,6 @@ export class OperatorViewComponent implements OnInit {
   HighlightSelection(option) {
     const operatorLabelID = 'texera-operator-label-'  + option.operatorType;
     if (this.optionId) {
-
       document.getElementById(this.optionId).style.backgroundColor = '';
     }
     document.getElementById(operatorLabelID).style.backgroundColor = '#ed5281';
@@ -65,9 +63,17 @@ export class OperatorViewComponent implements OnInit {
   }
 
   expandCurrent(group : string) {
-    return this.currentExpand === group;
+    return this.currentExpand === group.toLowerCase();
   }
 
+  transferTitle(group: string) {
+    if(group === 'source')
+      return 'Sources';
+    else if(group === 'standalone')
+      return 'View Results';
+    else
+      return group;
+  }
 
 }
 

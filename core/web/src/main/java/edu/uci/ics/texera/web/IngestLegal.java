@@ -1,6 +1,7 @@
 package edu.uci.ics.texera.web;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import edu.uci.ics.texera.api.constants.DataConstants.TexeraProject;
 import edu.uci.ics.texera.api.schema.AttributeType;
@@ -27,7 +28,7 @@ public class IngestLegal {
         relationManager.createTable("专利判决文档-100份", Utils.getDefaultIndexDirectory().resolve("legal-100-docs"), 
                 new Schema.Builder().add("文本", AttributeType.TEXT).build(), LuceneAnalyzerConstants.chineseAnalyzerString());
         
-        Path legalPath = Utils.getResourcePath("legal-1", TexeraProject.TEXERA_WEB);
+        Path legalPath = Paths.get("~/legal-1");
 
         FileSourceOperator fileSource = new FileSourcePredicate(legalPath.toRealPath().toString(), "文本", null, null).newOperator();
         

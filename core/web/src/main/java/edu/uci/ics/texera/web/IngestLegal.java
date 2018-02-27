@@ -28,7 +28,7 @@ public class IngestLegal {
         relationManager.createTable("专利判决文档-100份", Utils.getDefaultIndexDirectory().resolve("legal-100-docs"), 
                 new Schema.Builder().add("文本", AttributeType.TEXT).build(), LuceneAnalyzerConstants.chineseAnalyzerString());
         
-        Path legalPath = Paths.get("~/legal-1");
+        Path legalPath = Paths.get("/home/rodeo/legal-1");
 
         FileSourceOperator fileSource = new FileSourcePredicate(legalPath.toRealPath().toString(), "文本", null, null).newOperator();
         

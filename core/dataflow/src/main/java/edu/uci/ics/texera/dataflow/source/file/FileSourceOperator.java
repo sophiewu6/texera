@@ -114,9 +114,10 @@ public class FileSourceOperator implements ISourceOperator {
         // keep iterating until 
         //   1) a file is converted to a tuple successfully
         //   2) the cursor reaches the end
-        while (cursor < pathList.size()) {            
+        while (pathIterator.hasNext()) {            
             try {
                 Path path = pathIterator.next();
+                cursor++;
                 String extension = com.google.common.io.Files.getFileExtension(path.toString());
                 String content;
                 if (extension.equalsIgnoreCase("pdf")) {
@@ -129,7 +130,6 @@ public class FileSourceOperator implements ISourceOperator {
                     content = FileExtractorUtils.extractPlainTextFile(path);
                 }
                 Tuple tuple = new Tuple(outputSchema, IDField.newRandomID(), new TextField(content));
-                cursor++;
                 return tuple;
             } catch (DataflowException e) {
                 // ignore error and move on

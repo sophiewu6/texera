@@ -51,19 +51,19 @@
             <version>1.1</version>
         </dependency>
         <dependency>
-    		      <groupId>org.apache.poi</groupId>
-    		      <artifactId>poi-ooxml</artifactId>
-    		      <version>3.16</version>
-		</dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.17</version>
+        </dependency>
 		<dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.16</version>
+            <version>1.17</version>
         </dependency>
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parsers</artifactId>
-            <version>1.16</version>
+            <version>1.17</version>
         </dependency>
 		<dependency>
             <groupId>com.mashape.unirest</groupId>

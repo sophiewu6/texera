@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 
+import edu.uci.ics.texera.api.constants.DataConstants.TexeraProject;
+import edu.uci.ics.texera.api.utils.Utils;
+import edu.uci.ics.texera.dataflow.source.file.FileSourceOperator;
 import edu.uci.ics.texera.perftest.sample.SampleExtraction;
 import edu.uci.ics.texera.perftest.twitter.TwitterSample;
 import edu.uci.ics.texera.web.healthcheck.SampleHealthCheck;
@@ -82,6 +85,11 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
         cors.setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
         // Add URL mapping
         cors.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+    }
+    
+    public static void ingestLegalDoc() throws Exception {
+        java.nio.file.Path legalDocPath = Utils.getResourcePath("legalDocs", TexeraProject.TEXERA_WEB);
+                
     }
 
     public static void main(String args[]) throws Exception {

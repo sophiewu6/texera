@@ -23,8 +23,9 @@ import * as joint from 'jointjs';
  *    This doesn't work because the problem of the "ghost image" (the image that follows the mouse when dragging).
  *    The native HTML5 drag/drop API requires that the "ghost" image must be visually the same as the original element.
  *    However, in our case, the dragging operator is not the same as the original element.
- *    There is **NO** workaround for that problem: see this post for details: https://kryogenix.org/code/browser/custom-drag-image.html
- *    The HTML5 drag and Drop API itself is considered a disaster: https://www.quirksmode.org/blog/archives/2009/09/the_html5_drag.html
+ *    There is **NO** workaround for this problem: see this post for details: https://kryogenix.org/code/browser/custom-drag-image.html
+ *      (part of the post isn't exactly true on Chrome anymore because the Chrome itself changed)
+ *    The HTML5 drag and Drop API itself is also considered a disaster: https://www.quirksmode.org/blog/archives/2009/09/the_html5_drag.html
  *
  *  2. Using some angular drag and drop libraries for Angular, for example:
  *    ng2-dnd: https://github.com/akserg/ng2-dnd
@@ -123,7 +124,7 @@ export class OperatorDragDropService {
     jQuery('body').append('<div id="flyPaper" style="position:fixed;z-index:100;;pointer-event:none;"></div>');
 
     // get the UI element of the operator type from operatorUIElementService
-    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType);
+    const operatorUIElement = this.operatorUIElementService.getOperatorUIElement(operatorType, 'temporary-dragging-operator');
 
     // create the jointjs model and paper of the ghost element
     const tempGhostModel = new joint.dia.Graph();

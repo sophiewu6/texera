@@ -28,7 +28,7 @@ export class WorkflowViewObserverService {
   }
 
   private handleDeleteOperatorClicked(operatorID: string): void {
-
+    this.workflowModelActionService.deleteOperator(operatorID);
   }
 
 }

@@ -26,8 +26,17 @@ export class WorkflowModelActionService {
   }
 
   public deleteOperator(operatorID: string): void {
+    // get the cell from jointJS graph by ID and then remove it
     this.workflowModelService.uiGraph.getCell(operatorID).remove();
   }
+
+  // public addLink(origin: OperatorPort, destination: OperatorPort): void {
+
+  // }
+
+  // public deleteLink(origin: OperatorPort, destination: OperatorPort): void {
+
+  // }
 
   public changeOperatorProperty(operatorID: string, newProperty: Object): void {
     this.workflowModelEventService.operatorPropertyChangedSubject.next({operatorID, newProperty});

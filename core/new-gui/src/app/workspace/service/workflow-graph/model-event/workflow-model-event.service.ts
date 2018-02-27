@@ -14,12 +14,27 @@ export class WorkflowModelEventService {
 
   public linkDeletedSubject = new Subject<any>();
 
+  public linkChangedSubject = new Subject<any>();
+
   public operatorPropertyChangedSubject = new Subject<{operatorID: string, newProperty: Object}>();
 
 
 
   constructor(
     private workflowModelService: WorkflowModelService
-  ) { }
+  ) {
+    this.workflowModelService.uiGraph.on('add', (cell: joint.dia.Cell) => this.handleJointModelAdd(cell));
+
+  }
+
+  private handleJointModelAdd(cell: joint.dia.Cell) {
+    if (cell.isLink()) {
+      const link = <joint.dia.Link>cell;
+      this.linkAddedSubject.next(link.attributes);
+    }
+
+  }
+
+
 
 }

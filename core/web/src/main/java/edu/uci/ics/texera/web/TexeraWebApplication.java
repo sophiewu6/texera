@@ -93,12 +93,17 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
     }
 
     public static void main(String args[]) throws Exception {
-        System.out.println("Writing promed Index");
-        SampleExtraction.writeSampleIndex();
-        System.out.println("Finished Writing promed Index");
-        System.out.println("Writing twitter index");
-        TwitterSample.writeTwitterIndex();
-        System.out.println("Finished writing twitter index");
+//        System.out.println("Writing promed Index");
+//        SampleExtraction.writeSampleIndex();
+//        System.out.println("Finished Writing promed Index");
+//        System.out.println("Writing twitter index");
+//        TwitterSample.writeTwitterIndex();
+//        System.out.println("Finished writing twitter index");
+        
+        System.out.println("insert legal data");
+        IngestLegal.ingestLegalData();
+        System.out.println("insert legal data finished");
+        
         new TexeraWebApplication().run(args);
     }
 }

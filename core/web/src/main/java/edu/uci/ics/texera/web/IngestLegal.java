@@ -15,7 +15,7 @@ import edu.uci.ics.texera.storage.constants.LuceneAnalyzerConstants;
 
 public class IngestLegal {
 
-    public static void main(String[] args) throws Exception {
+    public static void ingestLegalData() throws Exception {
         
         RelationManager relationManager = RelationManager.getInstance();
         

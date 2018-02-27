@@ -6,6 +6,14 @@ import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
+import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.microsoft.OfficeParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.xml.sax.SAXException;
 
 import edu.uci.ics.texera.api.exception.DataflowException;
 
@@ -74,6 +82,27 @@ public class FileExtractorUtils {
             }
             return res.toString();
         } catch (IOException e) {
+            throw new DataflowException(e);
+        }
+    }
+    
+    /**
+     * Extract data from MS Word DOC/DOCX file to text
+     * 
+     * @param path
+     * @return
+     * @throws DataflowException
+     */
+    public static String extractWordFile(Path path) throws DataflowException {
+        try (FileInputStream inputStream = new FileInputStream(path.toString())) {
+            BodyContentHandler handler = new BodyContentHandler();
+            Metadata metadata = new Metadata();
+
+            AutoDetectParser parser = new AutoDetectParser();
+            parser.parse(inputStream, handler, metadata);
+            
+            return handler.toString();
+        } catch (IOException | SAXException | TikaException e) {
             throw new DataflowException(e);
         }
     }

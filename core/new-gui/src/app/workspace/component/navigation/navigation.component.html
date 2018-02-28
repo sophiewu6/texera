@@ -2,6 +2,11 @@
      fxFlexFill>
     <div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
         <label>Texera</label>
-        <button mat-raised-button color="accent" (click)="onClickRun()">Run</button>
+        <button mat-raised-button color="accent" (click)="onClickRun()">
+            <span *ngIf="!showSpinner">
+                Run
+            </span>
+            <mat-progress-spinner *ngIf="showSpinner" class="LoadingButton" mode="indeterminate" diameter="37"></mat-progress-spinner>
+        </button>
     </div>
 </mat-toolbar>

@@ -25,6 +25,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { startWith } from 'rxjs/operators/startWith';
 import { map } from 'rxjs/operators/map';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @NgModule({
   declarations: [
@@ -51,6 +52,7 @@ import { map } from 'rxjs/operators/map';
     JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
     ReactiveFormsModule,
     FormsModule,
+    MatProgressSpinnerModule,
   ],
   providers: [ HttpClientModule ],
   bootstrap: [AppComponent]

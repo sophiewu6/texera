@@ -136,11 +136,6 @@ public class LogicalPlan {
     public Schema getOperatorOutputSchema(String operatorID, Map<String, List<Schema>> inputSchemas)
             throws PlanGenException, DataflowException {
 
-        if (UPDATED) {
-            buildOperators();
-            checkGraphCyclicity();
-        }
-
         IOperator currentOperator = operatorObjectMap.get(operatorID);
         Schema outputSchema = null;
         if (currentOperator instanceof ISourceOperator) {
@@ -162,6 +157,12 @@ public class LogicalPlan {
     }
 
     public Map<String, List<Schema>> retrieveAllOperatorInputSchema() throws PlanGenException {
+
+        if (UPDATED) {
+            buildOperators();
+            checkGraphCyclicity();
+        }
+
         Map<String, Integer> inEdgeCount = new HashMap<>();
         for (Map.Entry<String, LinkedHashSet<String>> entry: adjacencyList.entrySet()) {
             inEdgeCount.putIfAbsent(entry.getKey(), 0);
@@ -171,8 +172,8 @@ public class LogicalPlan {
         }
 
         Queue<String> queue = new LinkedList<>();
-        for (Map.Entry<String, Integer> entry: inEdgeCount.entrySet()) {
-            if (entry.getValue() == 0) {
+        for (Map.Entry<String, IOperator> entry: operatorObjectMap.entrySet()) {
+            if (entry.getValue() instanceof ISourceOperator) {
                 queue.add(entry.getKey());
             }
         }
@@ -180,21 +181,19 @@ public class LogicalPlan {
         Map<String, List<Schema>> inputSchemas = new HashMap<>();
         while (!queue.isEmpty()) {
             String origin = queue.poll();
-            System.out.print("FRONT: " + origin + "  ");
             Schema curOutputSchema = null;
             curOutputSchema = getOperatorOutputSchema(origin, inputSchemas);
 
             if (curOutputSchema != null) {
                 for (String destination: adjacencyList.get(origin)) {
-                    inputSchemas.computeIfAbsent(destination, k -> new ArrayList<>()).add(curOutputSchema);
-                    inEdgeCount.put(destination, inEdgeCount.get(destination)-1);
-                    if (inEdgeCount.get(destination) == 0)
-                    {
-                        inEdgeCount.remove(destination);
-                        if (!(operatorObjectMap.get(destination) instanceof ISink)) {
+                    if (!(operatorObjectMap.get(destination) instanceof ISink))
+                        inputSchemas.computeIfAbsent(destination, k -> new ArrayList<>()).add(curOutputSchema);
+                        inEdgeCount.put(destination, inEdgeCount.get(destination)-1);
+                        if (inEdgeCount.get(destination) == 0)
+                        {
+                            inEdgeCount.remove(destination);
                             queue.offer(destination);
                         }
-                    }
                 }
             }
         }

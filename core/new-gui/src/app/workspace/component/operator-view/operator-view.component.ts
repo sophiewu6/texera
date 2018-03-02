@@ -21,16 +21,18 @@ export class OperatorViewComponent implements OnInit {
 
   public operatorMetadataList: OperatorSchema[] = [];
 
-  optionId: string;
+  optionId: string = '';
 
   currentExpand: string;
 
   operatorGroupName: string[] = ['source', 'Search', 'Analysis', 'Split', 'Join', 'Other', 'Write Database', 'standalone'];
 
+  inputMonitor: string = '';
+
+
   constructor(private operatorMetadataService: OperatorMetadataService) {
     operatorMetadataService.metadataChanged$.subscribe(x => {
       this.operatorMetadataList = x;
-      console.log(this.operatorMetadataList);
       this.operatorCtrl = new FormControl();
       this.filteredOptions = this.operatorCtrl.valueChanges
         .pipe(
@@ -60,6 +62,12 @@ export class OperatorViewComponent implements OnInit {
     this.optionId = operatorLabelID;
     this.currentExpand = option.additionalMetadata.operatorGroupName.toLowerCase();
 
+  }
+
+  removeSelection() {
+    if(this.inputMonitor.length===0 && this.optionId != '') {
+      document.getElementById(this.optionId).style.backgroundColor = '';
+    }
   }
 
   expandCurrent(group : string) {

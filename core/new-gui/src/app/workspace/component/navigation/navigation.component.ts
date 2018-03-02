@@ -16,7 +16,6 @@ export class NavigationComponent implements OnInit {
   }
 
   onClickRun() {
-    this.showSpinner=!this.showSpinner;
     this.executeWorkflowService.onExecuteWorkflowRequested();
     this.showSpinner=!this.showSpinner;
   }

@@ -1,4 +1,7 @@
-export interface OperatorLink {
-    origin: string;
-    destination: string;
+interface OperatorLink {
+    linkID: string;
+    sourceOperator?: string;
+    sourcePort?: string;
+    targetOperator?: string;
+    targetPort?: string;
 }

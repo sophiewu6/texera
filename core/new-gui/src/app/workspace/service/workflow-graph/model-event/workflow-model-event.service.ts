@@ -7,48 +7,57 @@ import '../../../common/rxjs-operators.ts';
 export class WorkflowModelEventService {
 
   public operatorAddedSubject = new Subject<{operator: OperatorPredicate, xOffset: number, yOffset: number}>();
+  public operatorAddedObservable = this.operatorAddedSubject.asObservable();
 
-  public operatorDeletedSubject = new Subject<any>();
+  private operatorDeletedSubject = new Subject<{operatorID: string}>();
+  public operatorDeletedObservable = this.operatorDeletedSubject.asObservable();
 
-  public linkAddedSubject = new Subject<{operatorLink: OperatorLink}>();
+  private linkAddedSubject = new Subject<OperatorLink>();
+  public linkAddedObservable = this.linkAddedSubject.asObservable().distinctUntilChanged();
 
-  public linkDeletedSubject = new Subject<any>();
+  private linkDeletedSubject = new Subject<OperatorLink>();
+  public linkDeletedObservable = this.linkDeletedSubject.asObservable();
 
-  public linkChangedSubject = new Subject<any>();
+  private linkChangedSubject = new Subject<OperatorLink>();
+  public linkChangedObservable = this.linkChangedSubject.asObservable().distinctUntilChanged();
 
   public operatorPropertyChangedSubject = new Subject<{operatorID: string, newProperty: Object}>();
-
-
 
   constructor(
     private workflowModelService: WorkflowModelService
   ) {
-    this.workflowModelService.uiGraph.on('add', (cell: joint.dia.Cell) => this.handleJointModelAdd(cell));
-    this.workflowModelService.uiGraph.on('change', (cell: joint.dia.Cell) => this.handleJointCellChange(cell));
+    this.workflowModelService.uiGraph.on(
+      'change:source change:target', (link: joint.dia.Link) => this.handleJointLinkChange(link));
+    this.workflowModelService.uiGraph.on(
+      'remove', (cell: joint.dia.Cell) => this.handleJointCellDelete(cell));
+
   }
 
-  private handleJointCellChange(cell: joint.dia.Cell) {
-    if (cell.isLink) {
-      const link = <joint.dia.Link>cell;
-      const sourceElement = link.getSourceElement();
-      const targetElement = link.getTargetElement();
-      if (sourceElement){  }
-
+  private handleJointLinkChange(link: joint.dia.Link): void {
+    const sourceElement = link.getSourceElement();
+    const targetElement = link.getTargetElement();
+    // if the sourceElement and targetElement are both valid, then it means
+    //   the link is acutally connected
+    if (sourceElement && targetElement) {
+      this.linkAddedSubject.next(
+        {linkID: link.id.toString(), origin: sourceElement.id.toString(), destination: targetElement.id.toString()});
+      return;
     }
-
+    // if one of them is not valid, then it means that one side of the link
+    //  is being dragged around, we need to delete the link if the link is previously connected
+    // if (this.workflowModelService.logicalPlan.hasLink())
 
   }
 
-  /*
-    Only handle to the add link event and push to the link added subject.
-    Operator added subject will be direclty pushed by the action, not here.
-  */
-  private handleJointModelAdd(cell: joint.dia.Cell) {
+  private handleJointCellDelete(cell: joint.dia.Cell): void {
     if (cell.isLink()) {
-      const link = <joint.dia.Link>cell;
-
-      this.linkAddedSubject.next({});
-      this.linkAddedSubject.next(link.attributes);
+      // handle link deleted
+      const link = <joint.dia.Link> cell;
+      this.linkDeletedSubject.next();
+    } else {
+      // handle operator deleted
+      const element = <joint.dia.Element> cell;
+      this.operatorDeletedSubject.next({operatorID: element.id.toString()});
     }
   }
 

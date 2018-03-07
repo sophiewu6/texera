@@ -9,12 +9,20 @@ import { ExecuteWorkflowService } from '../../service/execute-workflow/execute-w
 })
 export class NavigationComponent implements OnInit {
 
-  constructor(private executeWorkflowService: ExecuteWorkflowService) { }
+  showSpinner = false;
+
+  constructor(private executeWorkflowService: ExecuteWorkflowService) {
+    executeWorkflowService.executeFinished$.subscribe(
+      value => this.showSpinner = false,
+      error => this.showSpinner = false
+    )
+  }
 
   ngOnInit() {
   }
 
   onClickRun() {
+    this.showSpinner = true;
     this.executeWorkflowService.onExecuteWorkflowRequested();
   }
 

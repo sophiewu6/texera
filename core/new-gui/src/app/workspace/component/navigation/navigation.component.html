@@ -3,7 +3,10 @@
     <div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
         <label id="texera-workspace-navigation-title">Texera</label>
         <button id="texera-workspace-navigation-run" (click)="onClickRun()">
-            <i id="texera-run-icon" class="fa fa-play-circle-o" aria-hidden="true"></i>&nbsp; Run
+            <mat-spinner id="texera-loading-spinner" *ngIf="showSpinner" [diameter]="30"></mat-spinner>
+            <span *ngIf="!showSpinner">
+                <i id="texera-run-icon" class="fa fa-play-circle-o" aria-hidden="true"></i>&nbsp; Run
+            </span>
         </button>
     </div>
 </mat-toolbar>

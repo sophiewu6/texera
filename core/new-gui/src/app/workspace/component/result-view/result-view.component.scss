@@ -15,12 +15,10 @@
 .mat-table {
     display: table;
     width: 100%;
-
-    > .mat-header-row, > .mat-row {
+    .mat-header-row, .mat-row {
         display: table-row;
         border: none;
-
-        > .mat-header-cell, > .mat-cell {
+        .mat-header-cell, .mat-cell {
             display: table-cell;
             font-size: 16px;
             height: 18px;
@@ -33,15 +31,15 @@
             border-right: 1.5px solid rgba(0, 0, 0, 0.12);
         }
     }
+    .mat-header-cell {
+        font-weight: bold;
+        color :  #e6e6e6;
+        background-color: #3F51B5;
+        text-transform: uppercase;
+    }
+    
+    .mat-row:nth-child(even) {
+        background-color: #C5CAE9;
+    }
 }
 
-.mat-header-cell {
-    font-weight: bold;
-    color :  #e6e6e6;
-    background-color: #3F51B5;
-    text-transform: uppercase;
-}
-
-.mat-row:nth-child(even) {
-    background-color: #C5CAE9;
-}

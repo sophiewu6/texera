@@ -64,7 +64,7 @@ public class TupleSinkPredicate extends PredicateBase {
         return ImmutableMap.<String, Object>builder()
             .put(PropertyNameConstants.USER_FRIENDLY_NAME, "View Results")
             .put(PropertyNameConstants.OPERATOR_DESCRIPTION, "View the results of the workflow")
-            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, "standalone")
+            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, "View Results")
             .build();
     }
 

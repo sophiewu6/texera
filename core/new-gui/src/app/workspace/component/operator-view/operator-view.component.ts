@@ -25,14 +25,16 @@ export class OperatorViewComponent implements OnInit {
 
   currentExpand: string;
 
-  operatorGroupName: string[] = ['source', 'Search', 'Analysis', 'Split', 'Join', 'Other', 'Write Database', 'standalone'];
+  operatorGroupName: Set<string>;
 
   inputMonitor: string = '';
 
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
     operatorMetadataService.metadataChanged$.subscribe(x => {
+      console.log(x);
       this.operatorMetadataList = x;
+      this.operatorGroupName = new Set(this.operatorMetadataList.map(metadata => metadata.additionalMetadata.operatorGroupName));
       this.operatorCtrl = new FormControl();
       this.filteredOptions = this.operatorCtrl.valueChanges
         .pipe(
@@ -70,17 +72,8 @@ export class OperatorViewComponent implements OnInit {
     }
   }
 
-  expandCurrent(group : string) {
+  expandCurrent(group: string) {
     return this.currentExpand === group.toLowerCase();
-  }
-
-  transferTitle(group: string) {
-    if(group === 'source')
-      return 'Sources';
-    else if(group === 'standalone')
-      return 'View Results';
-    else
-      return group;
   }
 
 }

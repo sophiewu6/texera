@@ -15,7 +15,7 @@
       <mat-expansion-panel [expanded] = "expandCurrent(operatorType)">
           <mat-expansion-panel-header>
               <mat-panel-title>
-                {{transferTitle(operatorType)}}
+                {{operatorType}}
               </mat-panel-title>
           </mat-expansion-panel-header>
             <div *ngFor="let operatorSchema of operatorMetadataList">

@@ -40,17 +40,6 @@ export class OperatorUIElementService {
       }
     });
 
-
-    // operatorElement.attr({
-    //   '.delete-button' : {
-    //     fill : "grey",
-    //     event: 'element:delete'
-    //   }
-    // });
-    // set input ports
-
-
-
     for (let i = 0; i < operatorSchema.additionalMetadata.numInputPorts; i++) {
       operatorElement.addInPort(`in${i}`);
     }

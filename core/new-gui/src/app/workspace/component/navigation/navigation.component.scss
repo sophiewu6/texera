@@ -1,0 +1,25 @@
+#texera-workspace-navigation-title {
+    font-weight: bold;
+    margin: 0px;
+}
+
+#texera-workspace-navigation-run {
+    border-radius: 10px;
+    box-shadow: 1px 1px 2px 2px rgba(0, 0, 0, 0.2);
+    font-size: 18px;
+    font-weight: bold;
+    background-color: #4CAF50;
+    color: white;
+    padding: 3px;
+    border: none;
+    padding: 5px 15px;
+    cursor: pointer;
+}
+
+#texera-workspace-navigation-run:hover {
+    background-color: #81C784;
+}
+
+#texera-loading-spinner {
+    color: #85e085;
+}

@@ -1,6 +1,8 @@
+@import '../../../app.component';
 .texera-workspace-result-view-container {
-    border-style: solid;
-    overflow: auto;
+    box-sizing: border-box;
+    border-bottom: 0.5px solid black;
+    height: 100%;
     width: 100%;
 }
 
@@ -14,21 +16,30 @@
 .mat-table {
     display: table;
     width: 100%;
-
-    > .mat-header-row, > .mat-row {
+    .mat-header-row, .mat-row {
         display: table-row;
         border: none;
-
-        > .mat-header-cell, > .mat-cell {
+        .mat-header-cell, .mat-cell {
             display: table-cell;
-            height: 48px;
-            padding: 0px 10px;
+            font-size: 16px;
+            height: 18px;
+            padding: 0px 6px;
             vertical-align: middle;
             max-width: 200px;
             text-overflow: ellipsis;
             white-space: nowrap;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-            border-right: 1px solid rgba(0, 0, 0, 0.12);
+            // border-bottom: 1.5px solid rgba(0, 0, 0, 0.12);
+            border-right: 1.5px solid rgba(0, 0, 0, 0.12);
         }
+    }
+    .mat-header-cell {
+        font-weight: bold;
+        color :  #e6e6e6;
+        background-color: #3F51B5;
+        text-transform: uppercase;
+    }
+    
+    .mat-row:nth-child(even) {
+        background-color: #C5CAE9;
     }
 }

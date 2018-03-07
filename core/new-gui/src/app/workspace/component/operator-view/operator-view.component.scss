@@ -1,16 +1,22 @@
+@import '../../../app.component';
+
 .texera-workspace-operator-view-container {
-    width: 100%;
+    // width: 100%;
     height: 100%;
-    border-style: solid;
+    // border-style: solid;
+    box-sizing: border-box;
+    border: 0.5px solid black;
+    
     overflow: auto;
+    padding: 0px 5px;
 }
 
 .search-area {
-    min-width: 150px;
-    max-width: 500px;
+    @include width-bound (500px, 150px);
     width: 100%;
   }
   
 .search-area-full-width {
     width: 100%;
   }
+

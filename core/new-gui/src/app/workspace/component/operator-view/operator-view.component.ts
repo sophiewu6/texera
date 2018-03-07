@@ -21,7 +21,13 @@ export class OperatorViewComponent implements OnInit {
 
   public operatorMetadataList: OperatorSchema[] = [];
 
-  optionId: string;
+  optionId: string = '';
+
+  currentExpand: string;
+
+  operatorGroupName: string[] = ['source', 'Search', 'Analysis', 'Split', 'Join', 'Other', 'Write Database', 'standalone'];
+
+  inputMonitor: string = '';
 
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
@@ -38,7 +44,7 @@ export class OperatorViewComponent implements OnInit {
 
   filterOptions(name: string) {
     return this.operatorMetadataList.filter(option =>
-      option.additionalMetadata.userFriendlyName.toLowerCase().indexOf(name.toLowerCase()) !== -1);
+      option.additionalMetadata.userFriendlyName.toLowerCase().indexOf(name.toLowerCase()) !== -1 && name.length > 0);
   }
 
   ngOnInit() {
@@ -47,18 +53,35 @@ export class OperatorViewComponent implements OnInit {
 
 
   HighlightSelection(option) {
-    console.log(option.operatorGroupName);
     const operatorLabelID = 'texera-operator-label-'  + option.operatorType;
     if (this.optionId) {
-      document.getElementById(this.optionId).style.color = 'black';
+      document.getElementById(this.optionId).style.backgroundColor = '';
     }
-    document.getElementById(operatorLabelID).style.color = 'red';
+    document.getElementById(operatorLabelID).style.backgroundColor = '#ed5281';
 
     this.optionId = operatorLabelID;
+    this.currentExpand = option.additionalMetadata.operatorGroupName.toLowerCase();
 
   }
 
+  removeSelection() {
+    if(this.inputMonitor.length===0 && this.optionId != '') {
+      document.getElementById(this.optionId).style.backgroundColor = '';
+    }
+  }
 
+  expandCurrent(group : string) {
+    return this.currentExpand === group.toLowerCase();
+  }
+
+  transferTitle(group: string) {
+    if(group === 'source')
+      return 'Sources';
+    else if(group === 'standalone')
+      return 'View Results';
+    else
+      return group;
+  }
 
 }
 

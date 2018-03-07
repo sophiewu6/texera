@@ -6,23 +6,23 @@ import '../../../../common/rxjs-operators.ts';
 @Injectable()
 export class WorkflowModelEventService {
 
-  public operatorAddedSubject = new Subject<{operator: OperatorPredicate, xOffset: number, yOffset: number}>();
-  public operatorAddedObservable = this.operatorAddedSubject.asObservable();
+  public _operatorAddedSubject = new Subject<{operator: OperatorPredicate, xOffset: number, yOffset: number}>();
+  public operatorAddedObservable = this._operatorAddedSubject.asObservable();
 
-  private operatorDeletedSubject = new Subject<{operatorID: string}>();
-  public operatorDeletedObservable = this.operatorDeletedSubject.asObservable();
+  public _operatorDeletedSubject = new Subject<{operatorID: string}>();
+  public operatorDeletedObservable = this._operatorDeletedSubject.asObservable();
 
-  private linkAddedSubject = new Subject<OperatorLink>();
-  public linkAddedObservable = this.linkAddedSubject.asObservable().distinctUntilChanged();
+  public _linkAddedSubject = new Subject<OperatorLink>();
+  public linkAddedObservable = this._linkAddedSubject.asObservable().distinctUntilChanged();
 
-  private linkDeletedSubject = new Subject<{linkID: string}>();
-  public linkDeletedObservable = this.linkDeletedSubject.asObservable();
+  public _linkDeletedSubject = new Subject<{linkID: string}>();
+  public linkDeletedObservable = this._linkDeletedSubject.asObservable();
 
-  private linkChangedSubject = new Subject<OperatorLink>();
-  public linkChangedObservable = this.linkChangedSubject.asObservable().distinctUntilChanged();
+  public _linkChangedSubject = new Subject<OperatorLink>();
+  public linkChangedObservable = this._linkChangedSubject.asObservable().distinctUntilChanged();
 
-  public operatorPropertyChangedSubject = new Subject<{operatorID: string, newProperty: Object}>();
-  public operatorPropertyChangedObservable = this.operatorPropertyChangedSubject.asObservable().distinctUntilChanged();
+  public _operatorPropertyChangedSubject = new Subject<{operatorID: string, newProperty: Object}>();
+  public operatorPropertyChangedObservable = this._operatorPropertyChangedSubject.asObservable().distinctUntilChanged();
 
   constructor(
     private workflowJointGraphService: WorkflowJointGraphService
@@ -57,7 +57,7 @@ export class WorkflowModelEventService {
 
   private handleJointCellAdd(cell: joint.dia.Cell): void {
     if (cell.isLink()) {
-      this.linkAddedSubject.next(WorkflowModelEventService.getOperatorLinkObject(<joint.dia.Link> cell));
+      this._linkAddedSubject.next(WorkflowModelEventService.getOperatorLinkObject(<joint.dia.Link> cell));
     }
   }
 
@@ -65,16 +65,16 @@ export class WorkflowModelEventService {
     if (cell.isLink()) {
       // handle link deleted
       const link = <joint.dia.Link> cell;
-      this.linkDeletedSubject.next({linkID: link.id.toString()});
+      this._linkDeletedSubject.next({linkID: link.id.toString()});
     } else {
       // handle operator deleted
       const element = <joint.dia.Element> cell;
-      this.operatorDeletedSubject.next({operatorID: element.id.toString()});
+      this._operatorDeletedSubject.next({operatorID: element.id.toString()});
     }
   }
 
   private handleJointLinkChange(link: joint.dia.Link): void {
-    this.linkChangedSubject.next(WorkflowModelEventService.getOperatorLinkObject(link));
+    this._linkChangedSubject.next(WorkflowModelEventService.getOperatorLinkObject(link));
   }
 
 }

@@ -24,7 +24,7 @@ export class WorkflowModelActionService {
     // add the operator UI element to the UI model
     this.workflowJointGraphService.uiGraph.addCell(operatorUIElement);
 
-    this.workflowModelEventService.operatorAddedSubject.next({operator, xOffset, yOffset});
+    this.workflowModelEventService._operatorAddedSubject.next({operator, xOffset, yOffset});
   }
 
   public deleteOperator(operatorID: string): void {
@@ -41,7 +41,7 @@ export class WorkflowModelActionService {
   // }
 
   public changeOperatorProperty(operatorID: string, newProperty: Object): void {
-    this.workflowModelEventService.operatorPropertyChangedSubject.next({operatorID, newProperty});
+    this.workflowModelEventService._operatorPropertyChangedSubject.next({operatorID, newProperty});
   }
 
 }

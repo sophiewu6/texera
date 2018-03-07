@@ -36,7 +36,7 @@ export class WorkflowTexeraGraphService {
       data => this.texeraGraph.changeLink(data)
     );
 
-    this.workflowModelEventService.operatorPropertyChangedSubject.distinctUntilChanged().subscribe(
+    this.workflowModelEventService.operatorPropertyChangedObservable.distinctUntilChanged().subscribe(
       data => this.texeraGraph.changeOperatorProperty(data.operatorID, data.newProperty)
     );
   }

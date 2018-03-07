@@ -3,6 +3,8 @@ import { DataSource } from '@angular/cdk/table';
 
 import { ExecuteWorkflowService } from '../../service/execute-workflow/execute-workflow.service';
 import { Observable } from 'rxjs/Observable';
+import { NgbModal , ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+
 
 /* tslint:disable:no-inferrable-types */
 @Component({
@@ -18,14 +20,24 @@ export class ResultViewComponent implements OnInit {
   currentColumns: TableColumn[] = undefined;
   currentDisplayColumns: string[] = undefined;
   currentDataSource: ResultDataSource = undefined;
+  currentDisplayRows: string = '';
 
   /** Column definitions in order */
   // displayedColumns = this.columns.map(x => x.columnDef);
 
-  constructor(private executeWorkflowService: ExecuteWorkflowService, private changeDetectorRef: ChangeDetectorRef) {
+  constructor(private executeWorkflowService: ExecuteWorkflowService, private changeDetectorRef: ChangeDetectorRef,
+    private modalService: NgbModal) {
     this.executeWorkflowService.executeFinished$.subscribe(
       value => this.handleResultData(value),
     );
+  }
+
+  open(content: any): void {
+    this.modalService.open(content).result.then((result) => {
+      console.log(result);
+    }, (reason) => {
+      console.log(reason);
+    });
   }
 
   private handleResultData(response: any): void {
@@ -52,6 +64,13 @@ export class ResultViewComponent implements OnInit {
     columnNames.forEach(col => columns.push(new TableColumn(col, col, (row) => `${row[col]}`)));
     console.log(columns);
     return columns;
+  }
+
+  private getRowDetails(row: any, content: any): void {
+    console.log('ROw clicked');
+    console.log(row);
+    this.currentDisplayRows = JSON.stringify(row, undefined, 2);
+    this.open(content);
   }
 
   ngOnInit() {

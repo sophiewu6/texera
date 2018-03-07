@@ -23,6 +23,8 @@ export class WorkflowModelActionService {
 
     // add the operator UI element to the UI model
     this.workflowModelService.uiGraph.addCell(operatorUIElement);
+
+    this.workflowModelEventService.operatorAddedSubject.next({operator, xOffset, yOffset});
   }
 
   public deleteOperator(operatorID: string): void {

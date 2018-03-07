@@ -1,4 +1,4 @@
-interface OperatorLink {
+export interface OperatorLink {
     origin: string;
     destination: string;
 }

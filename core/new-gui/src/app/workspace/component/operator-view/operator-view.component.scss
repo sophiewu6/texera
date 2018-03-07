@@ -1,3 +1,5 @@
+@import '../../../app.component';
+
 .texera-workspace-operator-view-container {
     // width: 100%;
     height: 100%;
@@ -10,11 +12,11 @@
 }
 
 .search-area {
-    min-width: 150px;
-    max-width: 500px;
+    @include width-bound (500px, 150px);
     width: 100%;
   }
   
 .search-area-full-width {
     width: 100%;
   }
+

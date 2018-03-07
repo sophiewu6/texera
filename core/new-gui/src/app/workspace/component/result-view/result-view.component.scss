@@ -25,14 +25,21 @@
 
         > .mat-header-cell, > .mat-cell {
             display: table-cell;
-            height: 48px;
-            padding: 0px 10px;
+            font-size: 16px;
+            height: 18px;
+            padding: 0px 6px;
             vertical-align: middle;
             max-width: 200px;
             text-overflow: ellipsis;
             white-space: nowrap;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-            border-right: 1px solid rgba(0, 0, 0, 0.12);
+            border-bottom: 1.5px solid rgba(0, 0, 0, 0.12);
+            border-right: 1.5px solid rgba(0, 0, 0, 0.12);
         }
     }
+}
+
+.mat-header-cell {
+    font-weight: bold;
+    color : black;
+    background-color: #99bbff;
 }

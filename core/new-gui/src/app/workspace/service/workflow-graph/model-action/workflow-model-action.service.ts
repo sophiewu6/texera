@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { WorkflowModelService } from '../model/workflow-model.service';
+import { WorkflowJointGraphService } from '../model/workflow-joint-graph.service';
 import { OperatorUIElementService } from '../../operator-ui-element/operator-ui-element.service';
 import { WorkflowModelEventService } from '../model-event/workflow-model-event.service';
 
@@ -7,7 +7,7 @@ import { WorkflowModelEventService } from '../model-event/workflow-model-event.s
 export class WorkflowModelActionService {
 
   constructor(
-    private workflowModelService: WorkflowModelService,
+    private workflowJointGraphService: WorkflowJointGraphService,
     private workflowModelEventService: WorkflowModelEventService,
     private operatorUIElementService: OperatorUIElementService
   ) { }
@@ -18,18 +18,18 @@ export class WorkflowModelActionService {
       operator.operatorType, operator.operatorID);
     // change its position
     operatorUIElement.position(
-      xOffset - this.workflowModelService.uiPaper.pageOffset().x,
-      yOffset - this.workflowModelService.uiPaper.pageOffset().y);
+      xOffset - this.workflowJointGraphService.uiPaper.pageOffset().x,
+      yOffset - this.workflowJointGraphService.uiPaper.pageOffset().y);
 
     // add the operator UI element to the UI model
-    this.workflowModelService.uiGraph.addCell(operatorUIElement);
+    this.workflowJointGraphService.uiGraph.addCell(operatorUIElement);
 
     this.workflowModelEventService.operatorAddedSubject.next({operator, xOffset, yOffset});
   }
 
   public deleteOperator(operatorID: string): void {
     // get the cell from jointJS graph by ID and then remove it
-    this.workflowModelService.uiGraph.getCell(operatorID).remove();
+    this.workflowJointGraphService.uiGraph.getCell(operatorID).remove();
   }
 
   // public addLink(origin: OperatorPort, destination: OperatorPort): void {

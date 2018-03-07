@@ -28,15 +28,11 @@ export class OperatorViewComponent implements OnInit {
     operatorMetadataService.metadataChanged$.subscribe(x => {
       this.operatorMetadataList = x;
       this.operatorCtrl = new FormControl();
-      console.log('Filter Options ? ');
-      console.log(this.filteredOptions);
       this.filteredOptions = this.operatorCtrl.valueChanges
         .pipe(
           startWith(''),
           map(option => this.filterOptions(option))
         );
-      console.log('Current filter op ');
-      console.log(this.filteredOptions);
     });
   }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { WorkflowModelService } from '../model/workflow-model.service';
+import { WorkflowJointGraphService } from '../model/workflow-joint-graph.service';
 import { Observable, Subject } from 'rxjs/Rx';
-import '../../../common/rxjs-operators.ts';
+import '../../../../common/rxjs-operators.ts';
 
 @Injectable()
 export class WorkflowModelEventService {
@@ -15,45 +15,57 @@ export class WorkflowModelEventService {
   private linkAddedSubject = new Subject<OperatorLink>();
   public linkAddedObservable = this.linkAddedSubject.asObservable().distinctUntilChanged();
 
-  private linkDeletedSubject = new Subject<OperatorLink>();
+  private linkDeletedSubject = new Subject<{linkID: string}>();
   public linkDeletedObservable = this.linkDeletedSubject.asObservable();
 
   private linkChangedSubject = new Subject<OperatorLink>();
   public linkChangedObservable = this.linkChangedSubject.asObservable().distinctUntilChanged();
 
   public operatorPropertyChangedSubject = new Subject<{operatorID: string, newProperty: Object}>();
+  public operatorPropertyChangedObservable = this.operatorPropertyChangedSubject.asObservable().distinctUntilChanged();
 
   constructor(
-    private workflowModelService: WorkflowModelService
+    private workflowJointGraphService: WorkflowJointGraphService
   ) {
-    this.workflowModelService.uiGraph.on(
-      'change:source change:target', (link: joint.dia.Link) => this.handleJointLinkChange(link));
-    this.workflowModelService.uiGraph.on(
+    this.workflowJointGraphService.uiGraph.on(
+      'add', (cell: joint.dia.Cell) => this.handleJointCellAdd(cell));
+    this.workflowJointGraphService.uiGraph.on(
       'remove', (cell: joint.dia.Cell) => this.handleJointCellDelete(cell));
-
+    this.workflowJointGraphService.uiGraph.on(
+      'change:source change:target', (link: joint.dia.Link) => this.handleJointLinkChange(link));
   }
 
-  private handleJointLinkChange(link: joint.dia.Link): void {
-    const sourceElement = link.getSourceElement();
-    const targetElement = link.getTargetElement();
-    // if the sourceElement and targetElement are both valid, then it means
-    //   the link is acutally connected
-    if (sourceElement && targetElement) {
-      this.linkAddedSubject.next(
-        {linkID: link.id.toString(), origin: sourceElement.id.toString(), destination: targetElement.id.toString()});
-      return;
-    }
-    // if one of them is not valid, then it means that one side of the link
-    //  is being dragged around, we need to delete the link if the link is previously connected
-    // if (this.workflowModelService.logicalPlan.hasLink())
+  private static getOperatorLinkObject(link: joint.dia.Link): OperatorLink {
+    const linkID = link.id.toString();
+    let sourceOperator = null;
+    let sourcePort = null;
+    let targetOperator = null;
+    let targetPort = null;
 
+    if (link.getSourceElement()) {
+      sourceOperator = link.getSourceElement().id.toString();
+      sourcePort = link.get('source').port.toString();
+    }
+
+    if (link.getTargetElement()) {
+      targetOperator = link.getTargetElement().id.toString();
+      targetPort = link.get('target').port.toString();
+    }
+
+    return {linkID, sourceOperator, sourcePort, targetOperator, targetPort};
+  }
+
+  private handleJointCellAdd(cell: joint.dia.Cell): void {
+    if (cell.isLink()) {
+      this.linkAddedSubject.next(WorkflowModelEventService.getOperatorLinkObject(<joint.dia.Link> cell));
+    }
   }
 
   private handleJointCellDelete(cell: joint.dia.Cell): void {
     if (cell.isLink()) {
       // handle link deleted
       const link = <joint.dia.Link> cell;
-      this.linkDeletedSubject.next();
+      this.linkDeletedSubject.next({linkID: link.id.toString()});
     } else {
       // handle operator deleted
       const element = <joint.dia.Element> cell;
@@ -61,6 +73,8 @@ export class WorkflowModelEventService {
     }
   }
 
-
+  private handleJointLinkChange(link: joint.dia.Link): void {
+    this.linkChangedSubject.next(WorkflowModelEventService.getOperatorLinkObject(link));
+  }
 
 }

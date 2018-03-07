@@ -4,6 +4,7 @@ import { OperatorUIElementService } from '../operator-ui-element/operator-ui-ele
 
 declare var jQuery: JQueryStatic;
 import * as joint from 'jointjs';
+import { WorkflowGraphUtilsService } from '../workflow-graph/utils/workflow-graph-utils.service';
 
 /**
  * The OperatorDragDropService class implements the behavior of dragging an operator label from the side bar
@@ -59,7 +60,7 @@ export class OperatorDragDropService {
 
   /** Subject for operator is dropped on the main workflow editor (equivalent to dragging is stopped) */
   private operatorDroppedSubject = new Subject<{
-    'operatorType': string,
+    'operator': OperatorPredicate,
     'offset': { 'x': number, 'y': number }
   }>();
   /**
@@ -72,7 +73,9 @@ export class OperatorDragDropService {
   public operatorDroppedInEditor = this.operatorDroppedSubject.asObservable();
 
   constructor(
-    private operatorUIElementService: OperatorUIElementService) {
+    private operatorUIElementService: OperatorUIElementService,
+    private workflowGraphUtilsService: WorkflowGraphUtilsService
+  ) {
   }
 
   /**
@@ -92,8 +95,7 @@ export class OperatorDragDropService {
     // register callback functions for jquery UI
     jQuery('#' + dragElementID).draggable({
       helper: () => this.createNewOperatorUIElement(operatorType),
-      start: (event, ui) => this.onOperatorDragStarted(event, ui),
-      stop: (event, ui) => this.onOperatorDropped(event, ui)
+      start: (event: any, ui) => this.onOperatorDragStarted(event, ui)
     });
   }
 
@@ -103,7 +105,7 @@ export class OperatorDragDropService {
   */
   public registerWorkflowEditorDrop(dropElementID: string): void {
     jQuery('#' + dropElementID).droppable({
-      drop: (event, ui) => this.onOperatorDropped(event, ui)
+      drop: (event: any, ui) => this.onOperatorDropped(event, ui)
     });
   }
 
@@ -147,12 +149,12 @@ export class OperatorDragDropService {
    * Hanlder function for jQueryUI's drag started event.
    * It converts the event to the drag started Subject.
    *
-   * @param event
+   * @param event JQuery.Event type, although JQueryUI typing says the type is Event, the object's actual type is JQuery.Event
    * @param ui jQueryUI Draggable Event UI
    */
-  private onOperatorDragStarted(event: Event, ui: JQueryUI.DraggableEventUIParams): void {
+  private onOperatorDragStarted(event: JQuery.Event, ui: JQueryUI.DraggableEventUIParams): void {
     // get the operatorType based on the DOM element ID
-    const operatorType = this.elementOperatorTypeMap.get(event.srcElement.id);
+    const operatorType = this.elementOperatorTypeMap.get(event.toElement.id);
     // set the currentOperatorType
     this.currentOperatorType = operatorType;
     // notify the subject of the event
@@ -167,14 +169,15 @@ export class OperatorDragDropService {
    * @param event
    * @param ui
    */
-  private onOperatorDropped(event: Event, ui: JQueryUI.DraggableEventUIParams): void {
+  private onOperatorDropped(event: JQuery.Event, ui: JQueryUI.DraggableEventUIParams): void {
+    console.log('on op dropped called');
     // notify the subject of the event
     // use ui.offset instead of ui.position because offset is relative to document root, where position is relative to parent element
     this.operatorDroppedSubject.next({
-      'operatorType': this.currentOperatorType,
-      'offset': {
-        'x': ui.offset.left,
-        'y': ui.offset.top
+      operator: this.workflowGraphUtilsService.getNewOperatorPredicate(this.currentOperatorType),
+      offset: {
+        x: ui.offset.left,
+        y: ui.offset.top
       }
     });
   }

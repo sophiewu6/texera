@@ -27,7 +27,6 @@ export class OperatorUIElementService {
         '</g>'
     });
 
-
     const operatorElement = new joint.shapes.devs['TexeraModel']({
       position: { x: 0, y: 0 },
       size: { width: 120, height: 50 },
@@ -39,17 +38,6 @@ export class OperatorUIElementService {
         fill : 'red', event: 'element:delete'}
       }
     });
-
-
-    // operatorElement.attr({
-    //   '.delete-button' : {
-    //     fill : "grey",
-    //     event: 'element:delete'
-    //   }
-    // });
-    // set input ports
-
-
 
     for (let i = 0; i < operatorSchema.additionalMetadata.numInputPorts; i++) {
       operatorElement.addInPort(`in${i}`);

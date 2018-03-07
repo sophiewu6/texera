@@ -2,6 +2,8 @@
      fxFlexFill>
     <div fxLayout="row" fxLayoutAlign="space-between center" fxFlexFill>
         <label id="texera-workspace-navigation-title">Texera</label>
-        <button id="texera-workspace-navigation-run" mat-raised-button color="accent" (click)="onClickRun()">Run</button>
+        <button id="texera-workspace-navigation-run" (click)="onClickRun()">
+            <i id="texera-run-icon" class="fa fa-play-circle-o" aria-hidden="true"></i>&nbsp; Run
+        </button>
     </div>
 </mat-toolbar>

@@ -1,7 +1,4 @@
 .texera-workspace-result-view-container {
-    // border-style: solid;
-    // overflow: auto;
-    // padding: 1px;
     box-sizing: border-box;
     border-bottom: 0.5px solid black;
     height: 100%;
@@ -32,7 +29,7 @@
             max-width: 200px;
             text-overflow: ellipsis;
             white-space: nowrap;
-            border-bottom: 1.5px solid rgba(0, 0, 0, 0.12);
+            // border-bottom: 1.5px solid rgba(0, 0, 0, 0.12);
             border-right: 1.5px solid rgba(0, 0, 0, 0.12);
         }
     }
@@ -40,6 +37,11 @@
 
 .mat-header-cell {
     font-weight: bold;
-    color : black;
-    background-color: #99bbff;
+    color :  #e6e6e6;
+    background-color: #3F51B5;
+    text-transform: uppercase;
+}
+
+.mat-row:nth-child(even) {
+    background-color: #C5CAE9;
 }

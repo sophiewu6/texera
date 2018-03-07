@@ -2,6 +2,9 @@
 
 /* Use a pre-built theme of Angular Material */
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import 'variables';
+@import '../node_modules/font-awesome/scss/font-awesome';
+
 
 html, body, .viewport {
     width: 100%;

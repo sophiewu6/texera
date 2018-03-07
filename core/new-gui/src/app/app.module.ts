@@ -7,6 +7,8 @@ import { Observable } from 'rxjs/Rx';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { CustomNgMaterialModule } from './common/custom-ng-material.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 
 import {
   JsonSchemaFormModule, MaterialDesignFrameworkModule
@@ -51,6 +53,7 @@ import { map } from 'rxjs/operators/map';
     JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
     ReactiveFormsModule,
     FormsModule,
+    NgbModule.forRoot()
   ],
   providers: [ HttpClientModule ],
   bootstrap: [AppComponent]

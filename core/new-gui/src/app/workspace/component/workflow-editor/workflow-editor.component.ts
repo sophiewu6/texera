@@ -63,8 +63,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
   private createJointjsPaper(): joint.dia.Paper {
     const paper = new joint.dia.Paper({
       el: $('#' + this.WORKFLOW_EDITOR_ID),
-      width: 600,
-      height: 200,
       model: this.workflowJointGraphService.uiGraph,
       gridSize: 1,
       snapLinks: true,

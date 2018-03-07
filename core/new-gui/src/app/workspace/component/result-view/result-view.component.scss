@@ -1,14 +1,11 @@
 @import '../../../app.component';
 .texera-workspace-result-view-container {
     box-sizing: border-box;
-    border-bottom: 0.5px solid black;
     height: 100%;
     width: 100%;
 }
 
 #result-table {
-  display: flex;
-  flex-direction: column;
   max-width: 1000px;
 }
 

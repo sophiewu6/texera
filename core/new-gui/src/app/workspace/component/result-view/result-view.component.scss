@@ -1,25 +1,23 @@
-@import '../../../app.component';
-.texera-workspace-result-view-container {
-    box-sizing: border-box;
-    height: 100%;
-    width: 100%;
-}
-
-#result-table {
-  max-width: 1000px;
-}
-
-
 .mat-table {
-    display: table;
-    width: 100%;
+
+    .mat-header-row {
+        min-height: 2.5em;
+        font-size: 14px;
+    }
+
+    .mat-row {
+        min-height: 2em;
+        font-size: 14px;
+    }
+    
     .mat-header-row, .mat-row {
         display: table-row;
         border: none;
+
         .mat-header-cell, .mat-cell {
             display: table-cell;
-            font-size: 16px;
-            height: 18px;
+            
+
             padding: 0px 6px;
             vertical-align: middle;
             max-width: 200px;

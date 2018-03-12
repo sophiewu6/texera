@@ -20,29 +20,13 @@ export class OperatorMetadataService {
   private onMetadataChangedSubject = new Subject<OperatorSchema[]>();
   metadataChanged$ = this.onMetadataChangedSubject.asObservable();
 
-  private fetchAllOperatorMetadata(): void {
-    // Observable.of(OPERATOR_METADATA).subscribe(x => {
-    //   this.operatorMetadataList = x;
-    //   this.onMetadataChangedSubject.next(x);
-    // });
-
+  public fetchAllOperatorMetadata(): void {
     this.http.get(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
       value => {
         this.operatorMetadataList = value.json();
         this.onMetadataChangedSubject.next(this.operatorMetadataList);
       }
     );
-  }
-
-  getOperatorMetadataList(): OperatorSchema[] {
-    if (this.operatorMetadataList.length === 0) {
-      this.fetchAllOperatorMetadata();
-    }
-    return this.operatorMetadataList;
-  }
-
-  getOperatorMetadata(operatorType: string): OperatorSchema {
-    return this.getOperatorMetadataList().find(x => x.operatorType === operatorType);
   }
 
 }

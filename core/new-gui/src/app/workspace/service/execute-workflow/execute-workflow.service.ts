@@ -20,7 +20,7 @@ export class ExecuteWorkflowService {
   executeStarted$ = this.onExecuteStartedSubject.asObservable();
 
   // observable and subject for execution finish
-  private onExecuteFinishedSubject = new Subject<Object[]>();
+  private onExecuteFinishedSubject = new Subject<Object>();
   executeFinished$ = this.onExecuteFinishedSubject.asObservable();
 
   // main entry function, called when the user requests to execute a workflow
@@ -33,7 +33,7 @@ export class ExecuteWorkflowService {
   // show the mock result data without sending request to server
   private showMockResultData(): void {
     this.onExecuteStartedSubject.next('started');
-    this.onExecuteFinishedSubject.next(MOCK_RESULT_DATA);
+    this.onExecuteFinishedSubject.next({code: 0, result: MOCK_RESULT_DATA});
   }
 
   // send a mock workflow plan to the server: ScanSource(twitter_sample) -> ViewResults

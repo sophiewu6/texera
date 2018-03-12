@@ -6,10 +6,17 @@ import { OperatorMetadataService } from '../operator-metadata/operator-metadata.
 @Injectable()
 export class OperatorUIElementService {
 
-  constructor(private operatorMetadataService: OperatorMetadataService) { }
+  private operatorMetadata: OperatorSchema[] = [];
+
+  constructor(private operatorMetadataService: OperatorMetadataService) {
+    this.operatorMetadataService.metadataChanged$.subscribe(
+      value => this.operatorMetadata = value
+    );
+
+  }
 
   getOperatorUIElement(operatorType: string, operatorID: string): joint.dia.Element {
-    const operatorSchema = this.operatorMetadataService.getOperatorMetadata(operatorType);
+    const operatorSchema = this.operatorMetadata.find(schema => schema.operatorType === operatorType);
 
     joint.shapes.devs['TexeraModel'] = joint.shapes.devs.Model.extend({
       type: 'devs.TexeraModel',
@@ -32,8 +39,8 @@ export class OperatorUIElementService {
       position: { x: 0, y: 0 },
       size: { width: 120, height: 50 },
       attrs: {
-        'rect': { fill: '#80deea' , 'follow-scale': true },
-        'text': { text: operatorType, fill: 'black', 'font-size': '16.5px',
+        'rect': { fill: '#FFFFFF' , 'follow-scale': true, stroke: '#CFCFCF', 'stroke-width': '2' },
+        'text': { text: operatorType, fill: 'black', 'font-size': '12px',
         'ref-x': 0.5, 'ref-y' : 0.5, ref: 'rect',  'y-alignment': 'middle', 'x-alignment': 'middle' },
         '.delete-button' : { x : 120, y : -15, cursor : 'pointer',
         fill : 'red', event: 'element:delete'}

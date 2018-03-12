@@ -29,7 +29,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
   // the DOM element ID of the main editor
   // the id in the corresponding html file must also be changed whenever this is changed
-  public readonly WORKFLOW_EDITOR_ID: string = 'texera-workflow-holder';
+  public readonly WORKFLOW_EDITOR_ID: string = 'texera-workflow-editor-body-id';
   // the jointJS paper
   private paper: joint.dia.Paper = null;
 
@@ -61,9 +61,14 @@ export class WorkflowEditorComponent implements AfterViewInit {
    * JointJS documentation about paper: https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper
    */
   private createJointjsPaper(): joint.dia.Paper {
+    console.log('height: ' + $('#' + this.WORKFLOW_EDITOR_ID).height());
+    console.log('width: ' + $('#' + this.WORKFLOW_EDITOR_ID).width());
+
     const paper = new joint.dia.Paper({
       el: $('#' + this.WORKFLOW_EDITOR_ID),
       model: this.workflowJointGraphService.uiGraph,
+      height: $('#' + this.WORKFLOW_EDITOR_ID).height(),
+      width: $('#' + this.WORKFLOW_EDITOR_ID).width(),
       gridSize: 1,
       snapLinks: true,
       linkPinning: false,
@@ -119,7 +124,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     if (cellView.model.isElement()) {
       // an operator cell is pointed down
       // push the operator ID to the subject
-      this.workflowViewEventService.operatorSelectedInEditor.next({operatorID: cellView.model.id.toString()});
+      this.workflowViewEventService.operatorSelectedInEditor.next({ operatorID: cellView.model.id.toString() });
     }
   }
 
@@ -132,7 +137,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
    *
    */
   private handleElementDelete(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {
-    this.workflowViewEventService.deleteOperatorClickedInEditor.next({operatorID: cellView.model.id.toString()});
+    this.workflowViewEventService.deleteOperatorClickedInEditor.next({ operatorID: cellView.model.id.toString() });
   }
 
 }

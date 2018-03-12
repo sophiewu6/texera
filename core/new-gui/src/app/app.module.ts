@@ -11,7 +11,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 
 import {
-  JsonSchemaFormModule, MaterialDesignFrameworkModule
+  JsonSchemaFormModule, MaterialDesignFrameworkModule, Bootstrap4FrameworkModule
 } from 'angular2-json-schema-form';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -50,6 +50,7 @@ import { map } from 'rxjs/operators/map';
     BrowserAnimationsModule,
 
     MaterialDesignFrameworkModule,
+    Bootstrap4FrameworkModule,
     JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
     ReactiveFormsModule,
     FormsModule,

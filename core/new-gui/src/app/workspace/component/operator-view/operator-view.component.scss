@@ -1,9 +1,11 @@
-@import '../../../app.component';
-
-.texera-workspace-operator-view-container {
-  border: 0.5px solid black;
-  
-  overflow-y: scroll;
+.texera-workspace-operator-view-body {
+    padding: 5px;
 }
 
-
+.texera-operator-search-form {
+    padding-left: 15px;
+    padding-right: 5px;
+    &.mat-form-field-infix {
+        width: 100%;
+    }
+}

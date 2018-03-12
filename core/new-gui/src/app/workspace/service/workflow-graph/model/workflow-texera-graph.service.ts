@@ -1,44 +1,30 @@
 import { Injectable } from '@angular/core';
 
 import { WorkflowGraph } from '../../../model/workflow-graph';
-import { WorkflowModelEventService } from '../model-event/workflow-model-event.service';
+import { WorkflowSyncModelService } from './workflow-sync-model.service';
 
 
 @Injectable()
 export class WorkflowTexeraGraphService {
 
-  private texeraGraph = new WorkflowGraph([], []);
+  public texeraWorkflowGraph: WorkflowGraphReadonly = this.workflowSyncModelService._texeraGraph;
 
-  public texeraWorkflowGraph: WorkflowGraphReadonly = this.texeraGraph;
+  public operatorAddedObservable = this.workflowSyncModelService._operatorAddedSubject.asObservable();
 
-  constructor(private workflowModelEventService: WorkflowModelEventService) {
-    this.bindModelEvents();
-  }
+  public operatorDeletedObservable = this.workflowSyncModelService._operatorDeletedSubject.asObservable();
 
-  private bindModelEvents(): void {
-    this.workflowModelEventService.operatorAddedObservable.subscribe(
-      data => this.texeraGraph.addOperator(data.operator)
-    );
+  public linkAddedObservable = this.workflowSyncModelService._linkAddedSubject.asObservable().distinctUntilChanged();
 
-    this.workflowModelEventService.operatorDeletedObservable.subscribe(
-      data => this.texeraGraph.deleteOperator(data.operatorID)
-    );
+  public linkDeletedObservable = this.workflowSyncModelService._linkDeletedSubject.asObservable();
 
-    this.workflowModelEventService.linkAddedObservable.subscribe(
-      data => this.texeraGraph.addLink(data)
-    );
+  public linkChangedObservable = this.workflowSyncModelService._linkChangedSubject.asObservable().distinctUntilChanged();
 
-    this.workflowModelEventService.linkDeletedObservable.subscribe(
-      data => this.texeraGraph.deleteLink(data.linkID)
-    );
+  public operatorPropertyChangedObservable = this.workflowSyncModelService._operatorPropertyChangedSubject
+    .asObservable().distinctUntilChanged();
 
-    this.workflowModelEventService.linkChangedObservable.distinctUntilChanged().subscribe(
-      data => this.texeraGraph.changeLink(data)
-    );
-
-    this.workflowModelEventService.operatorPropertyChangedObservable.distinctUntilChanged().subscribe(
-      data => this.texeraGraph.changeOperatorProperty(data.operatorID, data.newProperty)
-    );
+  constructor(
+    private workflowSyncModelService: WorkflowSyncModelService
+  ) {
   }
 
 }

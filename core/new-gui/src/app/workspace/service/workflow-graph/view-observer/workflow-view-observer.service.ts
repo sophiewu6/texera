@@ -25,7 +25,6 @@ export class WorkflowViewObserverService {
   }
 
   private handleOperatorDropped(operator: OperatorPredicate, xOffset: number, yOffset: number) {
-    console.log('view observer: op dropped, calling add operator');
     this.workflowModelActionService.addOperator(operator, xOffset, yOffset);
   }
 

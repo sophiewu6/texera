@@ -14,7 +14,7 @@ export class NavigationComponent implements OnInit {
     executeWorkflowService.executeFinished$.subscribe(
       value => this.showSpinner = false,
       error => this.showSpinner = false
-    )
+    );
   }
 
   ngOnInit() {

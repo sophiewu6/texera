@@ -11,7 +11,6 @@ export class OperatorLabelComponent implements OnInit, AfterViewInit {
 
   @Input() operator: OperatorSchema;
   operatorLabelID: string;
-  color:string = 'red';
 
   constructor(private operatorDragDropService: OperatorDragDropService) {
   }

@@ -132,8 +132,8 @@ export class OperatorDragDropService {
     const tempGhostModel = new joint.dia.Graph();
     const tempGhostPaper = new joint.dia.Paper({
       el: jQuery('#flyPaper'),
-      width: 120,
-      height: 50,
+      width: 140,
+      height: 40,
       model: tempGhostModel,
       gridSize: 1
     });

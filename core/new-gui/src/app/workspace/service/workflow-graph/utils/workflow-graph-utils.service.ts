@@ -5,12 +5,12 @@ import { OperatorMetadataService } from '../../operator-metadata/operator-metada
 export class WorkflowGraphUtilsService {
 
   private nextAvailableID = 0;
-  private operatorMetadata: OperatorSchema[] = [];
+  private operatorSchemaList: OperatorSchema[] = [];
 
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
     this.operatorMetadataService.metadataChanged$.subscribe(
-      value => this.operatorMetadata = value
+      value => this.operatorSchemaList = value.operators
     );
   }
 
@@ -25,7 +25,7 @@ export class WorkflowGraphUtilsService {
     const operatorID = this.getNextAvailableID();
     const operatorProperties = {};
 
-    const operatorSchema = this.operatorMetadata.find(schema => schema.operatorType === operatorType);
+    const operatorSchema = this.operatorSchemaList.find(schema => schema.operatorType === operatorType);
 
     const inputPorts: string[] = [];
     const outputPorts: string[] = [];

@@ -51,8 +51,8 @@ export class OperatorViewComponent implements OnInit {
 
   inputMonitor = '';
 
-  public operatorMetadataList: OperatorSchema[] = [];
-  public groupNames: string[] = [];
+  public operatorSchemaList: OperatorSchema[] = [];
+  public groupNamesOrdered: string[] = [];
   public operatorGroupMap = new Map<string, OperatorSchema[]>();
 
   private readonly fuseSearchOptions: Fuse.FuseOptions = {
@@ -63,7 +63,7 @@ export class OperatorViewComponent implements OnInit {
     minMatchCharLength: 2,
     location: 0,
   };
-  public fuseSearch = new Fuse(this.operatorMetadataList, this.fuseSearchOptions);
+  public fuseSearch = new Fuse(this.operatorSchemaList, this.fuseSearchOptions);
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
@@ -78,16 +78,23 @@ export class OperatorViewComponent implements OnInit {
   ngOnInit() {
   }
 
-  private processOperatorMetadata(operatorMetadata: OperatorSchema[]): void {
-    this.operatorMetadataList = operatorMetadata;
+  private processOperatorMetadata(operatorMetadata: OperatorMetadata): void {
+    console.log(operatorMetadata);
 
-    this.groupNames = Array.from(new Set(operatorMetadata.map(schema => schema.additionalMetadata.operatorGroupName)));
+    this.operatorSchemaList = operatorMetadata.operators;
 
-    this.operatorGroupMap = new Map<string, OperatorSchema[]>(
-      this.groupNames.map(groupName =>
-        <[string, OperatorSchema[]]> [groupName, operatorMetadata.filter(x => x.additionalMetadata.operatorGroupName === groupName)]));
+    this.groupNamesOrdered = operatorMetadata.groups.slice()
+        .sort((a, b) => (a.groupOrder - b.groupOrder))
+        .map(groupOrder => groupOrder.groupName);
 
-    this.fuseSearch = new Fuse(this.operatorMetadataList, this.fuseSearchOptions);
+    this.operatorGroupMap = new Map(
+      this.groupNamesOrdered.map(groupName =>
+        <[string, OperatorSchema[]]> [groupName,
+          operatorMetadata.operators.filter(x => x.additionalMetadata.operatorGroupName === groupName)]
+      )
+    );
+
+    this.fuseSearch = new Fuse([], this.fuseSearchOptions);
   }
 
   findOperatorName(query: string): OperatorSchema[] {

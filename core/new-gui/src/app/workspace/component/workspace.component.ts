@@ -20,6 +20,7 @@ import { ExecuteWorkflowService } from '../service/execute-workflow/execute-work
 import { OperatorDragDropService } from '../service/operator-drag-drop/operator-drag-drop.service';
 import { OperatorUIElementService } from '../service/operator-ui-element/operator-ui-element.service';
 
+import { TableAutocompleteService } from '../service/property-autocomplete/table-autocomplete.service';
 
 
 @Component({
@@ -40,7 +41,9 @@ import { OperatorUIElementService } from '../service/operator-ui-element/operato
 
     ExecuteWorkflowService,
     OperatorDragDropService,
-    OperatorUIElementService
+    OperatorUIElementService,
+
+    TableAutocompleteService,
 
   ]
 })
@@ -64,10 +67,12 @@ export class WorkspaceComponent implements OnInit {
     private executeWorkflowService: ExecuteWorkflowService,
     private operatorDragDropService: OperatorDragDropService,
     private operatorUIElementService: OperatorUIElementService,
+    private tableAutocompleteService: TableAutocompleteService
   ) { }
 
   ngOnInit() {
     this.operatorMetadataService.fetchAllOperatorMetadata();
+    this.tableAutocompleteService.fetchAllTableMetadata();
   }
 
 }

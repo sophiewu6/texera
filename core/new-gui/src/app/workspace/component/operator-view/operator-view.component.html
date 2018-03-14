@@ -14,7 +14,7 @@
     {{removeSelection()}}
 
   <mat-accordion multi="false">
-    <mat-expansion-panel class="mat-elevation-z0" *ngFor="let groupName of groupNames">
+    <mat-expansion-panel class="mat-elevation-z0" *ngFor="let groupName of groupNamesOrdered">
       <mat-expansion-panel-header>
         {{groupName}}
       </mat-expansion-panel-header>

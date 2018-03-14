@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
 
@@ -28,17 +28,17 @@ export const OPERATOR_METADATA_ENDPOINT = 'resources/operator-metadata';
 @Injectable()
 export class OperatorMetadataService {
 
-  private operatorMetadata: OperatorSchema[] = [];
+  private operatorMetadata: OperatorMetadata = null;
 
-  constructor(private http: Http) { }
+  constructor(private httpClient: HttpClient) { }
 
-  private onMetadataChangedSubject = new Subject<OperatorSchema[]>();
+  private onMetadataChangedSubject = new Subject<OperatorMetadata>();
   public metadataChanged$ = this.onMetadataChangedSubject.asObservable();
 
   public fetchAllOperatorMetadata(): void {
-    this.http.get(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
+    this.httpClient.get<OperatorMetadata>(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
       value => {
-        this.operatorMetadata = value.json();
+        this.operatorMetadata = value;
         this.onMetadataChangedSubject.next(this.operatorMetadata);
       }
     );

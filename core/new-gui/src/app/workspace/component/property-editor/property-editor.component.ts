@@ -29,7 +29,7 @@ export class PropertyEditorComponent implements OnInit {
   currentSchema: OperatorSchema = null;
   formLayout: object = this.generateFormLayout();
 
-  operatorMetadata: OperatorSchema[] = [];
+  operatorSchemaList: OperatorSchema[] = [];
 
   displayForm = false;
 
@@ -44,7 +44,7 @@ export class PropertyEditorComponent implements OnInit {
     private workflowModelActionService: WorkflowModelActionService
   ) {
     this.operatorMetadataService.metadataChanged$.subscribe(
-      value => { this.operatorMetadata = value; }
+      value => { this.operatorSchemaList = value.operators; }
     );
 
     this.workflowViewEventService.operatorSelectedInEditor
@@ -78,7 +78,7 @@ export class PropertyEditorComponent implements OnInit {
     console.log('changePropertyEditor called');
     console.log('operatorID: ' + operator.operatorID);
     this.operatorID = operator.operatorID;
-    this.currentSchema = this.operatorMetadata.find(schema => schema.operatorType === operator.operatorType);
+    this.currentSchema = this.operatorSchemaList.find(schema => schema.operatorType === operator.operatorType);
     // make a copy of the property data
     this.initialData = Object.assign({}, operator.operatorProperties);
 

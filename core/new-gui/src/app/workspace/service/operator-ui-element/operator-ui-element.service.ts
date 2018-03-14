@@ -21,11 +21,11 @@ import { OperatorMetadataService } from '../operator-metadata/operator-metadata.
 @Injectable()
 export class OperatorUIElementService {
 
-  private operatorMetadata: OperatorSchema[] = [];
+  private operatorSchemaList: OperatorSchema[] = [];
 
   constructor(private operatorMetadataService: OperatorMetadataService) {
     this.operatorMetadataService.metadataChanged$.subscribe(
-      value => this.operatorMetadata = value
+      value => this.operatorSchemaList = value.operators
     );
 
   }
@@ -41,7 +41,7 @@ export class OperatorUIElementService {
    * @returns JointJS Element
    */
   public getOperatorUIElement(operatorType: string, operatorID: string): joint.dia.Element {
-    const operatorSchema = this.operatorMetadata.find(schema => schema.operatorType === operatorType);
+    const operatorSchema = this.operatorSchemaList.find(schema => schema.operatorType === operatorType);
 
     joint.shapes.devs['TexeraModel'] = joint.shapes.devs.Model.extend({
       type: 'devs.TexeraModel',

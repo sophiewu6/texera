@@ -47,7 +47,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
         value => {
           const height = $('.texera-workflow-editor-grid-container').height();
           const width = $('.texera-workflow-editor-grid-container').width();
-          this.paper.setDimensions(width,height);
+          this.paper.setDimensions(width, height);
         }
       );
   }
@@ -138,7 +138,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     const current = this;
     $(window).resize(function(){
-      console.log('resizeddd');
       current.onResizedSubject.next();
     })
 

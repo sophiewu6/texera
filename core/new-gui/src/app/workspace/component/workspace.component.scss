@@ -15,10 +15,7 @@ $header-height: 56px;
 .texera-workspace-grid-container {
   display: grid;
   grid-template-columns: 14% 70% 16%;
-  grid-template-rows: 
-    $header-height 
-    calc((100vh - #{$header-height}) * 0.75) 
-    calc((100vh - #{$header-height}) * 0.25);
+  grid-template-rows: 50px, auto, 20%;
 }
 
 .texera-navigation-grid-container {

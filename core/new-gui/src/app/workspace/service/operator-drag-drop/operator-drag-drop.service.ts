@@ -1,6 +1,6 @@
 import { Injectable, ElementRef } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
-import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
+import { OperatorUIElementService, DEFAULT_OPERATOR_WIDTH, DEFAULT_OPERATOR_HEIGHT } from '../operator-ui-element/operator-ui-element.service';
 
 declare var jQuery: JQueryStatic;
 import * as joint from 'jointjs';
@@ -132,8 +132,8 @@ export class OperatorDragDropService {
     const tempGhostModel = new joint.dia.Graph();
     const tempGhostPaper = new joint.dia.Paper({
       el: jQuery('#flyPaper'),
-      width: 140,
-      height: 40,
+      width: DEFAULT_OPERATOR_WIDTH,
+      height: DEFAULT_OPERATOR_HEIGHT,
       model: tempGhostModel,
       gridSize: 1
     });

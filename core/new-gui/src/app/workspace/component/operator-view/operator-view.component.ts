@@ -79,7 +79,6 @@ export class OperatorViewComponent implements OnInit {
   }
 
   private processOperatorMetadata(operatorMetadata: OperatorMetadata): void {
-    console.log(operatorMetadata);
 
     this.operatorSchemaList = operatorMetadata.operators;
 
@@ -94,19 +93,18 @@ export class OperatorViewComponent implements OnInit {
       )
     );
 
-    this.fuseSearch = new Fuse([], this.fuseSearchOptions);
+    this.fuseSearch = new Fuse(this.operatorSchemaList, this.fuseSearchOptions);
   }
 
   findOperatorName(query: string): OperatorSchema[] {
-    console.log(query);
+    // console.log(query);
     const searchResult: OperatorSchema[] = this.fuseSearch.search(query);
-    console.log(searchResult);
+    // console.log(searchResult);
     return searchResult;
   }
 
   onAutocompleteOptionSelected(event: MatAutocompleteSelectedEvent) {
     this.inputMonitor = '';
-    console.log(event.option);
     const operator = this.workflowGraphUtilsService.getNewOperatorPredicate(event.option.value.operatorType);
     this.workflowModelActionService.addOperator(
       operator, 500, 300);

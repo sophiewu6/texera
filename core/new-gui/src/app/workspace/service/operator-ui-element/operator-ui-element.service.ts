@@ -3,6 +3,10 @@ import { Injectable } from '@angular/core';
 import * as joint from 'jointjs';
 import { OperatorMetadataService } from '../operator-metadata/operator-metadata.service';
 
+
+export const DEFAULT_OPERATOR_WIDTH = 140;
+export const DEFAULT_OPERATOR_HEIGHT = 40;
+
 /**
  * OperatorUIElementService controls the shape of an operator
  *  when the operator element is displayed by JointJS.
@@ -72,7 +76,7 @@ export class OperatorUIElementService {
     const operatorElement = new joint.shapes.devs['TexeraModel']({
       id: operatorID,
       position: { x: 0, y: 0 },
-      size: { width: 140, height: 40 },
+      size: { width: DEFAULT_OPERATOR_WIDTH, height: DEFAULT_OPERATOR_HEIGHT },
       attrs: {
         'rect': { fill: '#FFFFFF', 'follow-scale': true, stroke: '#CFCFCF', 'stroke-width': '2' },
         'text': {

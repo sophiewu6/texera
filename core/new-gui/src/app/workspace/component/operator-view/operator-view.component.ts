@@ -13,6 +13,9 @@ import { MatAutocompleteSelectedEvent } from '@angular/material';
 import { WorkflowModelActionService } from '../../service/workflow-graph/model-action/workflow-model-action.service';
 import { WorkflowGraphUtilsService } from '../../service/workflow-graph/utils/workflow-graph-utils.service';
 import { WorkflowViewEventService } from '../../service/workflow-graph/view-event/workflow-view-event.service';
+import { SmartOperatorLocation } from './smart-operator-location';
+import { WorkflowTexeraGraphService } from '../../service/workflow-graph/model/workflow-texera-graph.service';
+import { WorkflowJointGraphService } from '../../service/workflow-graph/model/workflow-joint-graph.service';
 
 /**
  * OperatorViewComponent is the left-side panel that shows the operators.
@@ -55,6 +58,8 @@ export class OperatorViewComponent implements OnInit {
   public groupNamesOrdered: string[] = [];
   public operatorGroupMap = new Map<string, OperatorSchema[]>();
 
+  private smartOperatorLocation: SmartOperatorLocation;
+
   private readonly fuseSearchOptions: Fuse.FuseOptions = {
     tokenize: true,
     matchAllTokens: true,
@@ -70,9 +75,11 @@ export class OperatorViewComponent implements OnInit {
     private workflowModelActionService: WorkflowModelActionService,
     private workflowGraphUtilsService: WorkflowGraphUtilsService,
     private workflowViewEventService: WorkflowViewEventService,
+    private workflowTexeraGraphService: WorkflowTexeraGraphService,
+    private workflowJointGraphService: WorkflowJointGraphService
   ) {
     operatorMetadataService.metadataChanged$.subscribe(value => this.processOperatorMetadata(value));
-
+    this.smartOperatorLocation = new SmartOperatorLocation(this.workflowTexeraGraphService, this.workflowJointGraphService);
   }
 
   ngOnInit() {
@@ -106,8 +113,9 @@ export class OperatorViewComponent implements OnInit {
   onAutocompleteOptionSelected(event: MatAutocompleteSelectedEvent) {
     this.inputMonitor = '';
     const operator = this.workflowGraphUtilsService.getNewOperatorPredicate(event.option.value.operatorType);
+    const smartLocation = this.smartOperatorLocation.suggestNextLocation(operator.operatorType);
     this.workflowModelActionService.addOperator(
-      operator, 500, 300);
+      operator, smartLocation.x, smartLocation.y);
     this.workflowViewEventService.operatorSelectedInEditor.next({operatorID: operator.operatorID});
   }
 

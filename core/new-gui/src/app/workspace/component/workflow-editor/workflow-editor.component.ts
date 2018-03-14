@@ -36,10 +36,20 @@ export class WorkflowEditorComponent implements AfterViewInit {
   // the jointJS paper
   private paper: joint.dia.Paper = null;
 
+  private onResizedSubject = new Subject<Object>();
+  onResized$ = this.onResizedSubject.asObservable();
+
   constructor(
     private workflowJointGraphService: WorkflowJointGraphService,
     private workflowViewEventService: WorkflowViewEventService,
     private operatorDragDropService: OperatorDragDropService) {
+      this.onResized$.subscribe(
+        value => {
+          const height = $('.texera-workflow-editor-grid-container').height();
+          const width = $('.texera-workflow-editor-grid-container').width();
+          this.paper.setDimensions(width,height);
+        }
+      );
   }
 
   /**
@@ -125,6 +135,12 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.paper.on('blank:pointerdown', (evt: Event, x: number, y: number) => {
       this.workflowViewEventService.pointerDownOnBlankInEditor.next({ 'event': evt, 'x': x, 'y': y });
     });
+
+    const current = this;
+    $(window).resize(function(){
+      console.log('resizeddd');
+      current.onResizedSubject.next();
+    })
 
   }
 

@@ -60,7 +60,7 @@ public class SystemResource {
 //     */
 //    @GET
 //    @Path("/dictionary/{id}")
-//    public TexeraWebResponse getDictionaryByID(@QueryParam("id") int id) {
+//    public TexeraWebResponse getDictionaryByID(@PathParam("id") int id) {
 //        DictionaryManager dictionaryManager = DictionaryManager.getInstance();
 //        String dictionaryContent = dictionaryManager.getDictionaryByID(id);
 //

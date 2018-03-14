@@ -41,6 +41,30 @@ public class FileUploadResource {
 		return new TexeraWebResponse(0, "Dictionary is uploaded");
 	}
 
+	@PUT
+    @Path("/dictionary/{id}")
+    public TexeraWebResponse updateDictionaryFIle(
+			@PathParam("id") int id,
+			@FormDataParam("file") InputStream uploadedInputStream,
+			@FormDataParam("file") FormDataContentDisposition fileDetail) throws Exception {
+
+		StringBuilder dictionary = new StringBuilder();
+
+		String line = "";
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(uploadedInputStream))) {
+			while ((line = br.readLine()) != null) {
+				dictionary.append(line);
+			}
+		} catch (IOException e) {
+			throw new TexeraWebException("Error occurred whlie uploading dictionary");
+		}
+
+		String fileName = fileDetail.getFileName();
+		DictionaryManager dictionaryManager = DictionaryManager.getInstance();
+		dictionaryManager.updateDictionaryByID(fileName, dictionary.toString(), id);
+		return new TexeraWebResponse(0, "Dictionary is updated");
+    }
+
 	
 
 }

@@ -1,48 +1,47 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs/Rx';
 import '../../../common/rxjs-operators.ts';
-
-import * as _ from 'lodash';
 
 import { OPERATOR_METADATA } from './mock-operator-metadata';
 import { AppSettings } from '../../../common/app-setting';
 
 export const OPERATOR_METADATA_ENDPOINT = 'resources/operator-metadata';
 
+
+/**
+ * OperatorMetadataService talks to the backend to fetch the operator metadata,
+ *  which contains a list of operator schemas.
+ * Each operator schema contains all the information related to an operator,
+ *  for example, operatorType, userFriendlyName, and the jsonSchema of its properties.
+ *
+ * fetchAllOperatorMetadata is called in ngOnInit function of the root component,
+ *  to initiate the HTTP request to get the data.
+ *
+ * If a Component or a Service wants to get the operatorMetadata, it should
+ *  subscribe to the metadataChanged Observable to get the metadata,
+ *  once the metadata is ready, it will be broadcasted through the observable.
+ *
+ * @author Zuozhi Wang
+ *
+ */
 @Injectable()
 export class OperatorMetadataService {
 
-  private operatorMetadataList: OperatorSchema[] = [];
+  private operatorMetadata: OperatorMetadata = null;
 
-  constructor(private http: Http) { }
+  constructor(private httpClient: HttpClient) { }
 
-  private onMetadataChangedSubject = new Subject<OperatorSchema[]>();
-  metadataChanged$ = this.onMetadataChangedSubject.asObservable();
+  private onMetadataChangedSubject = new Subject<OperatorMetadata>();
+  public metadataChanged$ = this.onMetadataChangedSubject.asObservable();
 
-  private fetchAllOperatorMetadata(): void {
-    // Observable.of(OPERATOR_METADATA).subscribe(x => {
-    //   this.operatorMetadataList = x;
-    //   this.onMetadataChangedSubject.next(x);
-    // });
-
-    this.http.get(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
+  public fetchAllOperatorMetadata(): void {
+    this.httpClient.get<OperatorMetadata>(`${AppSettings.API_ENDPOINT}/${OPERATOR_METADATA_ENDPOINT}`).subscribe(
       value => {
-        this.operatorMetadataList = value.json();
-        this.onMetadataChangedSubject.next(this.operatorMetadataList);
+        this.operatorMetadata = value;
+        this.onMetadataChangedSubject.next(this.operatorMetadata);
       }
     );
-  }
-
-  getOperatorMetadataList(): OperatorSchema[] {
-    if (this.operatorMetadataList.length === 0) {
-      this.fetchAllOperatorMetadata();
-    }
-    return this.operatorMetadataList;
-  }
-
-  getOperatorMetadata(operatorType: string): OperatorSchema {
-    return this.getOperatorMetadataList().find(x => x.operatorType === operatorType);
   }
 
 }

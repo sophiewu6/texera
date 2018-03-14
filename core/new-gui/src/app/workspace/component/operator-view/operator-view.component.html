@@ -1,28 +1,36 @@
-<div class="texera-workspace-operator-view-container">
-    <form class="search-area">
-      <mat-form-field class="search-area-full-width">
-        <input type="text" placeholder="Search Operators" aria-label="OperatorSchema" [(ngModel)] = "inputMonitor" matInput [formControl]="operatorCtrl" [matAutocomplete]="auto" >
-        <mat-autocomplete #auto="matAutocomplete">
-          <mat-option *ngFor="let option of filteredOptions | async" (onSelectionChange)="HighlightSelection(option)" [value]="option.additionalMetadata.userFriendlyName">
+<div class="texera-workspace-operator-view-body">
+
+  <form class="texera-operator-search-form">
+      <mat-form-field>
+        <input type="text" placeholder="Search Operators" [(ngModel)] = "inputMonitor" matInput [formControl]="searchOperatorForm" [matAutocomplete]="auto" >
+        <mat-autocomplete #auto="matAutocomplete" [autoActiveFirstOption]="true" 
+        (optionSelected)="onAutocompleteOptionSelected($event)">
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
             {{option.additionalMetadata.userFriendlyName}}
           </mat-option>
         </mat-autocomplete>
       </mat-form-field>
     </form>
     {{removeSelection()}}
+
   <mat-accordion multi="false">
-      <div *ngFor="let operatorType of operatorGroupName">
-      <mat-expansion-panel [expanded] = "expandCurrent(operatorType)">
-          <mat-expansion-panel-header>
-              <mat-panel-title>
-                {{operatorType}}
-              </mat-panel-title>
-          </mat-expansion-panel-header>
-            <div *ngFor="let operatorSchema of operatorMetadataList">
-                <texera-operator-label  *ngIf="operatorSchema.additionalMetadata.operatorGroupName.toLowerCase() == operatorType.toLowerCase() 
-                " [operator]="operatorSchema"></texera-operator-label>
-            </div>
-      </mat-expansion-panel> 
+    <mat-expansion-panel class="mat-elevation-z0" *ngFor="let groupName of groupNamesOrdered">
+      <mat-expansion-panel-header>
+        {{groupName}}
+      </mat-expansion-panel-header>
+      <div *ngFor="let operatorSchema of operatorGroupMap.get(groupName)">
+        <texera-operator-label [operator]="operatorSchema"></texera-operator-label>
       </div>
-  </mat-accordion> 
+    </mat-expansion-panel>
+  </mat-accordion>
+
+  <!-- <ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-0" class="fucking-list">
+      <ngb-panel *ngFor="let groupName of groupNames" title="{{groupName}}">
+        <ng-template ngbPanelContent>
+          <div *ngFor="let operatorSchema of operatorGroupMap.get(groupName)">
+            <texera-operator-label [operator]="operatorSchema"></texera-operator-label>
+          </div>
+        </ng-template>
+      </ngb-panel>
+    </ngb-accordion> -->
 </div>

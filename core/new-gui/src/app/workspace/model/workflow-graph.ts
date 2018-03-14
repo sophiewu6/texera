@@ -27,8 +27,10 @@ export class WorkflowGraph {
         this.operatorIDMap.set(operator.operatorID, operator);
     }
 
-    deleteOperator(operatorID: string): void {
+    deleteOperator(operatorID: string): OperatorPredicate {
+        const operator = this.operatorIDMap.get(operatorID);
         this.operatorIDMap.delete(operatorID);
+        return operator;
     }
 
     changeOperatorProperty(operatorID: string, newProperty: Object) {
@@ -47,8 +49,10 @@ export class WorkflowGraph {
         this.operatorLinkMap.set(operatorLink.linkID, operatorLink);
     }
 
-    deleteLink(linkID: string): void {
+    deleteLink(linkID: string): OperatorLink {
+        const link = this.operatorLinkMap.get(linkID);
         this.operatorLinkMap.delete(linkID);
+        return link;
     }
 
     changeLink(operatorLink: OperatorLink): void {

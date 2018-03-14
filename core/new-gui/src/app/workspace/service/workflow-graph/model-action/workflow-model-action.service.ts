@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { WorkflowJointGraphService } from '../model/workflow-joint-graph.service';
 import { OperatorUIElementService } from '../../operator-ui-element/operator-ui-element.service';
-import { WorkflowModelEventService } from '../model-event/workflow-model-event.service';
+import { WorkflowSyncModelService } from '../model/workflow-sync-model.service';
 
 @Injectable()
 export class WorkflowModelActionService {
 
   constructor(
     private workflowJointGraphService: WorkflowJointGraphService,
-    private workflowModelEventService: WorkflowModelEventService,
+    private workflowSyncModelService: WorkflowSyncModelService,
     private operatorUIElementService: OperatorUIElementService
   ) { }
 
@@ -24,7 +24,9 @@ export class WorkflowModelActionService {
     // add the operator UI element to the UI model
     this.workflowJointGraphService.uiGraph.addCell(operatorUIElement);
 
-    this.workflowModelEventService._operatorAddedSubject.next({operator, xOffset, yOffset});
+    // notify the sync model service about addOperator
+    this.workflowSyncModelService._handleAddOperator(operator);
+
   }
 
   public deleteOperator(operatorID: string): void {
@@ -32,16 +34,8 @@ export class WorkflowModelActionService {
     this.workflowJointGraphService.uiGraph.getCell(operatorID).remove();
   }
 
-  // public addLink(origin: OperatorPort, destination: OperatorPort): void {
-
-  // }
-
-  // public deleteLink(origin: OperatorPort, destination: OperatorPort): void {
-
-  // }
-
   public changeOperatorProperty(operatorID: string, newProperty: Object): void {
-    this.workflowModelEventService._operatorPropertyChangedSubject.next({operatorID, newProperty});
+    this.workflowSyncModelService._handleChangeOperatorProperty(operatorID, newProperty);
   }
 
 }

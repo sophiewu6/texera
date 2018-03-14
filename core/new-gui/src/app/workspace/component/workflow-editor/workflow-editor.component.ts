@@ -13,11 +13,14 @@ import { WorkflowViewEventService } from '../../service/workflow-graph/view-even
 /**
  * WorkflowEditorComponent is the componenet for the main workflow editor part of the UI.
  *
- * This componenet is binded to a JointJS paper. JointJS will handle the operations of the main workflow.
+ * This componenet is binded with the JointJS paper. JointJS handles the operations of the main workflow.
  * The JointJS UI events are wrapped into observables and exposed to other components / services.
  *
  * See JointJS documentation for the list of events that can be captured on the JointJS paper view.
  * https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper.events
+ *
+ * @author Zuozhi Wang
+ * @author Henry Chen
  *
 */
 @Component({
@@ -27,9 +30,9 @@ import { WorkflowViewEventService } from '../../service/workflow-graph/view-even
 })
 export class WorkflowEditorComponent implements AfterViewInit {
 
-  // the DOM element ID of the main editor
-  // the id in the corresponding html file must also be changed whenever this is changed
-  public readonly WORKFLOW_EDITOR_ID: string = 'texera-workflow-holder';
+  // the DOM element ID of the main editor. It can be used by jQuery and jointJS to find the DOM element
+  // in the HTML template, the div element ID is set using this variable
+  public readonly WORKFLOW_EDITOR_ID: string = 'texera-workflow-editor-body-id';
   // the jointJS paper
   private paper: joint.dia.Paper = null;
 
@@ -39,6 +42,12 @@ export class WorkflowEditorComponent implements AfterViewInit {
     private operatorDragDropService: OperatorDragDropService) {
   }
 
+  /**
+   * Creates the JointJS paper object,
+   *  binds it with the DOM element,
+   *  and let other services know the paper object
+   *  *after* the view is initialized.
+   */
   ngAfterViewInit() {
     // create the jointJS paper with custom configurations
     this.paper = this.createJointjsPaper();
@@ -55,17 +64,20 @@ export class WorkflowEditorComponent implements AfterViewInit {
   }
 
   /**
-   * Creates a JointJS Paper object, which is the view that is responsible for
+   * Creates a JointJS Paper object, which is the JointJS view object responsible for
    *  rendering the workflow cells and handle UI events.
    *
    * JointJS documentation about paper: https://resources.jointjs.com/docs/jointjs/v2.0/joint.html#dia.Paper
    */
   private createJointjsPaper(): joint.dia.Paper {
+    // console.log('height: ' + $('#' + this.WORKFLOW_EDITOR_ID).height());
+    // console.log('width: ' + $('#' + this.WORKFLOW_EDITOR_ID).width());
+
     const paper = new joint.dia.Paper({
       el: $('#' + this.WORKFLOW_EDITOR_ID),
-      width: 600,
-      height: 200,
       model: this.workflowJointGraphService.uiGraph,
+      height: $('#' + this.WORKFLOW_EDITOR_ID).height(),
+      width: $('#' + this.WORKFLOW_EDITOR_ID).width(),
       gridSize: 1,
       snapLinks: true,
       linkPinning: false,
@@ -98,8 +110,13 @@ export class WorkflowEditorComponent implements AfterViewInit {
   }
 
   /**
-   * bind the JointJS Paper events to functions that push the event to the corresponding Subject
-  */
+   * Binds the JointJS Paper events to functions that push the event to the corresponding Subject:
+   * The following events happening in JointJS paper are binded:
+   *  - mouse pointer down in a Cell
+   *  - mouse pointer down in the blank area
+   *  - the delete "x" button of an operator is clicked
+   *
+   */
   private bindJointPaperEvents(): void {
     this.paper.on('cell:pointerdown', (cellView, evt, x, y) => this.handleCellPointerDown(cellView, evt, x, y));
 
@@ -114,14 +131,15 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
   /**
    * Handle JointJS paper cell:pointerdown event.
-   * Check if the cell is an operator, and push the operator ID of the clicked operator to the corresponding subject
+   * Check if the cell is an operator, and push the operator ID of the clicked operator to the corresponding subject.
+   * Ignore if the cell is a link (for now, it might be used in the future).
    */
   private handleCellPointerDown(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {
     // in jointJS, a cell can either be an operator(joint.dia.Element) or a link
     if (cellView.model.isElement()) {
       // an operator cell is pointed down
       // push the operator ID to the subject
-      this.workflowViewEventService.operatorSelectedInEditor.next({operatorID: cellView.model.id.toString()});
+      this.workflowViewEventService.operatorSelectedInEditor.next({ operatorID: cellView.model.id.toString() });
     }
   }
 
@@ -134,7 +152,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
    *
    */
   private handleElementDelete(cellView: joint.dia.CellView, evt: Event, x: number, y: number) {
-    this.workflowViewEventService.deleteOperatorClickedInEditor.next({operatorID: cellView.model.id.toString()});
+    this.workflowViewEventService.deleteOperatorClickedInEditor.next({ operatorID: cellView.model.id.toString() });
   }
 
 }

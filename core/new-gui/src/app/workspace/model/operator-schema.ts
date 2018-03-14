@@ -12,3 +12,13 @@ interface OperatorSchema {
     jsonSchema: Object;
     additionalMetadata: OperatorAdditionalMetadata;
 }
+
+interface GroupOrder {
+    groupName: string;
+    groupOrder: number;
+}
+
+interface OperatorMetadata {
+    operators: OperatorSchema[];
+    groups: GroupOrder[];
+}

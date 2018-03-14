@@ -8,6 +8,28 @@ import { Observable } from 'rxjs/Observable';
 import { startWith } from 'rxjs/operators/startWith';
 import { map } from 'rxjs/operators/map';
 
+import * as Fuse from 'fuse.js';
+import { MatAutocompleteSelectedEvent } from '@angular/material';
+import { WorkflowModelActionService } from '../../service/workflow-graph/model-action/workflow-model-action.service';
+import { WorkflowGraphUtilsService } from '../../service/workflow-graph/utils/workflow-graph-utils.service';
+import { WorkflowViewEventService } from '../../service/workflow-graph/view-event/workflow-view-event.service';
+
+/**
+ * OperatorViewComponent is the left-side panel that shows the operators.
+ *
+ * The operators are grouped using their group name from the operator metadata,
+ *  clicking a group name reveals the operators in the group, each operator is a sub-component: OperatorLabelComponent.
+ *
+ * The component has an input box to search the operators.
+ * Search is full text search and fuzzy search, implemented using fuse.js http://fusejs.io/
+ * Search results are shown in the autocomplete dropdown list,
+ *  pressing "Enter" or clicking a suggestion will creates an operator in the main workflow editor panel.
+ *
+ *
+ * @author Bolin Chen
+ * @author Zuozhi Wang
+ *
+ */
 @Component({
   selector: 'texera-operator-view',
   templateUrl: './operator-view.component.html',
@@ -15,42 +37,78 @@ import { map } from 'rxjs/operators/map';
 })
 export class OperatorViewComponent implements OnInit {
 
-  operatorCtrl: FormControl = new FormControl();
+  searchOperatorForm: FormControl = new FormControl();
 
-  filteredOptions: Observable<any[]>;
+  filteredOptions = this.searchOperatorForm.valueChanges.pipe(
+    startWith<string | OperatorSchema>(''),
+    map(value => typeof value === 'string' ? value : value.additionalMetadata.userFriendlyName),
+    map(name => this.findOperatorName(name))
+  );
 
-  public operatorMetadataList: OperatorSchema[] = [];
-
-  optionId: string = '';
+  optionId = '';
 
   currentExpand: string;
 
-  operatorGroupName: Set<string>;
+  inputMonitor = '';
 
-  inputMonitor: string = '';
+  public operatorSchemaList: OperatorSchema[] = [];
+  public groupNamesOrdered: string[] = [];
+  public operatorGroupMap = new Map<string, OperatorSchema[]>();
 
+  private readonly fuseSearchOptions: Fuse.FuseOptions = {
+    tokenize: true,
+    matchAllTokens: true,
+    threshold: 0.2,
+    keys: ['additionalMetadata.userFriendlyName'],
+    minMatchCharLength: 2,
+    location: 0,
+  };
+  public fuseSearch = new Fuse(this.operatorSchemaList, this.fuseSearchOptions);
 
-  constructor(private operatorMetadataService: OperatorMetadataService) {
-    operatorMetadataService.metadataChanged$.subscribe(x => {
-      console.log(x);
-      this.operatorMetadataList = x;
-      this.operatorGroupName = new Set(this.operatorMetadataList.map(metadata => metadata.additionalMetadata.operatorGroupName));
-      this.operatorCtrl = new FormControl();
-      this.filteredOptions = this.operatorCtrl.valueChanges
-        .pipe(
-          startWith(''),
-          map(option => this.filterOptions(option))
-        );
-    });
-  }
+  constructor(
+    private operatorMetadataService: OperatorMetadataService,
+    private workflowModelActionService: WorkflowModelActionService,
+    private workflowGraphUtilsService: WorkflowGraphUtilsService,
+    private workflowViewEventService: WorkflowViewEventService,
+  ) {
+    operatorMetadataService.metadataChanged$.subscribe(value => this.processOperatorMetadata(value));
 
-  filterOptions(name: string) {
-    return this.operatorMetadataList.filter(option =>
-      option.additionalMetadata.userFriendlyName.toLowerCase().indexOf(name.toLowerCase()) !== -1 && name.length > 0);
   }
 
   ngOnInit() {
-    this.operatorMetadataList  = this.operatorMetadataService.getOperatorMetadataList();
+  }
+
+  private processOperatorMetadata(operatorMetadata: OperatorMetadata): void {
+
+    this.operatorSchemaList = operatorMetadata.operators;
+
+    this.groupNamesOrdered = operatorMetadata.groups.slice()
+        .sort((a, b) => (a.groupOrder - b.groupOrder))
+        .map(groupOrder => groupOrder.groupName);
+
+    this.operatorGroupMap = new Map(
+      this.groupNamesOrdered.map(groupName =>
+        <[string, OperatorSchema[]]> [groupName,
+          operatorMetadata.operators.filter(x => x.additionalMetadata.operatorGroupName === groupName)]
+      )
+    );
+
+    this.fuseSearch = new Fuse(this.operatorSchemaList, this.fuseSearchOptions);
+  }
+
+  findOperatorName(query: string): OperatorSchema[] {
+    // console.log(query);
+    const searchResult: OperatorSchema[] = this.fuseSearch.search(query);
+    // console.log(searchResult);
+    return searchResult;
+  }
+
+  onAutocompleteOptionSelected(event: MatAutocompleteSelectedEvent) {
+    this.inputMonitor = '';
+    const operator = this.workflowGraphUtilsService.getNewOperatorPredicate(event.option.value.operatorType);
+    this.workflowModelActionService.addOperator(
+      operator, 500, 300);
+    this.workflowViewEventService.operatorSelectedInEditor.next({operatorID: operator.operatorID});
   }
 
 
@@ -67,13 +125,16 @@ export class OperatorViewComponent implements OnInit {
   }
 
   removeSelection() {
-    if(this.inputMonitor.length===0 && this.optionId != '') {
+    if (this.inputMonitor.length === 0 && this.optionId !== '') {
       document.getElementById(this.optionId).style.backgroundColor = '';
     }
   }
 
-  expandCurrent(group: string) {
-    return this.currentExpand === group.toLowerCase();
+  displayOperatorName(value: OperatorSchema): string {
+    if (! value) {
+      return '';
+    }
+    return value.additionalMetadata.userFriendlyName;
   }
 
 }

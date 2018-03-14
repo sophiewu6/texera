@@ -1,3 +1,9 @@
+
+/**
+ * OPERATOR_METADATA const variable is a mock operator metadata consisting of
+ *  a few operators, which can be useful when testing.
+ *
+ */
 export const OPERATOR_METADATA: OperatorSchema[] = [
     {
         'operatorType': 'ScanSource',

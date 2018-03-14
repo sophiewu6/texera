@@ -20,33 +20,51 @@ export class ExecuteWorkflowService {
   executeStarted$ = this.onExecuteStartedSubject.asObservable();
 
   // observable and subject for execution finish
-  private onExecuteFinishedSubject = new Subject<Object[]>();
+  private onExecuteFinishedSubject = new Subject<Object>();
   executeFinished$ = this.onExecuteFinishedSubject.asObservable();
 
-  // main entry function, called when the user requests to execute a workflow
-  onExecuteWorkflowRequested(): void {
+  /**
+   * Initiate the workflow execution process by sending the workflow to the backend.
+   *
+   * To get the result of the workflow execution, subscribe to the executeFinished Observable
+   *
+   */
+  executeWorkflow(): void {
     console.log('execute workflow plan');
     console.log(this.workflowTexeraGraphService.texeraWorkflowGraph);
     this.executeRealPlan();
   }
 
-  // show the mock result data without sending request to server
+  /**
+   * Used for testing
+   * Displays the mock result data without sending request to server
+   */
   private showMockResultData(): void {
     this.onExecuteStartedSubject.next('started');
-    this.onExecuteFinishedSubject.next(MOCK_RESULT_DATA);
+    this.onExecuteFinishedSubject.next({code: 0, result: MOCK_RESULT_DATA});
   }
 
-  // send a mock workflow plan to the server: ScanSource(twitter_sample) -> ViewResults
+  /**
+   * Used for testing
+   * Sends a mock workflow plan to the server: ScanSource(twitter_sample) -> ViewResults
+   */
   private executeMockPlan(): void {
     this.executeWorkflowPlan(MOCK_WORKFLOW_PLAN);
   }
 
-  // send the real workflow plan to the server
+  /**
+   * Picks up the workflow plan the texera graph and executes it.
+   */
   private executeRealPlan(): void {
     this.executeWorkflowPlan(this.workflowTexeraGraphService.texeraWorkflowGraph);
   }
 
-  // handle sending a HTTP request of a workflow plan to the server
+  /**
+   * Transforms the workflowPlan object to a JSON object that conforms with backend API,
+   *  and then sends a HTTP request to the server to execute the workflow.
+   *
+   * @param workflowPlan
+   */
   private executeWorkflowPlan(workflowPlan: WorkflowGraphReadonly): void {
     const body = this.getLogicalPlanRequest(workflowPlan);
     console.log('making http post request to backend');
@@ -73,11 +91,17 @@ export class ExecuteWorkflowService {
     this.onExecuteFinishedSubject.next(errorResponse.error);
   }
 
-  // transform a LogicalPlan object to the HTTP request body according to the backend API
-  private getLogicalPlanRequest(logicalPlan: WorkflowGraphReadonly): Object {
+  /**
+   * Transform a workflowGraph object to the HTTP request body according to the backend API.
+   *
+   * @param logicalPlan
+   */
+  private getLogicalPlanRequest(workflowGraph: WorkflowGraphReadonly): Object {
     const logicalPlanJson = { operators: [], links: [] };
 
-    logicalPlan.getOperators().forEach(
+    // each operator only needs the operatorID, operatorType, and the properties
+    // inputPorts and outputPorts are not needed (for now)
+    workflowGraph.getOperators().forEach(
       op => logicalPlanJson.operators.push(
         Object.assign(
           { operatorID: op.operatorID, operatorType: op.operatorType },
@@ -85,8 +109,9 @@ export class ExecuteWorkflowService {
         )
       ));
 
-    // filter out the non-connected links
-    logicalPlan.getLinks()
+    // filter out the non-connected links (because the workflowGraph model allows links that only connected to one operator)
+    //  and generates json object with key 'origin' and 'destination'
+    workflowGraph.getLinks()
     .filter(link => (link.sourceOperator && link.targetOperator))
     .forEach(
       link => logicalPlanJson.links.push(
@@ -95,6 +120,7 @@ export class ExecuteWorkflowService {
         )
       )
     );
+
     return logicalPlanJson;
   }
 

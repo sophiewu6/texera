@@ -9,7 +9,6 @@ import { OperatorMetadataService } from '../../service/operator-metadata/operato
 import { WorkflowTexeraGraphService } from '../../service/workflow-graph/model/workflow-texera-graph.service';
 import { WorkflowViewEventService } from '../../service/workflow-graph/view-event/workflow-view-event.service';
 import { WorkflowModelActionService } from '../../service/workflow-graph/model-action/workflow-model-action.service';
-import { WorkflowModelEventService } from '../../service/workflow-graph/model-event/workflow-model-event.service';
 import { OperatorDragDropService } from '../../service/operator-drag-drop/operator-drag-drop.service';
 
 
@@ -25,11 +24,12 @@ export class PropertyEditorComponent implements OnInit {
     to prevent "onChanges" event fired continously.
     currentPredicate won't change as the form value changes
   */
-
   operatorID: string = null;
   initialData: Object = null;
   currentSchema: OperatorSchema = null;
   formLayout: object = this.generateFormLayout();
+
+  operatorSchemaList: OperatorSchema[] = [];
 
   displayForm = false;
 
@@ -41,9 +41,12 @@ export class PropertyEditorComponent implements OnInit {
     private workflowTexeraGraphService: WorkflowTexeraGraphService,
     private workflowViewEventService: WorkflowViewEventService,
     private operatorDragDropService: OperatorDragDropService,
-    private workflowModelActionService: WorkflowModelActionService,
-    private workflowModelEventService: WorkflowModelEventService,
+    private workflowModelActionService: WorkflowModelActionService
   ) {
+    this.operatorMetadataService.metadataChanged$.subscribe(
+      value => { this.operatorSchemaList = value.operators; }
+    );
+
     this.workflowViewEventService.operatorSelectedInEditor
       .map(data => this.workflowTexeraGraphService.texeraWorkflowGraph.getOperator(data.operatorID))
       .merge(
@@ -51,9 +54,10 @@ export class PropertyEditorComponent implements OnInit {
       .distinctUntilKeyChanged('operatorID')
       .subscribe(data => this.changePropertyEditor(data));
 
-    this.workflowModelEventService.operatorDeletedObservable
-      .filter(data => data.operatorID === this.operatorID)
+    this.workflowTexeraGraphService.operatorDeletedObservable
+      .filter(data => data.operator.operatorID === this.operatorID)
       .subscribe(data => this.clearPropertyEditor());
+
   }
 
   ngOnInit() {
@@ -74,7 +78,7 @@ export class PropertyEditorComponent implements OnInit {
     console.log('changePropertyEditor called');
     console.log('operatorID: ' + operator.operatorID);
     this.operatorID = operator.operatorID;
-    this.currentSchema = this.operatorMetadataService.getOperatorMetadata(operator.operatorType);
+    this.currentSchema = this.operatorSchemaList.find(schema => schema.operatorType === operator.operatorType);
     // make a copy of the property data
     this.initialData = Object.assign({}, operator.operatorProperties);
 
@@ -88,7 +92,7 @@ export class PropertyEditorComponent implements OnInit {
     // hide submit button
     return [
       '*',
-      { type: 'submit', display: false }
+      { type: 'submit', condition: 'false' }
     ];
   }
 

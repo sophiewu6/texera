@@ -1,6 +1,6 @@
 import { Injectable, ElementRef } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
-import { OperatorUIElementService } from '../operator-ui-element/operator-ui-element.service';
+import { OperatorUIElementService, DEFAULT_OPERATOR_WIDTH, DEFAULT_OPERATOR_HEIGHT } from '../operator-ui-element/operator-ui-element.service';
 
 declare var jQuery: JQueryStatic;
 import * as joint from 'jointjs';
@@ -67,8 +67,8 @@ export class OperatorDragDropService {
    * Observable for operator is dropped on the main workflow editor.
    * Contains an object with:
    *  - operatorType - the type of the operator dropped
-   *  - xOffset - the x offset relative to document root
-   *  - yOffset - the y offset relative to document root
+   *  - offset.x - the x offset relative to document root
+   *  - offset.y - the y offset relative to document root
    */
   public operatorDroppedInEditor = this.operatorDroppedSubject.asObservable();
 
@@ -132,8 +132,8 @@ export class OperatorDragDropService {
     const tempGhostModel = new joint.dia.Graph();
     const tempGhostPaper = new joint.dia.Paper({
       el: jQuery('#flyPaper'),
-      width: 120,
-      height: 50,
+      width: DEFAULT_OPERATOR_WIDTH,
+      height: DEFAULT_OPERATOR_HEIGHT,
       model: tempGhostModel,
       gridSize: 1
     });

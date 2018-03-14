@@ -4,8 +4,8 @@
       <mat-form-field>
         <input type="text" placeholder="Search Operators" [(ngModel)] = "inputMonitor" matInput [formControl]="searchOperatorForm" [matAutocomplete]="auto" >
         <mat-autocomplete #auto="matAutocomplete" [autoActiveFirstOption]="true" 
-          (optionSelected)="onAutocompleteOptionSelected($event)">
-          <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+        (optionSelected)="onAutocompleteOptionSelected($event)">
+        <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
             {{option.additionalMetadata.userFriendlyName}}
           </mat-option>
         </mat-autocomplete>

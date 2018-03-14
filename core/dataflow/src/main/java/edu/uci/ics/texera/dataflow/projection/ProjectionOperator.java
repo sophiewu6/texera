@@ -25,7 +25,7 @@ public class ProjectionOperator extends AbstractSingleInputOperator {
     @Override
     protected void setUp() throws TexeraException {
         inputSchema = inputOperator.getOutputSchema();
-        outputSchema = transformToOutputSchema(outputSchema);
+        outputSchema = transformToOutputSchema(inputSchema);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
@@ -39,6 +40,9 @@ public class TupleSinkPredicate extends PredicateBase {
         if (this.limit == null) {
             this.limit = Integer.MAX_VALUE;
         }
+        if (this.limit <= 0) {
+            throw new TexeraException("limit must > 0");
+        }
         this.offset = offset;
         if (this.offset == null) {
             this.offset = 0;
@@ -64,7 +68,7 @@ public class TupleSinkPredicate extends PredicateBase {
         return ImmutableMap.<String, Object>builder()
             .put(PropertyNameConstants.USER_FRIENDLY_NAME, "View Results")
             .put(PropertyNameConstants.OPERATOR_DESCRIPTION, "View the results of the workflow")
-            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, "standalone")
+            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, OperatorGroupConstants.RESULT_GROUP)
             .build();
     }
 

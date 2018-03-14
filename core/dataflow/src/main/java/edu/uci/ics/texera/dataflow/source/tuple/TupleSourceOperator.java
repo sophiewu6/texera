@@ -84,6 +84,8 @@ public class TupleSourceOperator implements ISourceOperator {
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {
+        if (inputSchema == null || inputSchema.length == 0)
+            return getOutputSchema();
         throw new TexeraException(ErrorMessages.INVALID_INPUT_SCHEMA_FOR_SOURCE);
     }
 }

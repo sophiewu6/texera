@@ -139,18 +139,14 @@ public class LogicalPlan {
         IOperator currentOperator = operatorObjectMap.get(operatorID);
         Schema outputSchema = null;
         if (currentOperator instanceof ISourceOperator) {
-            currentOperator.open();
-            outputSchema = currentOperator.getOutputSchema();
-            currentOperator.close();
-        } else {
-            if (inputSchemas.containsKey(operatorID)) {
-                List<Schema> inputSchema = inputSchemas.get(operatorID);
-                try {
-                    outputSchema = currentOperator.transformToOutputSchema(
-                            inputSchema.toArray(new Schema[inputSchema.size()]));
-                } catch (TexeraException e) {
-                    System.out.println(e.getMessage());
-                }
+            outputSchema = currentOperator.transformToOutputSchema();
+        } else if (inputSchemas.containsKey(operatorID)) {
+            List<Schema> inputSchema = inputSchemas.get(operatorID);
+            try {
+                outputSchema = currentOperator.transformToOutputSchema(
+                        inputSchema.toArray(new Schema[inputSchema.size()]));
+            } catch (TexeraException e) {
+                System.out.println(e.getMessage());
             }
         }
         return outputSchema;
@@ -181,8 +177,7 @@ public class LogicalPlan {
         Map<String, List<Schema>> inputSchemas = new HashMap<>();
         while (!queue.isEmpty()) {
             String origin = queue.poll();
-            Schema curOutputSchema = null;
-            curOutputSchema = getOperatorOutputSchema(origin, inputSchemas);
+            Schema curOutputSchema = getOperatorOutputSchema(origin, inputSchemas);
 
             if (curOutputSchema != null) {
                 for (String destination: adjacencyList.get(origin)) {

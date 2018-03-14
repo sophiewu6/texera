@@ -85,6 +85,13 @@ public class RegexMatcherSourceOperator extends AbstractSingleInputOperator impl
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) {
+        if (inputSchema == null || inputSchema.length == 0) {
+            if (outputSchema == null) {
+                open();
+                close();
+            }
+            return getOutputSchema();
+        }
         throw new TexeraException(ErrorMessages.INVALID_INPUT_SCHEMA_FOR_SOURCE);
     }
 

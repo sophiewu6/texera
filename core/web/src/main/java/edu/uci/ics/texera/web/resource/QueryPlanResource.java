@@ -357,7 +357,7 @@ public class QueryPlanResource {
 
             if (validOperatorsId.contains(origin) && validOperatorsId.contains(dest)) {
                 validLinks.add(linkNode);
-            } else if (!validOperatorsId.contains(dest)) {
+            } else if (validOperatorsId.contains(origin) && !validOperatorsId.contains(dest)) {
                 linksEndWithInvalidDest.add(linkNode);
             }
         }

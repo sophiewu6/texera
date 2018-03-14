@@ -9,6 +9,7 @@ export class WorkflowTexeraGraphService {
 
   public texeraWorkflowGraph: WorkflowGraphReadonly = this.workflowSyncModelService._texeraGraph;
 
+
   public operatorAddedObservable = this.workflowSyncModelService._operatorAddedSubject.asObservable();
 
   public operatorDeletedObservable = this.workflowSyncModelService._operatorDeletedSubject.asObservable();

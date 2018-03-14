@@ -67,8 +67,8 @@ export class OperatorDragDropService {
    * Observable for operator is dropped on the main workflow editor.
    * Contains an object with:
    *  - operatorType - the type of the operator dropped
-   *  - xOffset - the x offset relative to document root
-   *  - yOffset - the y offset relative to document root
+   *  - offset.x - the x offset relative to document root
+   *  - offset.y - the y offset relative to document root
    */
   public operatorDroppedInEditor = this.operatorDroppedSubject.asObservable();
 

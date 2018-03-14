@@ -3,6 +3,21 @@ import { Injectable } from '@angular/core';
 import * as joint from 'jointjs';
 import { OperatorMetadataService } from '../operator-metadata/operator-metadata.service';
 
+/**
+ * OperatorUIElementService controls the shape of an operator
+ *  when the operator element is displayed by JointJS.
+ *
+ * This service alters the basic JointJS element by:
+ *  - setting the ID of the JointJS element to be the same as Texera's OperatorID
+ *  - changing the look of the operator box (size, colors, lines, etc..)
+ *  - adding input and output ports to the box based on the operator metadata
+ *  - changing the look of the ports
+ *  - adding a new delete button and the callback function of the delete button,
+ *      (original JointJS element doesn't have a built-in delete button)
+ *
+ * @author Henry Chen
+ * @author Zuozhi Wang
+ */
 @Injectable()
 export class OperatorUIElementService {
 
@@ -15,8 +30,17 @@ export class OperatorUIElementService {
 
   }
 
-
-  getOperatorUIElement(operatorType: string, operatorID: string): joint.dia.Element {
+  /**
+   * Gets the JointJS UI Element Object based on OperatorType OperatorID.
+   *
+   * The JointJS Element could be added to the JointJS graph to let JointJS display the operator accordingly.
+   *
+   * @param operatorType the type of the operator
+   * @param operatorID the ID of the operator, the JointJS element ID would be the same as operatorID
+   *
+   * @returns JointJS Element
+   */
+  public getOperatorUIElement(operatorType: string, operatorID: string): joint.dia.Element {
     const operatorSchema = this.operatorMetadata.find(schema => schema.operatorType === operatorType);
 
     joint.shapes.devs['TexeraModel'] = joint.shapes.devs.Model.extend({

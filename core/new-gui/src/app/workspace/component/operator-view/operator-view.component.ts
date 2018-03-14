@@ -14,6 +14,22 @@ import { WorkflowModelActionService } from '../../service/workflow-graph/model-a
 import { WorkflowGraphUtilsService } from '../../service/workflow-graph/utils/workflow-graph-utils.service';
 import { WorkflowViewEventService } from '../../service/workflow-graph/view-event/workflow-view-event.service';
 
+/**
+ * OperatorViewComponent is the left-side panel that shows the operators.
+ *
+ * The operators are grouped using their group name from the operator metadata,
+ *  clicking a group name reveals the operators in the group, each operator is a sub-component: OperatorLabelComponent.
+ *
+ * The component has an input box to search the operators.
+ * Search is full text search and fuzzy search, implemented using fuse.js http://fusejs.io/
+ * Search results are shown in the autocomplete dropdown list,
+ *  pressing "Enter" or clicking a suggestion will creates an operator in the main workflow editor panel.
+ *
+ *
+ * @author Bolin Chen
+ * @author Zuozhi Wang
+ *
+ */
 @Component({
   selector: 'texera-operator-view',
   templateUrl: './operator-view.component.html',

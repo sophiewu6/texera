@@ -11,7 +11,7 @@ export class WorkflowGraphUtilsService {
   constructor(private operatorMetadataService: OperatorMetadataService) {
     this.operatorMetadataService.metadataChanged$.subscribe(
       value => this.operatorMetadata = value
-    )
+    );
   }
 
   // generate a new operator ID

@@ -91,7 +91,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
       gridSize: 1,
       snapLinks: true,
       linkPinning: false,
-      validateConnection: this.validateOperatorConnection
+      validateConnection: this.validateOperatorConnection,
+      preventDefaultBlankAction: false,
+      preventContextMenu: false
     });
 
     return paper;
@@ -137,9 +139,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
     });
 
     const current = this;
-    $(window).resize(function(){
+    $(window).resize(function() {
       current.onResizedSubject.next();
-    })
+    });
 
   }
 

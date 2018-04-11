@@ -133,4 +133,7 @@ public class TupleSink implements ISink {
         return results;
     }
 
+    public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {
+        throw new TexeraException(ErrorMessages.INVALID_OUTPUT_SCHEMA_FOR_SINK);
+    }
 }

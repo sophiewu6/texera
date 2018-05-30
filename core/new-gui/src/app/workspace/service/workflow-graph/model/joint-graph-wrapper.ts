@@ -1,5 +1,6 @@
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
+import { Point } from '../../../types/workflow-common.interface';
 
 type operatorIDType = { operatorID: string };
 
@@ -53,7 +54,8 @@ export class JointGraphWrapper {
 
   public highlightOperator(operatorID: string): void {
     // try to get the operator using operator ID
-    if (! this.jointGraph.getCell(operatorID)) {
+    const jointCell = this.jointGraph.getCell(operatorID);
+    if (! this.isJointOperatorElement(jointCell)) {
       throw new Error(`opeartor with ID ${operatorID} doesn't exist`);
     }
     // if there's an existing highlighted cell, unhighlight it first
@@ -79,6 +81,15 @@ export class JointGraphWrapper {
 
   public getJointCellUnhighlightStream(): Observable<operatorIDType> {
     return this.jointCellUnhighlightStream.asObservable();
+  }
+
+
+  public getOperatorElementPosition(operatorID: string): Point {
+    const jointCell: joint.dia.Cell | undefined = this.jointGraph.get(operatorID);
+    if (! this.isJointOperatorElement(jointCell)) {
+      throw new Error(`opeartor with ID ${operatorID} doesn't exist`);
+    }
+    return jointCell.position();
   }
 
   /**
@@ -139,6 +150,13 @@ export class JointGraphWrapper {
     return jointLinkChangeStream;
   }
 
-
+  /**
+   * user-defined type guard that asserts if the joint cell object is truthy (not undefined/null)
+   *  and it is a joint element (operator)
+   * @param jointCell
+   */
+  private isJointOperatorElement(jointCell: joint.dia.Cell | undefined): jointCell is joint.dia.Element {
+    return !!jointCell && jointCell.isElement();
+  }
 
 }

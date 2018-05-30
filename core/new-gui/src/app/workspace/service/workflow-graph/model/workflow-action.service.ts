@@ -141,4 +141,8 @@ export class WorkflowActionService {
     this.texeraGraph.setOperatorProperty(operatorID, newProperty);
   }
 
+  public clearAll(): void {
+    this.jointGraph.clear();
+  }
+
 }

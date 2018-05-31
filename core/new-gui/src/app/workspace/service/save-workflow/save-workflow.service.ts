@@ -30,7 +30,7 @@ export class SaveWorkflowService {
       texeraGraph.getLinkAddStream(),
       texeraGraph.getLinkDeleteStream(),
       texeraGraph.getOperatorPropertyChangeStream().auditTime(200),
-      jointGraphWrapper.getOperatorPositionChangeStream().auditTime(500)
+      jointGraphWrapper.getOperatorPositionChangeStream().auditTime(3000)
     ).auditTime(1000).subscribe(
       () => this.autoSaveCurrentWorkflow()
     );

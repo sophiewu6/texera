@@ -1,26 +1,16 @@
+import { Observable } from 'rxjs/Observable';
 import { JointUIService } from './../joint-ui/joint-ui.service';
-import { HttpClient } from '@angular/common/http';
 import { JointGraphWrapper } from './../workflow-graph/model/joint-graph-wrapper';
 import { OperatorLink, OperatorPredicate, Point } from './../../types/workflow-common.interface';
 import { WorkflowActionService } from './../workflow-graph/model/workflow-action.service';
 import { Injectable } from '@angular/core';
+import { SessionStorageService } from 'ngx-webstorage';
 
 type OperatorWithPoint = OperatorPredicate & { point: Point };
 
-interface SaveableWorkflow {
+export interface SaveableWorkflow {
   operatorsWithPoints: OperatorWithPoint[];
   links: OperatorLink[];
-}
-
-interface SaveWorkflowResponse {
-  status: 'success' | 'fail';
-  message: string;
-}
-
-interface LoadWorkflowResponse {
-  status: 'success' | 'fail';
-  message: string;
-  savedWorkflow: SaveableWorkflow;
 }
 
 @Injectable()
@@ -29,41 +19,31 @@ export class SaveWorkflowService {
   constructor(
     private workflowActionService: WorkflowActionService,
     private jointUIService: JointUIService,
-    private httpClient: HttpClient
-  ) { }
+    private sessionStorageService: SessionStorageService
+  ) {
+    const texeraGraph = this.workflowActionService.getTexeraGraph();
+    const jointGraphWrapper = this.workflowActionService.getJointGraphWrapper();
 
-  public saveCurrentWorkflow(): void {
-    const saveableWorkflow = this.getSaveableWorkflow();
-    this.httpClient.post('', saveableWorkflow).subscribe();
-  }
-
-  public loadSavedWorkflow(): void {
-    this.workflowActionService.clearAll();
-
-    this.httpClient.get<LoadWorkflowResponse>('').subscribe(
-      (data) => {
-        if (data.status === 'success') {
-          data.savedWorkflow.operatorsWithPoints.forEach(
-            opWithPoint => {
-              const {point, ...operator} = opWithPoint;
-              this.workflowActionService.addOperator(
-                operator, this.jointUIService.getJointOperatorElement(operator, point)
-              );
-            }
-          );
-          data.savedWorkflow.links.forEach(
-            link => {
-              this.workflowActionService.addLink(link);
-            }
-          );
-        } else {
-          // TODO
-        }
-      }
+    Observable.merge(
+      texeraGraph.getOperatorAddStream(),
+      texeraGraph.getOperatorDeleteStream(),
+      texeraGraph.getLinkAddStream(),
+      texeraGraph.getLinkDeleteStream(),
+      texeraGraph.getOperatorPropertyChangeStream().auditTime(200),
+      jointGraphWrapper.getOperatorPositionChangeStream().auditTime(500)
+    ).auditTime(1000).subscribe(
+      () => this.autoSaveCurrentWorkflow()
     );
+
   }
 
-  private getSaveableWorkflow(): SaveableWorkflow {
+  public autoSaveCurrentWorkflow(): void {
+    console.log('auto save in progress...');
+    const saveableWorkflow = this.transformSaveableWorkflow();
+    this.sessionStorageService.store('texera-saved-workflow', JSON.stringify(saveableWorkflow));
+  }
+
+  private transformSaveableWorkflow(): SaveableWorkflow {
     const texeraGraph = this.workflowActionService.getTexeraGraph();
     const jointGraphWrapper = this.workflowActionService.getJointGraphWrapper();
 

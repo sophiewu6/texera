@@ -1,3 +1,4 @@
+import { SessionStorageService } from 'ngx-webstorage';
 import { OperatorMetadataService } from './../../operator-metadata/operator-metadata.service';
 import { OperatorMetadata } from './../../../types/operator-schema.interface';
 import { SyncTexeraModel } from './sync-texera-model';
@@ -8,6 +9,8 @@ import { Injectable } from '@angular/core';
 import { Point, OperatorPredicate, OperatorLink, OperatorPort } from '../../../types/workflow-common.interface';
 
 import * as joint from 'jointjs';
+import { SaveableWorkflow } from '../../save-workflow/save-workflow.service';
+import { Subject } from 'rxjs/Subject';
 
 
 /**
@@ -26,19 +29,28 @@ import * as joint from 'jointjs';
 @Injectable()
 export class WorkflowActionService {
 
+  public readonly workflowEditorRenderDone = new Subject<string>();
+
   private readonly texeraGraph: WorkflowGraph;
   private readonly jointGraph: joint.dia.Graph;
   private readonly jointGraphWrapper: JointGraphWrapper;
   private readonly syncTexeraModel: SyncTexeraModel;
 
+
   constructor(
     private operatorMetadataService: OperatorMetadataService,
-    private jointUIService: JointUIService
+    private jointUIService: JointUIService,
+    private sessionStorageService: SessionStorageService
   ) {
     this.texeraGraph = new WorkflowGraph();
     this.jointGraph = new joint.dia.Graph();
     this.jointGraphWrapper = new JointGraphWrapper(this.jointGraph);
     this.syncTexeraModel = new SyncTexeraModel(this.texeraGraph, this.jointGraphWrapper);
+
+    this.workflowEditorRenderDone.subscribe(
+      () => this.loadWorkflowFromSessionStorage()
+    );
+
   }
 
   /**
@@ -87,7 +99,7 @@ export class WorkflowActionService {
     // check that the operator doesn't exist
     this.texeraGraph.assertOperatorNotExists(operator.operatorID);
     // check that the operator type exists
-    if (! this.operatorMetadataService.operatorTypeExists(operator.operatorType)) {
+    if (!this.operatorMetadataService.operatorTypeExists(operator.operatorType)) {
       throw new Error(`operator type ${operator.operatorType} is invalid`);
     }
     // get the JointJS UI element
@@ -156,8 +168,21 @@ export class WorkflowActionService {
     this.texeraGraph.setOperatorProperty(operatorID, newProperty);
   }
 
-  public clearAll(): void {
-    this.jointGraph.clear();
+  private loadWorkflowFromSessionStorage() {
+    const savedWorkflowString: string | undefined = this.sessionStorageService.retrieve('texera-saved-workflow');
+    if (!savedWorkflowString) {
+      return;
+    }
+    const savedWorkflow: SaveableWorkflow = JSON.parse(savedWorkflowString);
+    // add operators
+    savedWorkflow.operatorsWithPoints.forEach(value => {
+      const { point, ...operator } = value;
+      this.addOperator(operator, point);
+    });
+    // add links
+    savedWorkflow.links.forEach(
+      link => this.addLink(link)
+    );
   }
 
 }

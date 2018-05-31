@@ -7,6 +7,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { CustomNgMaterialModule } from './common/custom-ng-material.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { Ng2Webstorage } from 'ngx-webstorage';
 
 import {
   JsonSchemaFormModule, MaterialDesignFrameworkModule
@@ -47,8 +48,9 @@ import 'hammerjs';
     MaterialDesignFrameworkModule,
     JsonSchemaFormModule.forRoot(MaterialDesignFrameworkModule),
 
+    Ng2Webstorage,
   ],
-  providers: [ HttpClientModule ],
+  providers: [HttpClientModule],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

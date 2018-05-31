@@ -4,6 +4,8 @@ import { Point } from '../../../types/workflow-common.interface';
 
 type operatorIDType = { operatorID: string };
 
+type operatorPositionType = { operatorID: string, position: Point };
+
 /**
  * JointGraphWrapper wraps jointGraph to provide:
  *  - getters of the properties (to hide the methods that could alther the jointGraph directly)
@@ -83,13 +85,22 @@ export class JointGraphWrapper {
     return this.jointCellUnhighlightStream.asObservable();
   }
 
-
   public getOperatorElementPosition(operatorID: string): Point {
-    const jointCell: joint.dia.Cell | undefined = this.jointGraph.get(operatorID);
+    const jointCell: joint.dia.Cell | undefined = this.jointGraph.getCell(operatorID);
     if (! this.isJointOperatorElement(jointCell)) {
       throw new Error(`opeartor with ID ${operatorID} doesn't exist`);
     }
     return jointCell.position();
+  }
+
+  public getOperatorPositionChangeStream(): Observable<operatorPositionType> {
+    return Observable.fromEvent(this.jointGraph, 'change:position')
+      .map(value => <joint.dia.Element>value)
+      .filter(jointElement => (!!jointElement) && jointElement.isElement())
+      .map(jointElement => ({
+        operatorID: jointElement.id.toString(),
+        position: jointElement.position()
+      }));
   }
 
   /**
@@ -156,7 +167,7 @@ export class JointGraphWrapper {
    * @param jointCell
    */
   private isJointOperatorElement(jointCell: joint.dia.Cell | undefined): jointCell is joint.dia.Element {
-    return !!jointCell && jointCell.isElement();
+    return (!!jointCell) && jointCell.isElement();
   }
 
 }

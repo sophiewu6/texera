@@ -8,10 +8,10 @@ import { SessionStorageService } from 'ngx-webstorage';
 
 type OperatorWithPoint = OperatorPredicate & { point: Point };
 
-export interface SaveableWorkflow {
-  operatorsWithPoints: OperatorWithPoint[];
-  links: OperatorLink[];
-}
+export interface SaveableWorkflow extends Readonly<{
+  operatorsWithPoints: ReadonlyArray<OperatorWithPoint>;
+  links: ReadonlyArray<OperatorLink>;
+}> { }
 
 @Injectable()
 export class SaveWorkflowService {

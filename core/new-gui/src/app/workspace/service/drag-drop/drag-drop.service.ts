@@ -73,8 +73,8 @@ export class DragDropService {
     this.getOperatorDropStream().subscribe(
       value => {
         this.currentOperatorType = DragDropService.DRAG_DROP_TEMP_OPERATOR_TYPE;
-        const operator = this.workflowUtilService.getNewOperatorPredicate(value.operatorType);
-        this.workflowActionService.addOperator(operator, value.offset);
+        const operator = this.workflowUtilService.getNewOperatorPredicate(value.operatorType, value.offset);
+        this.workflowActionService.addOperator(operator);
         this.workflowActionService.getJointGraphWrapper().highlightOperator(operator.operatorID);
       }
     );
@@ -150,8 +150,8 @@ export class DragDropService {
     jQuery('body').append('<div id="flyingJointPaper" style="position:fixed;z-index:100;pointer-event:none;"></div>');
 
     // create an operator and get the UI element from the operator type
-    const operator = this.workflowUtilService.getNewOperatorPredicate(operatorType);
-    const operatorUIElement = this.jointUIService.getJointOperatorElement(operator, { x: 0, y: 0 });
+    const operator = this.workflowUtilService.getNewOperatorPredicate(operatorType, { x: 0, y: 0 });
+    const operatorUIElement = this.jointUIService.getJointOperatorElement(operator);
 
     // create the jointjs model and paper of the ghost element
     const tempGhostModel = new joint.dia.Graph();

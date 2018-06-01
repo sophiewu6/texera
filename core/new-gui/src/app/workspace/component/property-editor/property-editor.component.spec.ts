@@ -83,7 +83,7 @@ describe('PropertyEditorComponent', () => {
     const jointUIService: JointUIService = TestBed.get(JointUIService);
     const jointGraphWrapper = workflowActionService.getJointGraphWrapper();
 
-    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+    workflowActionService.addOperator(mockScanPredicate);
 
     // check if the highlight function successfully updated the
     //  variables inside property editor component
@@ -114,7 +114,7 @@ describe('PropertyEditorComponent', () => {
 
     // add an operator and highligh the operator so that the
     //  variables in property editor component is setted correctly
-    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+    workflowActionService.addOperator(mockScanPredicate);
     jointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
 
     // stimulate a form change by the user

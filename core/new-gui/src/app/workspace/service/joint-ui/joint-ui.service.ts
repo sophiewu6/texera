@@ -89,16 +89,11 @@ export class JointUIService {
    *  which are specified in getCustomOperatorStyleAttrs() and getCustomPortStyleAttrs()
    *
    *
-   * @param operatorType the type of the operator
-   * @param operatorID the ID of the operator, the JointJS element ID would be the same as operatorID
-   * @param xPosition the topleft x position of the operator element (relative to JointJS paper, not absolute position)
-   * @param yPosition the topleft y position of the operator element (relative to JointJS paper, not absolute position)
+   * @param operator
    *
    * @returns JointJS Element
    */
-  public getJointOperatorElement(
-    operator: OperatorPredicate, point: Point
-  ): joint.dia.Element {
+  public getJointOperatorElement(operator: OperatorPredicate): joint.dia.Element {
 
     // check if the operatorType exists in the operator metadata
     const operatorSchema = this.operators.find(op => op.operatorType === operator.operatorType);
@@ -109,7 +104,7 @@ export class JointUIService {
     // construct a custom Texera JointJS operator element
     //   and customize the styles of the operator box and ports
     const operatorElement = new TexeraCustomJointElement({
-      position: point,
+      position: operator.position,
       size: { width: JointUIService.DEFAULT_OPERATOR_WIDTH, height: JointUIService.DEFAULT_OPERATOR_HEIGHT },
       attrs: JointUIService.getCustomOperatorStyleAttrs(operatorSchema.additionalMetadata.userFriendlyName),
       ports: {

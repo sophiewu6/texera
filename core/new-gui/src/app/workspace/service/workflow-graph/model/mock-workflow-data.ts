@@ -30,7 +30,8 @@ export const mockScanPredicate: OperatorPredicate = {
   operatorProperties: {
   },
   inputPorts: [],
-  outputPorts: ['output-0']
+  outputPorts: ['output-0'],
+  position: {x: 100, y: 100},
 };
 
 export const mockSentimentPredicate: OperatorPredicate = {
@@ -39,7 +40,8 @@ export const mockSentimentPredicate: OperatorPredicate = {
   operatorProperties: {
   },
   inputPorts: ['input-0'],
-  outputPorts: ['output-0']
+  outputPorts: ['output-0'],
+  position: {x: 200, y: 100},
 };
 
 export const mockResultPredicate: OperatorPredicate = {
@@ -48,7 +50,8 @@ export const mockResultPredicate: OperatorPredicate = {
   operatorProperties: {
   },
   inputPorts: ['input-0'],
-  outputPorts: []
+  outputPorts: [],
+  position: {x: 300, y: 100},
 };
 
 export const mockScanResultLink: OperatorLink = {

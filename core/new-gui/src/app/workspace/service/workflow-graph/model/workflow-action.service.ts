@@ -81,9 +81,8 @@ export class WorkflowActionService {
    * Throws an Error if the operator ID already existed in the Workflow Graph.
    *
    * @param operator
-   * @param point
    */
-  public addOperator(operator: OperatorPredicate, point: Point): void {
+  public addOperator(operator: OperatorPredicate): void {
     // check that the operator doesn't exist
     this.texeraGraph.assertOperatorNotExists(operator.operatorID);
     // check that the operator type exists
@@ -91,7 +90,7 @@ export class WorkflowActionService {
       throw new Error(`operator type ${operator.operatorType} is invalid`);
     }
     // get the JointJS UI element
-    const operatorJointElement = this.jointUIService.getJointOperatorElement(operator, point);
+    const operatorJointElement = this.jointUIService.getJointOperatorElement(operator);
 
     // add operator to joint graph first
     // if jointJS throws an error, it won't cause the inconsistency in texera graph

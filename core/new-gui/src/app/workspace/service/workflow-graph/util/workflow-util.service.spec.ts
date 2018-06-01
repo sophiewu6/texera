@@ -4,6 +4,7 @@ import { TestBed, inject } from '@angular/core/testing';
 
 import { WorkflowUtilService } from './workflow-util.service';
 import { getMockOperatorSchemaList } from '../../operator-metadata/mock-operator-metadata.data';
+import { mockPoint } from '../model/mock-workflow-data';
 
 describe('WorkflowUtilService', () => {
 
@@ -26,7 +27,7 @@ describe('WorkflowUtilService', () => {
   it('should be able to generate an operator predicate properly given a valid operator type', () => {
     const operatorSchema = getMockOperatorSchemaList()[0];
     const operatorPredicate = workflowUtilService.getNewOperatorPredicate(
-      operatorSchema.operatorType
+      operatorSchema.operatorType, mockPoint
     );
 
     // assert predicate itself and operator type are correct
@@ -46,7 +47,7 @@ describe('WorkflowUtilService', () => {
 
   it('should throw an error when trying to generate an operator predicate with non exist operator type', () => {
     expect(() => {
-      workflowUtilService.getNewOperatorPredicate('non-exist-operator-type');
+      workflowUtilService.getNewOperatorPredicate('non-exist-operator-type', mockPoint);
     }).toThrowError(new RegExp(`doesn't exist`));
   });
 
@@ -66,7 +67,7 @@ describe('WorkflowUtilService', () => {
     const repeat = 100;
 
     for (let i = 0; i < repeat; i++) {
-      idSet.add(workflowUtilService.getNewOperatorPredicate(operatorSchema.operatorType).operatorID);
+      idSet.add(workflowUtilService.getNewOperatorPredicate(operatorSchema.operatorType, mockPoint).operatorID);
     }
     // assert all IDs are distinct
     expect(idSet.size).toEqual(repeat);

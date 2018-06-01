@@ -30,7 +30,7 @@ describe('JointUIService', () => {
    */
   it('should create an JointJS Element successfully when the function is called', () => {
     const result = service.getJointOperatorElement(
-      mockScanPredicate, mockPoint);
+      mockScanPredicate);
     expect(result).toBeTruthy();
   });
 
@@ -45,9 +45,9 @@ describe('JointUIService', () => {
           operatorType: 'nonexistOperatorType',
           operatorProperties: {},
           inputPorts: [],
-          outputPorts: []
-        },
-        mockPoint
+          outputPorts: [],
+          position: mockPoint
+        }
       );
     }).toThrowError(new RegExp(`doesn't exist`));
   });
@@ -58,9 +58,9 @@ describe('JointUIService', () => {
    * matches the port number specified by the operator metadata
    */
   it('should create correct number of inPorts and outPorts based on operator metadata', () => {
-    const element1 = service.getJointOperatorElement(mockScanPredicate, mockPoint);
-    const element2 = service.getJointOperatorElement(mockSentimentPredicate, mockPoint);
-    const element3 = service.getJointOperatorElement(mockResultPredicate, mockPoint);
+    const element1 = service.getJointOperatorElement(mockScanPredicate);
+    const element2 = service.getJointOperatorElement(mockSentimentPredicate);
+    const element3 = service.getJointOperatorElement(mockResultPredicate);
 
     const inPortCount1 = element1.getPorts().filter(port => port.group === 'in').length;
     const outPortCount1 = element1.getPorts().filter(port => port.group === 'out').length;
@@ -87,15 +87,13 @@ describe('JointUIService', () => {
 
     graph.addCell(
       service.getJointOperatorElement(
-        mockScanPredicate,
-        mockPoint
+        mockScanPredicate
       )
     );
 
     graph.addCell(
       service.getJointOperatorElement(
-        mockResultPredicate,
-        { x: 500, y: 100 }
+        mockResultPredicate
       )
     );
 

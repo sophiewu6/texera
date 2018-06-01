@@ -37,7 +37,7 @@ describe('JointGraphWrapperService', () => {
 
   it('should emit operator delete event correctly when operator is deleted by JointJS', marbles((m) => {
 
-    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
+    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate));
 
     m.hot('-e-').do(v => jointGraph.getCell(mockScanPredicate.operatorID).remove()).subscribe();
 
@@ -51,8 +51,8 @@ describe('JointGraphWrapperService', () => {
 
   it('should emit link add event correctly when a link is connected by JointJS', marbles((m) => {
 
-    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
-    jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate, mockPoint));
+    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate));
+    jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate));
 
     const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
 
@@ -68,8 +68,8 @@ describe('JointGraphWrapperService', () => {
 
   it('should emit link delete event correctly when a link is deleted by JointJS', marbles((m) => {
 
-    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
-    jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate, mockPoint));
+    jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate));
+    jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate));
 
     const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
     jointGraph.addCell(mockScanResultLinkCell);
@@ -94,8 +94,8 @@ describe('JointGraphWrapperService', () => {
           when an operator along with one connected link are deleted by JonitJS`
     , marbles((m) => {
 
-      jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
-      jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate, mockPoint));
+      jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate));
+      jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate));
 
       const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
       jointGraph.addCell(mockScanResultLinkCell);
@@ -121,9 +121,9 @@ describe('JointGraphWrapperService', () => {
   it(`should emit operator delete event and link delete event correctly when
         an operator along with multiple links are deleted by JointJS`, marbles((m) => {
 
-      jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
-      jointGraph.addCell(jointUIService.getJointOperatorElement(mockSentimentPredicate, mockPoint));
-      jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate, mockPoint));
+      jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate));
+      jointGraph.addCell(jointUIService.getJointOperatorElement(mockSentimentPredicate));
+      jointGraph.addCell(jointUIService.getJointOperatorElement(mockResultPredicate));
 
       const mockScanSentimentLinkCell = JointUIService.getJointLinkCell(mockScanSentimentLink);
       const mockSentimentResultLinkCell = JointUIService.getJointLinkCell(mockSentimentResultLink);
@@ -153,7 +153,7 @@ describe('JointGraphWrapperService', () => {
       }
     );
 
-    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+    workflowActionService.addOperator(mockScanPredicate);
     localJointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
 
     expect(localJointGraphWrapper.getCurrentHighlightedOpeartorID()).toEqual(mockScanPredicate.operatorID);
@@ -179,8 +179,8 @@ describe('JointGraphWrapperService', () => {
       }
     );
 
-    workflowActionService.addOperator(mockScanPredicate, mockPoint);
-    workflowActionService.addOperator(mockResultPredicate, mockPoint);
+    workflowActionService.addOperator(mockScanPredicate);
+    workflowActionService.addOperator(mockResultPredicate);
 
     localJointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
     localJointGraphWrapper.highlightOperator(mockResultPredicate.operatorID);

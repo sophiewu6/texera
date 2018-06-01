@@ -1,4 +1,4 @@
-import { OperatorPredicate } from './../../../types/workflow-common.interface';
+import { OperatorPredicate, Point } from './../../../types/workflow-common.interface';
 import { OperatorMetadataService } from './../../operator-metadata/operator-metadata.service';
 import { OperatorSchema } from './../../../types/operator-schema.interface';
 import { Injectable } from '@angular/core';
@@ -36,7 +36,7 @@ export class WorkflowUtilService {
    * @param operatorType type of an Operator
    * @returns a new OperatorPredicate of the operatorType
    */
-  public getNewOperatorPredicate(operatorType: string): OperatorPredicate {
+  public getNewOperatorPredicate(operatorType: string, position: Point): OperatorPredicate {
     const operatorID = this.getRandomUUID();
     const operatorProperties = {};
 
@@ -56,7 +56,7 @@ export class WorkflowUtilService {
       outputPorts.push('output-' + i.toString());
     }
 
-    return { operatorID, operatorType, operatorProperties, inputPorts, outputPorts };
+    return { operatorID, operatorType, operatorProperties, inputPorts, outputPorts, position };
 
   }
 

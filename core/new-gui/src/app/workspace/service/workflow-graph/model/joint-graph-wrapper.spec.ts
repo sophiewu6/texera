@@ -143,11 +143,7 @@ describe('JointGraphWrapperService', () => {
 
     }));
 
-<<<<<<< HEAD
-  it('should handle the event when an operator is highlighted or unhighlighted in the JointJS paper', marbles((m) => {
-=======
   it('should emit a highlight event correctly when an operator is highlighted', marbles((m) => {
->>>>>>> new-gui-property-panel
     const workflowActionService: WorkflowActionService = TestBed.get(WorkflowActionService);
     const localJointGraphWrapper = workflowActionService.getJointGraphWrapper();
 
@@ -218,10 +214,6 @@ describe('JointGraphWrapperService', () => {
 
   it('should unhighlight previous highlighted operator if a new operator is highlighted', marbles((m) => {
     const workflowActionService: WorkflowActionService = TestBed.get(WorkflowActionService);
-<<<<<<< HEAD
-
-=======
->>>>>>> new-gui-property-panel
     const localJointGraphWrapper = workflowActionService.getJointGraphWrapper();
 
     workflowActionService.addOperator(mockScanPredicate, mockPoint);

@@ -79,7 +79,7 @@ export class JointUIService {
   }
 
   /**
-   * Gets the JointJS UI Element Object based on the operator predicate.
+   * Gets the JointJS UI Element object based on the operator predicate.
    * A JointJS Element could be added to the JointJS graph to let JointJS display the operator accordingly.
    *
    * The function checks if the operatorType exists in the metadata,
@@ -231,7 +231,7 @@ export class JointUIService {
    */
   public static getCustomOperatorStyleAttrs(operatorDisplayName: string): joint.shapes.devs.ModelSelectors {
     const operatorStyleAttrs = {
-      'rect': { fill: '#FFFFFF', 'follow-scale': true, stroke: '#CFCFCF', 'stroke-width': 2 },
+      'rect': { fill: '#FFFFFF', 'follow-scale': true, stroke: '#CFCFCF', 'stroke-width': '2' },
       'text': {
         text: operatorDisplayName, fill: 'black', 'font-size': '12px',
         'ref-x': 0.5, 'ref-y': 0.5, ref: 'rect', 'y-alignment': 'middle', 'x-alignment': 'middle'

@@ -1,10 +1,10 @@
+import { mockPoint } from './../model/mock-workflow-data';
 import { StubOperatorMetadataService } from './../../operator-metadata/stub-operator-metadata.service';
 import { OperatorMetadataService } from './../../operator-metadata/operator-metadata.service';
 import { TestBed, inject } from '@angular/core/testing';
 
 import { WorkflowUtilService } from './workflow-util.service';
-import { getMockOperatorSchemaList } from '../../operator-metadata/mock-operator-metadata.data';
-import { mockPoint } from '../model/mock-workflow-data';
+import { mockOperatorSchemaList } from '../../operator-metadata/mock-operator-metadata.data';
 
 describe('WorkflowUtilService', () => {
 
@@ -25,7 +25,7 @@ describe('WorkflowUtilService', () => {
   }));
 
   it('should be able to generate an operator predicate properly given a valid operator type', () => {
-    const operatorSchema = getMockOperatorSchemaList()[0];
+    const operatorSchema = mockOperatorSchemaList[0];
     const operatorPredicate = workflowUtilService.getNewOperatorPredicate(
       operatorSchema.operatorType, mockPoint
     );
@@ -62,7 +62,7 @@ describe('WorkflowUtilService', () => {
   });
 
   it('should be able to assign different operator IDs to newly generated operators', () => {
-    const operatorSchema = getMockOperatorSchemaList()[0];
+    const operatorSchema = mockOperatorSchemaList[0];
     const idSet = new Set<string>();
     const repeat = 100;
 

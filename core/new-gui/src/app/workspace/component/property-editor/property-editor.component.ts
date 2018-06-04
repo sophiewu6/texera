@@ -69,7 +69,9 @@ export class PropertyEditorComponent {
 
   // debounce time for form input in miliseconds
   //  please set this to multiples of 10 to make writing tests easy
-  public static formInputDebounceTime: number = 150;
+  public static formInputDebounceTime: number = 300;
+
+  private receiveTexeraChangeEvent: boolean = true;
 
 
   constructor(
@@ -83,14 +85,26 @@ export class PropertyEditorComponent {
 
     // handle the form change event to actually set the operator property
     this.outputFormChangeEventStream.subscribe(formData => {
+      this.receiveTexeraChangeEvent = false;
       // set the operator property to be the new form data
       if (this.currentOperatorID) {
         this.workflowActionService.setOperatorProperty(this.currentOperatorID, formData);
       }
+      this.receiveTexeraChangeEvent = true;
     });
 
     // handle highlight / unhighlight event to show / hide the property editor form
     this.handleHighlightEvents();
+
+
+    this.workflowActionService.getTexeraGraph().getOperatorPropertyChangeStream()
+      .filter(() => this.receiveTexeraChangeEvent)
+      .filter(value => value.operator.operatorID === this.currentOperatorID)
+      .subscribe(
+        value => {
+          this.currentOperatorInitialData = cloneDeep(value.operator.operatorProperties)
+        }
+      );
 
   }
 

@@ -52,9 +52,6 @@ export class JointGraphWrapper {
   constructor(private jointGraph: joint.dia.Graph) {
     // handle if the current highlighted operator is deleted, it should be unhighlighted
     this.handleOperatorDeleteUnhighlight();
-    this.getJointOperatorMoveStream().subscribe(
-      value => console.log(value)
-    );
   }
 
   /**
@@ -206,6 +203,15 @@ export class JointGraphWrapper {
         this.unhighlightCurrent();
       }
     });
+  }
+
+  /**
+   * user-defined type guard that asserts if the joint cell object is truthy (not undefined/null)
+   *  and it is a joint element (operator)
+   * @param jointCell
+   */
+  public static isJointOperatorElement(jointCell: joint.dia.Cell | undefined): jointCell is joint.dia.Element {
+    return (!!jointCell) && jointCell.isElement();
   }
 
 }

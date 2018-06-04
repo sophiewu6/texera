@@ -86,7 +86,7 @@ export class WorkflowActionService {
     // check that the operator doesn't exist
     this.texeraGraph.assertOperatorNotExists(operator.operatorID);
     // check that the operator type exists
-    if (! this.operatorMetadataService.operatorTypeExists(operator.operatorType)) {
+    if (!this.operatorMetadataService.operatorTypeExists(operator.operatorType)) {
       throw new Error(`operator type ${operator.operatorType} is invalid`);
     }
     // get the JointJS UI element
@@ -106,9 +106,14 @@ export class WorkflowActionService {
    */
   public deleteOperator(operatorID: string): void {
     this.texeraGraph.assertOperatorExists(operatorID);
+    // turn off sync joint event
+    this.syncTexeraModel.turnOffSyncJointEvent();
+    // remove operator from texera
+    this.texeraGraph.deleteOperator(operatorID);
     // remove the operator from JointJS
     this.jointGraph.getCell(operatorID).remove();
-    // JointJS operator delete event will propagate and trigger Texera operator delete
+    // turn back on sync joint event
+    this.syncTexeraModel.turnOnSyncJointEvent();
   }
 
   /**
@@ -119,10 +124,17 @@ export class WorkflowActionService {
   public addLink(link: OperatorLink): void {
     this.texeraGraph.assertLinkNotExists(link);
     this.texeraGraph.assertLinkIsValid(link);
+
+    // turn off sync joint event
+    this.syncTexeraModel.turnOffSyncJointEvent();
+    // add link to texera
+    this.texeraGraph.addLink(link);
     // add the link to JointJS
     const jointLinkCell = JointUIService.getJointLinkCell(link);
     this.jointGraph.addCell(jointLinkCell);
-    // JointJS link add event will propagate and trigger Texera link add
+    // turn back on sync joint event
+    this.syncTexeraModel.turnOnSyncJointEvent();
+
   }
 
   /**
@@ -132,8 +144,15 @@ export class WorkflowActionService {
    */
   public deleteLinkWithID(linkID: string): void {
     this.texeraGraph.assertLinkWithIDExists(linkID);
+
+    // turn off sync joint event
+    this.syncTexeraModel.turnOffSyncJointEvent();
+    // remove link from texera
+    this.texeraGraph.deleteLinkWithID(linkID);
+    // remove link from jointJS
     this.jointGraph.getCell(linkID).remove();
-    // JointJS link delete event will propagate and trigger Texera link delete
+    // turn back on sync joint event
+    this.syncTexeraModel.turnOnSyncJointEvent();
   }
 
   /**
@@ -143,22 +162,43 @@ export class WorkflowActionService {
    */
   public deleteLink(source: OperatorPort, target: OperatorPort): void {
     this.texeraGraph.assertLinkExists(source, target);
+
+    // turn off sync joint event
+    this.syncTexeraModel.turnOffSyncJointEvent();
+    // remove link from texera
+    this.texeraGraph.deleteLink(source, target);
+
+    // remove link from jointJS
     const link = this.texeraGraph.getLink(source, target);
     if (!link) {
       throw new Error(`link with source ${source} and target ${target} doesn't exist`);
     }
     this.jointGraph.getCell(link.linkID).remove();
-    // JointJS link delete event will propagate and trigger Texera link delete
+    // turn back on sync joint event
+    this.syncTexeraModel.turnOnSyncJointEvent();
+
   }
 
   public setOperatorProperty(operatorID: string, newProperty: object) {
     this.texeraGraph.setOperatorProperty(operatorID, newProperty);
   }
 
-  public setOperatorPosition(operatorID: string, newPosition: object) {
-    this.texeraGraph.assertOperatorExists(operatorID);
-    const cell = this.jointGraph.getCell(operatorID);
+  public setOperatorPosition(operatorID: string, newPosition: Point) {
+    // turn off sync joint event
+    this.syncTexeraModel.turnOffSyncJointEvent();
 
+    // change texera operator position
+    this.texeraGraph.setOperatorPosition(operatorID, newPosition);
+
+    // change jointJS operator position
+    const cell = this.jointGraph.getCell(operatorID);
+    if (!JointGraphWrapper.isJointOperatorElement(cell)) {
+      throw new Error(`operator with ${operatorID} doesn't exist`);
+    }
+    cell.position(newPosition.x, newPosition.y);
+
+    // turn back on sync joint event
+    this.syncTexeraModel.turnOnSyncJointEvent();
   }
 
 }

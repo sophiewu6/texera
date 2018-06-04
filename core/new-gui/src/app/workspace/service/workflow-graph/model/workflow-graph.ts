@@ -46,6 +46,9 @@ export class WorkflowGraph {
   ) {
     operatorPredicates.forEach(op => this.operatorIDMap.set(op.operatorID, op));
     operatorLinks.forEach(link => this.operatorLinkMap.set(link.linkID, link));
+
+    this.operatorPropertyChangeSubject.subscribe(value => console.log(value));
+    this.operatorPositionChangeSubject.subscribe(value => console.log(value));
   }
 
   /**
@@ -276,6 +279,16 @@ export class WorkflowGraph {
    */
   public getOperatorPropertyChangeStream(): Observable<{ oldProperty: object, operator: OperatorPredicate }> {
     return this.operatorPropertyChangeSubject.asObservable();
+  }
+
+  /**
+   * Gets the observable event stream of an operator position changed (operator is dragged around and moved).
+   * This event stream is truncated from the actual operator moved stream:
+   *  a debounce time is set to prevent this event stream from firing too often,
+   *  it will only fire an event after the user stops moving the operator for a certain duration.
+   */
+  public getOperatorPositionChangeStream(): Observable<{ oldPosition: Point, operator: OperatorPredicate }> {
+    return this.operatorPositionChangeSubject.asObservable();
   }
 
   /**

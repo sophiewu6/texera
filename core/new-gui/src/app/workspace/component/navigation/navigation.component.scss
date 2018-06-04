@@ -1,5 +1,12 @@
 @import '../workspace.component.scss';
-
 .texera-workspace-navigation-body {
-    border: 2px solid;
+  border: 2px solid;
+}
+
+.texera-workflow-navigation-undo-redo {
+  margin: auto;
+}
+
+.texera-undoredo-inactive {
+  color: rgba(0, 0, 0, 0.26);
 }

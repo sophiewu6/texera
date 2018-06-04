@@ -1,3 +1,4 @@
+import { UndoRedoService } from './../../service/undo-redo/undo-redo.service';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -7,9 +8,19 @@ import { Component, OnInit } from '@angular/core';
 })
 export class NavigationComponent implements OnInit {
 
-  constructor() { }
+  constructor(
+    public undoRedoService: UndoRedoService
+  ) { }
 
   ngOnInit() {
+  }
+
+  public undoPressed(): void {
+    this.undoRedoService.undo();
+  }
+
+  public redoPressed(): void {
+    this.undoRedoService.redo();
   }
 
 }

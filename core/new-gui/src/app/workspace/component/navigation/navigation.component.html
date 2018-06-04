@@ -2,5 +2,16 @@
 <div class="texera-workspace-navigation-body texera-workflow-component-body">
   <p>
     navigation works!
-  </p>  
+  </p>
+
+  <div class="texera-workflow-navigation-undo-redo">
+
+      <mat-icon *ngIf="undoRedoService.undoAvailable()" (click)="undoPressed()">undo</mat-icon>
+      <mat-icon *ngIf="! undoRedoService.undoAvailable()" class="texera-undoredo-inactive">undo</mat-icon>
+
+      <mat-icon *ngIf="undoRedoService.redoAvailable()" (click)="redoPressed()">redo</mat-icon>
+      <mat-icon *ngIf="! undoRedoService.redoAvailable()" class="texera-undoredo-inactive">redo</mat-icon>
+
+  </div>
+
 </div>

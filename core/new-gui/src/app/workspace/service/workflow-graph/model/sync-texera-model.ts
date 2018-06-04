@@ -2,6 +2,7 @@ import { OperatorLink } from './../../../types/workflow-common.interface';
 
 import { WorkflowGraph } from './workflow-graph';
 import { JointGraphWrapper } from './joint-graph-wrapper';
+import { timer } from 'rxjs/observable/timer';
 
 /**
  * SyncTexeraModel subscribes to the graph change events from JointJS,
@@ -17,6 +18,8 @@ import { JointGraphWrapper } from './joint-graph-wrapper';
  */
 export class SyncTexeraModel {
 
+  private syncJointEvent: boolean = true;
+
   constructor(
     private texeraGraph: WorkflowGraph,
     private jointGraphWrapper: JointGraphWrapper
@@ -24,6 +27,15 @@ export class SyncTexeraModel {
 
     this.handleJointOperatorDelete();
     this.handleJointLinkEvents();
+    this.handleJointOperatorMove();
+  }
+
+  public turnOnSyncJointEvent(): void {
+    this.syncJointEvent = true;
+  }
+
+  public turnOffSyncJointEvent(): void {
+    this.syncJointEvent = false;
   }
 
 
@@ -40,6 +52,7 @@ export class SyncTexeraModel {
    */
   private handleJointOperatorDelete(): void {
     this.jointGraphWrapper.getJointOperatorCellDeleteStream()
+      .filter(() => this.syncJointEvent)
       .map(element => element.id.toString())
       .subscribe(elementID => this.texeraGraph.deleteOperator(elementID));
   }
@@ -70,6 +83,7 @@ export class SyncTexeraModel {
      *  and only add valid links to the graph
      */
     this.jointGraphWrapper.getJointLinkCellAddStream()
+      .filter(() => this.syncJointEvent)
       .filter(link => SyncTexeraModel.isValidJointLink(link))
       .map(link => SyncTexeraModel.getOperatorLink(link))
       .subscribe(link => this.texeraGraph.addLink(link));
@@ -80,6 +94,7 @@ export class SyncTexeraModel {
      *  then delete the link by the link ID
      */
     this.jointGraphWrapper.getJointLinkCellDeleteStream()
+      .filter(() => this.syncJointEvent)
       .filter(link => SyncTexeraModel.isValidJointLink(link))
       .subscribe(link => this.texeraGraph.deleteLinkWithID(link.id.toString()));
 
@@ -90,6 +105,7 @@ export class SyncTexeraModel {
      * TODO: finish this documentation
      */
     this.jointGraphWrapper.getJointLinkCellChangeStream()
+      .filter(() => this.syncJointEvent)
       // we intentially want the side effect (delete the link) to happen **before** other operations in the chain
       .do((link) => {
         const linkID = link.id.toString();
@@ -102,13 +118,67 @@ export class SyncTexeraModel {
       });
   }
 
+  /**
+   *
+   * Handles JointJS operator operator move event stream,
+   *  truncate the event stream and omit some events,
+   *  to make the operator move only fire after the user stops moving for some time,
+   *  instead of firing at each little move step.
+   *
+   * Suppose we have operators with ID a, b, c, etc..
+   * each time the operator is moved, it emits events a1, a2, a3, or b1, b2, b3, etc..
+   *
+   * Suppose we have the following scenario:
+   * The user moves operator a around, then the user *quickly* moves operator b around.
+   * The source event stream will be like:
+   * --a1--a2--a3--b1--b2--b3--
+   *
+   * If we naively set a debounceTime on the whole event stream,
+   *  if interval between `a3` and `b1` is less than the debounceTime,
+   *  then only the final `b3` event will be emitted,
+   *  as if operator `a` has never been moved, as shown in the following diagram
+   *
+   * source: --a1--a2--a3--b1--b2--b3--
+   *           debounceTime(longTime)
+   * target:  ---------------------------------b3--
+   *
+   * We want to set the debounceTime high to avoid producing too many operator move events,
+   *  however, setting it too high will cause the problem stated above.
+   *
+   * Solution:
+   *  the event stream is groupBy operatorID,
+   *  each operatorID has its own sub-observable,
+   *  apply debounceTime on each operatorID's observable
+   *
+   * source:    --a1--a2--a3--b1--b2--b3-- (observable of events)
+   *                groupBy(operatorID): a new observable is created for each operatorID
+   * groupped:  --a1----------b1---------- (observable of observables)
+   *               \           \
+   *                a2          b2
+   *                 \           \
+   *                  a3          b3
+   *                   \           \
+   *              map(obs => obs.debounceTime): apply debounceTime to each sub-observable
+   * debounced: --------------------------
+   *               \           \
+   *                \           \    (emit after the debouncetime)
+   *                 a3          b3
+   *                  \           \
+   *              mergeAll(): merge all the sub-observables back together
+   * merged:    ---------------------a3----------b3--
+   *
+   * This will get the expected behavoir: each operator's move event stream is treated separately
+   *
+   */
   private handleJointOperatorMove(): void {
     this.jointGraphWrapper.getJointOperatorMoveStream()
-      // limit the operator move rate
-      .auditTime(50)
-      .subscribe(value => {
-
-      });
+      .filter(() => this.syncJointEvent)
+      .groupBy(value => value.operatorID)
+      .map(observableEachOperator => observableEachOperator.debounceTime(800))
+      .mergeAll()
+      .subscribe(value =>
+        this.texeraGraph.setOperatorPosition(value.operatorID, value.position)
+      );
   }
 
   /**
@@ -118,18 +188,18 @@ export class SyncTexeraModel {
    */
   static getOperatorLink(jointLink: joint.dia.Link): OperatorLink {
 
-    type jointLinkEventType = {id: string, port: string} | null | undefined;
+    type jointLinkEventType = { id: string, port: string } | null | undefined;
 
     // the link should be a valid link (both source and target are connected to an operator)
     // isValidLink function is not reused because of Typescript strict null checking
     const jointSourceElement: jointLinkEventType = jointLink.attributes.source;
     const jointTargetElement: jointLinkEventType = jointLink.attributes.target;
 
-    if (! jointSourceElement) {
+    if (!jointSourceElement) {
       throw new Error(`Invalid JointJS Link: no source element`);
     }
 
-    if (! jointTargetElement) {
+    if (!jointTargetElement) {
       throw new Error(`Invalid JointJS Link: no target element`);
     }
 

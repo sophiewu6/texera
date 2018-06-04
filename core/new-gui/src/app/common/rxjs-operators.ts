@@ -13,6 +13,8 @@ import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/empty';
 
+import 'rxjs/observable/timer'
+
 // Observable operators
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/do';
@@ -32,4 +34,7 @@ import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/merge';
 import 'rxjs/add/operator/throttleTime';
+import 'rxjs/add/operator/groupBy';
+import 'rxjs/add/operator/mergeAll';
+
 

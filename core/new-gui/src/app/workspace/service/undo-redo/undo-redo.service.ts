@@ -43,7 +43,8 @@ export class UndoRedoService {
       this.handleOperatorDelete(),
       this.handleLinkAdd(),
       this.handleLinkDelete(),
-      this.handleOperatorPropertyChange()
+      this.handleOperatorPropertyChange(),
+      this.handleOperatorPositionChange(),
     )
       .filter(() => this.recordUndoRedoInfo)
       .subscribe(value => {
@@ -94,12 +95,14 @@ export class UndoRedoService {
   }
 
   public redo(): void {
+    this.recordUndoRedoInfo = false;
     const action = this.redoStack.pop();
     if (!action) {
       throw new Error(`redo stack is empty`);
     }
     // perform the redo action
     action.redoAction();
+    this.recordUndoRedoInfo = true;
   }
 
   private handleOperatorAdd(): Observable<UndoRedoInfo> {
@@ -144,8 +147,6 @@ export class UndoRedoService {
 
   private handleOperatorPropertyChange(): Observable<UndoRedoInfo> {
     return this.workflowActionService.getTexeraGraph().getOperatorPropertyChangeStream()
-      .distinctUntilChanged()
-      .throttleTime(500)
       .map(value => {
         const debugMessage = `event: change property ${value}`;
         // special case for set operator property:
@@ -156,17 +157,26 @@ export class UndoRedoService {
         }
         const redoAction = () => {
           this.workflowActionService.getJointGraphWrapper().highlightOperator(value.operator.operatorID);
-          this.workflowActionService.setOperatorProperty(
-            value.operator.operatorID, value.operator.operatorProperties);
+          this.workflowActionService.setOperatorProperty(value.operator.operatorID, value.operator.operatorProperties);
         }
         return { debugMessage, undoAction, redoAction };
       });
   }
 
-  // private handleOperatorPositionChange(): Observable<UndoRedoInfo> {
-  //   // this.workflowActionService.getTexeraGraph().geto
+  private handleOperatorPositionChange(): Observable<UndoRedoInfo> {
+    return this.workflowActionService.getTexeraGraph().getOperatorPositionChangeStream()
+      .map(value => {
+        const debugMessage = `event: move operator: ${value}`;
+        const undoAction = () => {
+          this.workflowActionService.setOperatorPosition(value.operator.operatorID, value.oldPosition);
+        };
+        const redoAction = () => {
+          this.workflowActionService.setOperatorPosition(value.operator.operatorID, value.operator.position);
+        }
+        return { debugMessage, undoAction, redoAction };
+      });
 
-  // }
+  }
 
 
 

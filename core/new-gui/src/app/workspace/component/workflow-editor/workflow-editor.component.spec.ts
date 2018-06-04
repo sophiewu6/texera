@@ -162,7 +162,7 @@ describe('WorkflowEditorComponent', () => {
       // install a spy on the highlight operator function and pass the call through
       const highlightOperatorFunctionSpy = spyOn(JointGraphWrapper, 'highlightOperator').and.callThrough();
 
-      workflowActionService.addOperator(mockScanPredicate, mockPoint);
+      workflowActionService.addOperator(mockScanPredicate);
 
       // find the joint Cell View object of the operator element
       const jointCellView = component.getJointPaper().findViewByModel(mockScanPredicate.operatorID);
@@ -180,7 +180,7 @@ describe('WorkflowEditorComponent', () => {
 
     it('should react to operator highlight event and change the appearance of the operator to be highlighted', () => {
       const JointGraphWrapper = workflowActionService.getJointGraphWrapper();
-      workflowActionService.addOperator(mockScanPredicate, mockPoint);
+      workflowActionService.addOperator(mockScanPredicate);
 
       // highlight the operator
       JointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
@@ -197,7 +197,7 @@ describe('WorkflowEditorComponent', () => {
 
     it('should react to operator unhighlight event and change the appearance of the operator to be unhighlighted', () => {
       const JointGraphWrapper = workflowActionService.getJointGraphWrapper();
-      workflowActionService.addOperator(mockScanPredicate, mockPoint);
+      workflowActionService.addOperator(mockScanPredicate);
 
       // highlight the oprator first
       JointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);

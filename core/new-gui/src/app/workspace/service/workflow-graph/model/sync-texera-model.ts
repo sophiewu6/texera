@@ -8,6 +8,7 @@ import { JointGraphWrapper } from './joint-graph-wrapper';
  *  then sync the changes to the TexeraGraph:
  *    - delete operator
  *    - link events: link add/delete/change
+ *    - operator position change
  *
  * For details of handling each JointJS event type, see the comments below for each function.
  *
@@ -98,6 +99,15 @@ export class SyncTexeraModel {
       .map(link => SyncTexeraModel.getOperatorLink(link))
       .subscribe(link => {
         this.texeraGraph.addLink(link);
+      });
+  }
+
+  private handleJointOperatorMove(): void {
+    this.jointGraphWrapper.getJointOperatorMoveStream()
+      // limit the operator move rate
+      .auditTime(50)
+      .subscribe(value => {
+
       });
   }
 

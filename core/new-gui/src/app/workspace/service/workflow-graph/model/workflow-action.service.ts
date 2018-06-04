@@ -155,4 +155,10 @@ export class WorkflowActionService {
     this.texeraGraph.setOperatorProperty(operatorID, newProperty);
   }
 
+  public setOperatorPosition(operatorID: string, newPosition: object) {
+    this.texeraGraph.assertOperatorExists(operatorID);
+    const cell = this.jointGraph.getCell(operatorID);
+
+  }
+
 }

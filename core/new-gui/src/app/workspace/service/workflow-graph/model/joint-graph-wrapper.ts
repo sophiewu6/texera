@@ -1,7 +1,9 @@
+import { Point } from './../../../types/workflow-common.interface';
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
 
 type operatorIDType = { operatorID: string };
+type OperatorPositionType = { operatorID: string, position: Point }
 
 /**
  * JointGraphWrapper wraps jointGraph to provide:
@@ -50,6 +52,9 @@ export class JointGraphWrapper {
   constructor(private jointGraph: joint.dia.Graph) {
     // handle if the current highlighted operator is deleted, it should be unhighlighted
     this.handleOperatorDeleteUnhighlight();
+    this.getJointOperatorMoveStream().subscribe(
+      value => console.log(value)
+    );
   }
 
   /**
@@ -173,6 +178,20 @@ export class JointGraphWrapper {
       .map(value => <joint.dia.Link>value);
 
     return jointLinkChangeStream;
+  }
+
+  public getJointOperatorMoveStream(): Observable<OperatorPositionType> {
+    const jointOperatorMoveStream = Observable
+      .fromEvent(this.jointGraph, 'change:position')
+      .map(value => <joint.dia.Cell>value)
+      .filter(value => value.isElement())
+      .map(value => <joint.dia.Element>value)
+      .map(element => ({
+        operatorID: element.id.toString(),
+        position: element.position()
+      }));
+
+    return jointOperatorMoveStream;
   }
 
 

@@ -1,11 +1,11 @@
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
-import { OperatorPredicate, OperatorLink, OperatorPort } from '../../../types/workflow-common.interface';
+import { OperatorPredicate, Point, OperatorLink, OperatorPort } from '../../../types/workflow-common.interface';
 import { isEqual } from 'lodash-es';
 
 // define the restricted methods that could change the graph
 type restrictedMethods =
-  'addOperator' | 'deleteOperator' | 'addLink' | 'deleteLink' | 'deleteLinkWithID' | 'setOperatorProperty';
+  'addOperator' | 'deleteOperator' | 'addLink' | 'deleteLink' | 'deleteLinkWithID' | 'setOperatorProperty' | 'setOperatorPosition';
 
 // define a type Omit that creates a type with certain methods/properties omitted from it
 // http://ideasintosoftware.com/typescript-advanced-tricks/
@@ -38,6 +38,7 @@ export class WorkflowGraph {
   private readonly linkAddSubject = new Subject<OperatorLink>();
   private readonly linkDeleteSubject = new Subject<{ deletedLink: OperatorLink }>();
   private readonly operatorPropertyChangeSubject = new Subject<{ oldProperty: object, operator: OperatorPredicate }>();
+  private readonly operatorPositionChangeSubject = new Subject<{ oldPosition: Point, operator: OperatorPredicate }>();
 
   constructor(
     operatorPredicates: OperatorPredicate[] = [],
@@ -219,6 +220,24 @@ export class WorkflowGraph {
     this.operatorIDMap.set(operatorID, operator);
 
     this.operatorPropertyChangeSubject.next({ oldProperty, operator });
+  }
+
+  public setOperatorPosition(operatorID: string, newPosition: Point): void {
+    const originalOperatorData = this.operatorIDMap.get(operatorID);
+    if (originalOperatorData === undefined) {
+      throw new Error(`operator with ID ${operatorID} doesn't exist`);
+    }
+    const oldPosition = originalOperatorData.position;
+
+    // constructor a new copy with new position and all other original attributes
+    const operator = {
+      ...originalOperatorData,
+      position: newPosition,
+    };
+    // set the new copy back to the operator ID map
+    this.operatorIDMap.set(operatorID, operator);
+
+    this.operatorPositionChangeSubject.next({ oldPosition, operator });
   }
 
   /**

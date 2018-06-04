@@ -155,5 +155,35 @@ fdescribe('UndoRedoService', () => {
 
   });
 
+  it('should handle add operator action correctly', () => {
+    // add an operator
+    workflowActionService.addOperator(mockScanPredicate);
+
+    // check undo and redo stack size
+    expect(undoRedoService.getUndoStack().size()).toEqual(1);
+    expect(undoRedoService.getRedoStack().size()).toEqual(0);
+
+    // undo that operation
+    undoRedoService.undo();
+
+    // check actual graph
+    expect(workflowActionService.getTexeraGraph().hasOperator(mockScanPredicate.operatorID)).toBeFalsy();
+    // check undo and redo stack size
+    expect(undoRedoService.getUndoStack().size()).toEqual(0);
+    expect(undoRedoService.getRedoStack().size()).toEqual(1);
+
+    // try to redo the operation
+    undoRedoService.redo();
+
+    // check actual graph
+    expect(workflowActionService.getTexeraGraph().hasOperator(mockScanPredicate.operatorID)).toBeTruthy();
+    expect(workflowActionService.getTexeraGraph().getOperator(mockScanPredicate.operatorID)).toEqual(mockScanPredicate);
+
+    // cehck undo and redo stack size
+    expect(undoRedoService.getUndoStack().size()).toEqual(1);
+    expect(undoRedoService.getRedoStack().size()).toEqual(0);
+
+  });
+
 
 });

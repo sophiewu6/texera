@@ -222,6 +222,33 @@ let nltkSentiment = {
   }
 }
 
+let MLSentiment = {
+    top : 20,
+    left : 20,
+    properties : {
+        title : 'ML Sentiment Analysis',
+        inputs : {
+            input_1 : {
+                label : '',
+            }
+        },
+        outputs : {
+            output_1 : {
+                label : "",
+            }
+        },
+        attributes : {
+            "operatorType": "MLSentiment",
+            "attribute": "",
+            "resultAttribute": "resultAttr",
+            "batchSize": "1000"
+        },
+        image : "thirdparty/images/nltk.jpg",
+        color : '#85e085',
+        description: "Sentiment analysis based on machine learning package of UCLA",
+    }
+}
+
 let regexSplit = {
   top : 20,
   left : 20,

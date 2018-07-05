@@ -179,7 +179,6 @@ public class MLSentimentOperator implements IOperator {
         List<IField> outputFields = new ArrayList<>();
         outputFields.addAll(outputTuple.getFields());
 
-        String buff = outputTuple.getField(SchemaConstants._ID).getValue().toString();
         Integer className = idClassMap.get(outputTuple.getField(SchemaConstants._ID).getValue().toString());
         outputFields.add(new IntegerField( className ));
         return new Tuple(outputSchema, outputFields);

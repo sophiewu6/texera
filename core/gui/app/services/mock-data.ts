@@ -839,5 +839,6 @@ export const DEFAULT_MATCHERS: Data[] = [
     {id: 26, jsonData: nltkSentiment},
     {id: 27, jsonData: asterixSource},
     {id: 28, jsonData: twitterConverter},
-    {id: 29, jsonData: twitterfeedSource}
+    {id: 29, jsonData: twitterfeedSource},
+    {id: 30, jsonData: MLSentiment}
 ];

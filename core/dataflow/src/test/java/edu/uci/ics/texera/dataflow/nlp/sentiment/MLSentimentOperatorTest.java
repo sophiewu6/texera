@@ -19,7 +19,7 @@ public class MLSentimentOperatorTest {
      * Test sentiment test result should be positive.
      */
     @Test
-    public void test1() throws TexeraException {
+    public void positive_test() throws TexeraException {
         TupleSourceOperator tupleSource = new TupleSourceOperator(
                 Arrays.asList(MLSentimentTestConstants.POSITIVE_TUPLE), NlpSentimentTestConstants.SENTIMENT_SCHEMA);
         MLSentimentOperator mlSentimentOperator = new MLSentimentOperator(new MLSentimentOperatorPredicate(
@@ -41,7 +41,7 @@ public class MLSentimentOperatorTest {
      * Test sentiment test result should be negative
      */
     @Test
-    public void test2() throws TexeraException {
+    public void negative_test() throws TexeraException {
         TupleSourceOperator tupleSource = new TupleSourceOperator(
                 Arrays.asList(MLSentimentTestConstants.NEGATIVE_TUPLE), NlpSentimentTestConstants.SENTIMENT_SCHEMA);
         MLSentimentOperator mlSentimentOperator = new MLSentimentOperator(new MLSentimentOperatorPredicate(
@@ -63,7 +63,7 @@ public class MLSentimentOperatorTest {
      * Test batch processing of operator. All test results should be negative
      */
     @Test
-    public void test3() throws TexeraException {
+    public void group_negative_test() throws TexeraException {
         int batchSize = 30;
         int tupleSourceSize = 101;
 
@@ -91,8 +91,8 @@ public class MLSentimentOperatorTest {
 
     public static void main(String[] args) {
         MLSentimentOperatorTest test = new MLSentimentOperatorTest();
-        test.test1();
-        test.test2();
-        test.test3();
+        test.positive_test();
+        test.negative_test();
+        test.group_negative_test();
     }
 }

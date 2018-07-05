@@ -52,8 +52,8 @@ public class JsonSchemaHelper {
     }
     
     public static void main(String[] args) throws Exception {
-//        generateAllOperatorSchema();
-        generateJsonSchema(MLSentimentOperatorPredicate.class);
+        generateAllOperatorSchema();
+//        generateJsonSchema(MLSentimentOperatorPredicate.class);
     }
     
     public static void generateAllOperatorSchema() throws Exception {

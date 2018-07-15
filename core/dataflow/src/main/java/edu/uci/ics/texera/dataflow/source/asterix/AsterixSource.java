@@ -35,7 +35,6 @@ public class AsterixSource implements ISourceOperator {
     public AsterixSource(AsterixSourcePredicate predicate) {
         this.predicate = predicate;
         this.outputSchema = new Schema(
-                SchemaConstants._ID_ATTRIBUTE, 
                 new Attribute(this.predicate.getResultAttribute(), AttributeType.STRING));
     }
 
@@ -84,7 +83,7 @@ public class AsterixSource implements ISourceOperator {
                     "]";
             String asterixField = "`" + predicate.getField() + "`";
             sb.append("and ftcontains(" + asDataset + "." + asterixField + ", ");
-            sb.append(asterixKeyword + ", " + "{\"mode\":\"all\"}" + ")").append("\n");
+            sb.append(asterixKeyword + ", " + "{\"mode\":\"any\"}" + ")").append("\n");
         }
         if(predicate.getStartDate() != null){
         	String startDate = predicate.getStartDate();
@@ -99,6 +98,8 @@ public class AsterixSource implements ISourceOperator {
             sb.append("limit " + predicate.getLimit()).append("\n");
         }
         sb.append(";");
+        
+        System.out.println(sb.toString());
         return sb.toString();
     }
 
@@ -108,9 +109,7 @@ public class AsterixSource implements ISourceOperator {
             throw new DataflowException(ErrorMessages.OPERATOR_NOT_OPENED);
         }
         if (cursor < resultJsonArray.length()) {
-            Tuple tuple =  new Tuple(this.outputSchema, 
-                    IDField.newRandomID(),
-                    new StringField(resultJsonArray.getJSONObject(cursor).get("ds").toString()));
+            Tuple tuple =  new Tuple(this.outputSchema, new StringField(resultJsonArray.getJSONObject(cursor).get("ds").toString()));
             cursor ++;
             return tuple;
         }

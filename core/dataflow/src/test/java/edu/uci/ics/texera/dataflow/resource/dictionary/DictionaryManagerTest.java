@@ -25,29 +25,29 @@ public class DictionaryManagerTest {
         DictionaryManager.getInstance().addDictionary("dict2", "The content of dict2.");
     }
 
-    /*
-     * Test getDictionaries
-     */
-    @Test
-    public void getDictionariesTest() throws TexeraException {
-        Assert.assertEquals("[dict1, dict2]", DictionaryManager.getInstance().getDictionaries().toString());
-    }
+   /*
+    * Test getDictionaries
+    */
+   @Test
+   public void getDictionariesTest() throws TexeraException {
+       Assert.assertEquals("[dict1, dict2]", DictionaryManager.getInstance().getDictionaries().toString());
+   }
 
-    /*
-     * Test getDictionary
-     */
-    @Test
-    public void getDictionaryTest() throws TexeraException {
-        Assert.assertEquals("The content of dict1.", DictionaryManager.getInstance().getDictionary("dict1"));
-        Assert.assertEquals("The content of dict2.", DictionaryManager.getInstance().getDictionary("dict2"));
-    }
+   /*
+    * Test getDictionary
+    */
+   @Test
+   public void getDictionaryTest() throws TexeraException {
+       Assert.assertEquals("The content of dict1.", DictionaryManager.getInstance().getDictionary("dict1"));
+       Assert.assertEquals("The content of dict2.", DictionaryManager.getInstance().getDictionary("dict2"));
+   }
 
-    /*
-     * Test destroyDictionaryManager
-     */
-    @Test
-    public void destroyTest() throws TexeraException {
-        DictionaryManager.getInstance().destroyDictionaryManager();
-    }
+   /*
+    * Test destroyDictionaryManager
+    */
+   @Test
+   public void destroyDictionaryManagerTest() throws TexeraException {
+       DictionaryManager.getInstance().destroyDictionaryManager();
+   }
 
 }

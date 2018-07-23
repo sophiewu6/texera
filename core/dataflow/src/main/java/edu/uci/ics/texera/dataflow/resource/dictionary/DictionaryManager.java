@@ -1,8 +1,5 @@
 package edu.uci.ics.texera.dataflow.resource.dictionary;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,8 +15,6 @@ import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.StorageException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.schema.Attribute;
-import edu.uci.ics.texera.api.field.StringField;
-import edu.uci.ics.texera.api.tuple.Tuple;
 import edu.uci.ics.texera.storage.utils.StorageUtils;
 import edu.uci.ics.texera.storage.constants.MySQLConstants;
 

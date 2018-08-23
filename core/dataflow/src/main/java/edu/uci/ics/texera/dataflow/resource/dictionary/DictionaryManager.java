@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import edu.uci.ics.texera.dataflow.common.MetadataDBConnection;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,8 +16,7 @@ import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.StorageException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.schema.Attribute;
-import edu.uci.ics.texera.storage.utils.StorageUtils;
-import edu.uci.ics.texera.storage.constants.MySQLConstants;
+import static edu.uci.ics.texera.storage.constants.MySQLConstants.*;
 
 public class DictionaryManager {
 
@@ -26,16 +26,14 @@ public class DictionaryManager {
     private static PreparedStatement prepStatement;
 
     private DictionaryManager() throws StorageException {
-        // Establish JDBC connection to MySQL
+        // Establish JDBC connection to Database
+        connection = MetadataDBConnection.getConnection("com.mysql.jdbc.Driver", HOST, PORT, DATABASE, USERNAME, PASSWORD);
         try {
-            Class.forName("com.mysql.jdbc.Driver").newInstance();
-            String url = "jdbc:mysql://" + MySQLConstants.HOST + ":" + MySQLConstants.PORT + "/"
-                    + MySQLConstants.DATABASE + "?autoReconnect=true&useSSL=true";
-            connection = DriverManager.getConnection(url, MySQLConstants.USERNAME, MySQLConstants.PASSWORD);
             statement = connection.createStatement();
-        } catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            throw new DataflowException("DictionaryManager failed to connect to mysql database." + e.getMessage());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
+        
     }
 
 
@@ -48,20 +46,14 @@ public class DictionaryManager {
     }
 
     /**
-     * Creates plan store, both an index and a directory for plan objects.
+     * Creates dictionary table
      *
-     * @throws TexeraException
      */
-    public void createDictionaryManager() throws TexeraException {
-        // table should not exist
-        if (checkTableExistence(DictionaryManagerConstants.TABLE_NAME)) {
-            throw new StorageException(String.format("Table %s already exists.", DictionaryManagerConstants.TABLE_NAME));
-        }
-
+    public void createDictionaryManager() {
         // create the table
         List<Attribute> attributeList = DictionaryManagerConstants.SCHEMA.getAttributes();
-        String createTableStatement = "CREATE TABLE " + DictionaryManagerConstants.TABLE_NAME + " (\n";
-        createTableStatement += attributeList.stream().map(attr -> convertAttribute(attr))
+        String createTableStatement = "CREATE TABLE IF NOT EXISTS " + DictionaryManagerConstants.TABLE_NAME + " (\n";
+        createTableStatement += attributeList.stream().map(attr -> MetadataDBConnection.convertAttribute(attr))
                 .collect(Collectors.joining(",\n"));
         createTableStatement += "\n); ";
         try {
@@ -75,9 +67,8 @@ public class DictionaryManager {
     }
 
     /**
-     * removes plan store, both an index and a directory for dictionary objects.
+     * removes dictionary table
      *
-     * @throws TexeraException
      */
     public void destroyDictionaryManager() throws TexeraException {
         // table should exist
@@ -94,10 +85,13 @@ public class DictionaryManager {
             throw new DataflowException(
                     "DictionaryManager failed to delete table " + DictionaryManagerConstants.TABLE_NAME + ". " + e.getMessage());
         }
-
-        StorageUtils.deleteDirectory(DictionaryManagerConstants.DICTIONARY_DIR);
     }
 
+    /**
+     * add a record into dictionary table
+     * @param fileName
+     * @param dictionaryContent
+     */
     public void addDictionary(String fileName, String dictionaryContent) throws StorageException {
         String insertStatement = "INSERT INTO " + DictionaryManagerConstants.TABLE_NAME + " VALUES(?, ?);";
         try {
@@ -108,10 +102,14 @@ public class DictionaryManager {
             prepStatement.executeUpdate();
         } catch (SQLException e) {
             throw new DataflowException(
-                    "DictionaryManager failed to insert row " + fileName + " into table " + DictionaryManagerConstants.TABLE_NAME + ". " + e.getMessage());
+                    "DictionaryManager failed to insert record " + fileName + " into table " + DictionaryManagerConstants.TABLE_NAME + ". " + e.getMessage());
         }
     }
 
+    /**
+     * get the names of all records in dictionary table
+     * @return list of all names
+     */
     public List<String> getDictionaries() throws StorageException {
         List<String> dictionaries = new ArrayList<>();
         String getAllStatement = "SELECT * FROM " + DictionaryManagerConstants.TABLE_NAME + ";";
@@ -128,7 +126,11 @@ public class DictionaryManager {
         }
         return dictionaries;
     }
-
+    /**
+     * get the content of a record with specified name
+     * @param dictionaryName
+     * @return the content of that record
+     */
     public String getDictionary(String dictionaryName) throws StorageException {
         String getOneStatement = "SELECT * FROM " + DictionaryManagerConstants.TABLE_NAME + " WHERE "
                 + DictionaryManagerConstants.NAME + "='" + dictionaryName + "';";
@@ -145,6 +147,10 @@ public class DictionaryManager {
         return null;
     }
 
+    /**
+     * helper function to check table's existence
+     *
+     */
     public boolean checkTableExistence(String tableName) throws StorageException {
         String checkStatement = "SHOW TABLES LIKE '" + tableName + "';";
         try {
@@ -158,31 +164,4 @@ public class DictionaryManager {
         }
     }
 
-    /**
-     *
-     * Convert a texera attribute into one line of sql statement. Texera
-     * attribute is from outputSchema. Used in the create table statement.
-     *
-     * @param attribute
-     * @return
-     */
-    private String convertAttribute(Attribute attribute) {
-        String sqlAttrTypeName = attribute.getType().getName();
-        String sqlStatement = "\t" + attribute.getName();
-        switch (sqlAttrTypeName) {
-            case "integer":
-                sqlStatement += " INT";
-                break;
-            case "double":
-                sqlStatement += " DOUBLE";
-                break;
-            case "date":
-                sqlStatement += " DATE";
-                break;
-            default:
-                sqlStatement += " TEXT";
-                break; // Including string and text
-        }
-        return sqlStatement;
-    }
 }

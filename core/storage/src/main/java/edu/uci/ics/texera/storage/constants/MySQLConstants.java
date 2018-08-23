@@ -1,9 +1,7 @@
 package edu.uci.ics.texera.storage.constants;
 
-
-
 /**
- * MySQLConstants stores information for MySQL connection to be used by MetadataManager
+ * MySQLConstants stores information for MySQL connection to be used by metadata managers
  * 
  */
 public class MySQLConstants {

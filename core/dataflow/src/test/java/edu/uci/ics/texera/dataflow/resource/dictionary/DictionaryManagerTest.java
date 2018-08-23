@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.uci.ics.texera.api.exception.TexeraException;
-import edu.uci.ics.texera.dataflow.resource.dictionary.DictionaryManager;;
 
 public class DictionaryManagerTest {
     
@@ -48,6 +47,7 @@ public class DictionaryManagerTest {
    @Test
    public void destroyDictionaryManagerTest() throws TexeraException {
        DictionaryManager.getInstance().destroyDictionaryManager();
+       Assert.assertFalse(DictionaryManager.getInstance().checkTableExistence(DictionaryManagerConstants.TABLE_NAME));
    }
 
 }

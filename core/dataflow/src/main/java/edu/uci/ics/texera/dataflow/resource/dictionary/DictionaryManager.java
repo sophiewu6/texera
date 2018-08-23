@@ -16,7 +16,6 @@ import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.StorageException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.schema.Attribute;
-import static edu.uci.ics.texera.storage.constants.MySQLConstants.*;
 
 public class DictionaryManager {
 
@@ -27,7 +26,7 @@ public class DictionaryManager {
 
     private DictionaryManager() throws StorageException {
         // Establish JDBC connection to Database
-        connection = MetadataDBConnection.getConnection("com.mysql.jdbc.Driver", HOST, PORT, DATABASE, USERNAME, PASSWORD);
+        connection = MetadataDBConnection.getConnection();
         try {
             statement = connection.createStatement();
         } catch (Exception e) {

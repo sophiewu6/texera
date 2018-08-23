@@ -1,17 +1,19 @@
 package edu.uci.ics.texera.dataflow.common;
 
 import edu.uci.ics.texera.api.schema.Attribute;
+import static edu.uci.ics.texera.storage.constants.MySQLConstants.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class MetadataDBConnection {
+    private static String driver = "com.mysql.jdbc.Driver";
 
     /**
      * get a connection based on the passed driver and database info
      *
      */
-    public static Connection getConnection(String driver, String HOST, String PORT, String DATABASE, String USERNAME, String PASSWORD) {
+    public static Connection getConnection() {
         Connection connection = null;
         String url = null;
         try {

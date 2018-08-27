@@ -30,8 +30,11 @@ import edu.uci.ics.texera.storage.constants.LuceneAnalyzerConstants;
 public class AsterixTwitterIngest {
     
     public static void main(String[] args) {
-        ingestKeywords("16_twitter_immigration_policy_study_2", 
-                "immigration daca muslimban nobannowall buildthewall immigrants heretostay refugeeswelcome travelban refugees defenddaca nomuslimban immigrant deportation",
+//        ingestKeywords("16_twitter_immigration_policy_study_2", 
+//                "immigration daca muslimban nobannowall buildthewall immigrants heretostay refugeeswelcome travelban refugees defenddaca nomuslimban immigrant deportation",
+//                null, null, null);
+        ingestKeywords("03_twitter_hpv", 
+                "vaccine Vax Vaxxed Immunization Inoculation HPV Gardasil SB277 SB18 AAP16",
                 null, null, null);
     }
 

@@ -27,7 +27,7 @@ public class MLSentimentOperatorPredicate extends PredicateBase {
 
             @AdvancedOption
             @JsonProperty(value = PropertyNameConstants.NLP_NLTK_BATCH_SIZE, required = true,
-                    defaultValue = "10")
+                    defaultValue = "1000")
                     int batchSize) {
         if (inputAttributeName.trim().isEmpty()) {
             throw new TexeraException("Input Attribute Name Cannot Be Empty");

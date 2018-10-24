@@ -32,7 +32,7 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
     @Override
     public void initialize(Bootstrap<TexeraWebConfiguration> bootstrap) {
         // serve static frontend GUI files
-        bootstrap.addBundle(new FileAssetsBundle("./gui/", "/", "index.html"));
+        bootstrap.addBundle(new FileAssetsBundle("./new-gui/dist/", "/", "index.html"));
     }
 
     @Override

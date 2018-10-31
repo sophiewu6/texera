@@ -11,6 +11,7 @@ import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.tuple.Tuple;
+import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 import edu.uci.ics.texera.dataflow.source.asterix.AsterixSource;
 
 /**
@@ -20,7 +21,10 @@ import edu.uci.ics.texera.dataflow.source.asterix.AsterixSource;
  *
  */
 public class TupleSink implements ISink {
-    
+	private String operatorName;
+    private String previousOperatorName;
+    private int outputID=1;
+	
     private TupleSinkPredicate predicate;
     
     private IOperator inputOperator;
@@ -100,6 +104,27 @@ public class TupleSink implements ISink {
             if (cursor > predicate.getOffset()) {
                 break;
             }
+        }
+        if(resultTuple!=null) {
+            if(outputID==1) {
+                String className=this.getClass().getName();
+                this.operatorName=className.substring(className.lastIndexOf(".")+1,className.length());
+                String previousClassName=inputOperator.getClass().getName();
+                this.previousOperatorName=previousClassName.substring(previousClassName.lastIndexOf(".")+1,previousClassName.length());
+                Schema schema=getOutputSchema();
+                DatabaseConnector.createResultTable(this.operatorName+"Result", schema);
+                DatabaseConnector.createLineageTable(operatorName+"Lineage");
+                DatabaseConnector.deleteTupleFromResultCatalogTable(operatorName);
+                DatabaseConnector.deleteTupleFromLineageCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoResultCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoLineageCatalogTable(operatorName);
+            }
+            Tuple newTuple=new Tuple.Builder(resultTuple).removeIfExists(SchemaConstants.PAYLOAD, AsterixSource.RAW_DATA).build();
+            String tupleContent=newTuple.toString().replaceAll("'", "''");
+            int inputID=DatabaseConnector.selectInputIDFromResultTable(tupleContent, previousOperatorName+"Result");
+            DatabaseConnector.insertTupleToResultTable(operatorName+"Result", outputID, tupleContent);
+            DatabaseConnector.insertTupleIntoLineageTable(operatorName+"Lineage", inputID, outputID);
+            outputID++;
         }
         return new Tuple.Builder(resultTuple)
                 .removeIfExists(SchemaConstants.PAYLOAD, AsterixSource.RAW_DATA).build();

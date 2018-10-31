@@ -44,7 +44,7 @@ public class IDField implements IField {
 
     @Override
     public String toString() {
-        return "IDField [_id = " + _id + "]";
+        return "IDField [value=" + _id + "]";
     }
     
     /**

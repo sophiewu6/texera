@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 
+import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 import edu.uci.ics.texera.perftest.sample.SampleExtraction;
 import edu.uci.ics.texera.perftest.twitter.TwitterSample;
 import edu.uci.ics.texera.web.healthcheck.SampleHealthCheck;
@@ -39,6 +40,9 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
     public void run(TexeraWebConfiguration texeraWebConfiguration, Environment environment) throws Exception {
         // serve backend at /api
         environment.jersey().setUrlPattern("/api/*");
+        
+        final DatabaseConnector databaseConnector=new DatabaseConnector();
+        environment.jersey().register(databaseConnector);
         
         final QueryPlanResource newQueryPlanResource = new QueryPlanResource();
         environment.jersey().register(newQueryPlanResource);

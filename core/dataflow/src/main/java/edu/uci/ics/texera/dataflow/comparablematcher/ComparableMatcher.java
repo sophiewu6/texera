@@ -16,6 +16,7 @@ import edu.uci.ics.texera.api.schema.AttributeType;
 import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.tuple.*;
 import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
+import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 
 /**
  * ComparableMatcher is matcher for comparison query on any field which deals
@@ -25,6 +26,9 @@ import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
  * @author Zuozhi Wang
  */
 public class ComparableMatcher extends AbstractSingleInputOperator {
+	private String operatorName;
+    private String previousOperatorName;
+    private int outputID=1;
     
     private ComparablePredicate predicate;
     private AttributeType inputAttrType;
@@ -81,7 +85,27 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
         default:
             throw new DataflowException("Unable to do comparison: unknown type " + inputAttrType.getName());
         }
-        return conditionSatisfied ? inputTuple : null;
+        if(conditionSatisfied) {
+            if(outputID==1) {
+                String className=this.getClass().getName();
+                this.operatorName=className.substring(className.lastIndexOf(".")+1,className.length());
+                String previousClassName=inputOperator.getClass().getName();
+                this.previousOperatorName=previousClassName.substring(previousClassName.lastIndexOf(".")+1,previousClassName.length());
+                Schema schema=getOutputSchema();
+                DatabaseConnector.createResultTable(this.operatorName+"Result", schema);
+                DatabaseConnector.createLineageTable(operatorName+"Lineage");
+                DatabaseConnector.deleteTupleFromResultCatalogTable(operatorName);
+                DatabaseConnector.deleteTupleFromLineageCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoResultCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoLineageCatalogTable(operatorName);
+            }
+            String tupleContent=inputTuple.toString().replaceAll("'", "''");
+            int inputID=DatabaseConnector.selectInputIDFromResultTable(tupleContent, previousOperatorName+"Result");
+            DatabaseConnector.insertTupleToResultTable(operatorName+"Result", outputID, tupleContent);
+            DatabaseConnector.insertTupleIntoLineageTable(operatorName+"Lineage", inputID, outputID);
+            outputID++;
+            return inputTuple;
+        }else return null;
     }
 
     private boolean compareDate(Tuple inputTuple) throws DataflowException {     

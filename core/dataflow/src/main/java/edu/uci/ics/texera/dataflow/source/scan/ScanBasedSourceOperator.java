@@ -19,7 +19,7 @@ import edu.uci.ics.texera.storage.RelationManager;
  */
 public class ScanBasedSourceOperator implements ISourceOperator {
 	private String operatorName;
-    private int id=1;
+    private int lineageTupleID=1;
 
     private DataReader dataReader;
     
@@ -57,7 +57,7 @@ public class ScanBasedSourceOperator implements ISourceOperator {
         try {
         	Tuple tuple=dataReader.getNextTuple();
             if(tuple!=null) {
-                if(id==1) {
+                if(lineageTupleID==1) {
                     String className=this.getClass().getName();
                     this.operatorName=className.substring(className.lastIndexOf(".")+1,className.length());
                     DatabaseConnector.deleteTupleFromResultCatalogTable(operatorName);
@@ -65,11 +65,13 @@ public class ScanBasedSourceOperator implements ISourceOperator {
                     Schema schema=getOutputSchema();
                     DatabaseConnector.createResultTable(this.operatorName+"Result", schema);
                 }
-                String tupleContent=tuple.toString().replaceAll("'", "''");
-                DatabaseConnector.insertTupleToResultTable(this.operatorName+"Result", id, tupleContent);
-                id++;
+                Tuple tupleWithLineageID=DatabaseConnector.addTupleLineageIDToOutput(tuple, lineageTupleID);
+                String tupleContent=tupleWithLineageID.toString().replaceAll("'", "''");
+                DatabaseConnector.insertTupleToResultTable(this.operatorName+"Result", tupleContent);
+                lineageTupleID++;
+                return tupleWithLineageID;
             }
-            return tuple;
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
             throw new DataflowException(e.getMessage(), e);
@@ -91,7 +93,9 @@ public class ScanBasedSourceOperator implements ISourceOperator {
 
     @Override
     public Schema getOutputSchema() {
-        return dataReader.getOutputSchema();
+    	Schema schema=dataReader.getOutputSchema();
+    	schema=DatabaseConnector.addLineageIDAttribute(schema);
+        return schema;
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {

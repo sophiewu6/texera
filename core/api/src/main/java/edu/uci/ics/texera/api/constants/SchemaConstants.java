@@ -17,4 +17,7 @@ public class SchemaConstants {
     
     public static final String _ID = "_id";
     public static final Attribute _ID_ATTRIBUTE = new Attribute(_ID, AttributeType._ID_TYPE);
+    
+    public static final String LINEAGE_TUPLE_ID="lineageTupleID";
+    public static final Attribute LINEAGE_TUPLE_ID_ATTRIBUTE=new Attribute(LINEAGE_TUPLE_ID, AttributeType._ID_TYPE);
 }

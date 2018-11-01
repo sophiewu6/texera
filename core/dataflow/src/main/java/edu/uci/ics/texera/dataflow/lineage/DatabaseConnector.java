@@ -7,11 +7,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
+import edu.uci.ics.texera.api.constants.SchemaConstants;
+import edu.uci.ics.texera.api.exception.LineageException;
 import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.api.field.IDField;
+import edu.uci.ics.texera.api.field.IField;
 import edu.uci.ics.texera.api.schema.Attribute;
 import edu.uci.ics.texera.api.schema.AttributeType;
 import edu.uci.ics.texera.api.schema.Schema;
+import edu.uci.ics.texera.api.tuple.Tuple;
 
 public class DatabaseConnector {
     private static final String DB_URL="jdbc:mysql://localhost:3306/";
@@ -108,7 +114,7 @@ public class DatabaseConnector {
     }
     public static void createResultTable(String tableName,Schema schema) {
         ArrayList<Attribute> attributes=new ArrayList<>(schema.getAttributes());
-        String createTable="CREATE TABLE "+tableName+" (id INT, ";
+        String createTable="CREATE TABLE "+tableName+" (";
         for(int i=0;i<attributes.size();i++) {
             String attrName=attributes.get(i).getName();
             AttributeType attrType=attributes.get(i).getType();
@@ -185,9 +191,9 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
     }
-    public static void insertTupleToResultTable(String tableName,int tableID,String tupleContent) {
-        String insertTuple="INSERT INTO "+tableName+" ( id,";
-        String insertTuple1=" VALUES ("+tableID+",";
+    public static void insertTupleToResultTable(String tableName,String tupleContent) {
+    	String insertTuple="INSERT INTO "+tableName+" (";
+        String insertTuple1=" VALUES (";
         String[] schemaFields=tupleContent.split(", fields=");
         String[] schemas=schemaFields[0].split(", Attribute");
         ArrayList<String> fieldName=new ArrayList<>();
@@ -242,47 +248,43 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
     }
-    public static int selectInputIDFromResultTable(String tupleContent,String previousTableName) {
-        int inputID=0;
-        String selectStat="SELECT id FROM "+previousTableName+" WHERE ";
-        String[] schemaFields=tupleContent.split(", fields=");
-        String[] schemas=schemaFields[0].split(", Attribute");
-        ArrayList<String> fieldName=new ArrayList<>();
-        ArrayList<String> fieldTypes=new ArrayList<>();
-        ArrayList<String> fieldValues=new ArrayList<>();
-        for(int i=0;i<schemas.length;i++) {
-            String schemaString=schemas[i];
-            fieldName.add(schemaString.substring(schemaString.indexOf("[name=")+"[name=".length(), schemaString.indexOf(", type=")));
-        }
-        for(int i=0;i<schemas.length;i++) {
-            String schemaString=schemas[i];
-            fieldTypes.add(schemaString.substring(schemaString.indexOf(", type=")+", type=".length(), schemaString.indexOf("]")));
-        }
-        
-        String[] fields=schemaFields[1].split("\\[value=");
-        for(int i=1;i<fields.length;i++) {
-            fieldValues.add(fields[i].substring(0, fields[i].indexOf("]")));
-        }
-        for(int i=0;i<fieldName.size();i++) {
-            String fieldType=fieldTypes.get(i);
-            if(fieldType.compareTo("_id")==0||fieldType.compareTo("date")==0||fieldType.compareTo("datetime")==0||fieldType.compareTo("list")==0||fieldType.compareTo("string")==0||fieldType.compareTo("text")==0){
-                selectStat+=fieldName.get(i)+"='"+fieldValues.get(i)+"'";
-            }else if(fieldType.compareTo("double")==0||fieldType.compareTo("integer")==0) {
-                selectStat+=fieldName.get(i)+"="+fieldValues.get(i);
-            }else {
-                throw new TexeraException("Unkown IField class: " + fieldType);
-            }
-            if(i!=fieldName.size()-1) selectStat+=" AND ";
-        }
-        try {
-            ResultSet resultSet=DatabaseConnector.lineageStat.executeQuery(selectStat);
-            resultSet.next();
-            inputID=resultSet.getInt("id");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    public static int getInputTupleLineageID(Tuple tuple) {
+    	if(!tuple.getSchema().containsAttribute(SchemaConstants.LINEAGE_TUPLE_ID)) {
+    		throw new LineageException("get input tuple lineage id, but the tuple do not have lineageTupleID attribute");
+    	}
+        IDField inputTupleLineageID=tuple.getField(SchemaConstants.LINEAGE_TUPLE_ID);
+        int inputID=Integer.parseInt(inputTupleLineageID.getValue());
         return inputID;
+    }
+    public static Tuple addTupleLineageIDToOutput(Tuple outputTuple,int lineageID) {
+    	Schema schema=outputTuple.getSchema();
+    	//if contains lineageTupleID attribute, update the lineageTupleID with lineageID
+    	if(schema.containsAttribute(SchemaConstants.LINEAGE_TUPLE_ID)) {
+    		List<IField> inputFields=new ArrayList<>();
+            inputFields.addAll(outputTuple.getFields());
+            inputFields.remove(schema.getIndex(SchemaConstants.LINEAGE_TUPLE_ID).intValue());
+            List<IField> outputFields=new ArrayList<>();
+            IDField outputTupleLineageID=new IDField(""+lineageID);
+            outputFields.add(outputTupleLineageID);
+            outputFields.addAll(inputFields);
+            Tuple tupleWithLineageID=new Tuple(schema,outputFields.stream().toArray(IField[]::new));
+            return tupleWithLineageID;
+    	}else {//if not contain, add the lineageTupleID attribute
+    		List<IField> outputFields=new ArrayList<>();
+    		IDField outputTupleLineageID=new IDField(""+lineageID);
+    		outputFields.add(outputTupleLineageID);
+    		outputFields.addAll(outputTuple.getFields());
+    		schema=addLineageIDAttribute(schema);
+    		Tuple tupleWithLineageID=new Tuple(schema,outputFields.stream().toArray(IField[]::new));
+            return tupleWithLineageID;
+    	}
+    }
+    //if the schema doesn't contain lineageTupleID attribute, then add lineageTupleID attribute.
+    public static Schema addLineageIDAttribute(Schema schema) {
+    	if (! schema.containsAttribute(SchemaConstants.LINEAGE_TUPLE_ID)) {
+    		schema = new Schema.Builder().add(SchemaConstants.LINEAGE_TUPLE_ID_ATTRIBUTE).add(schema).build(); 
+        }
+    	return schema;
     }
     
     public static void dropDB() throws SQLException {

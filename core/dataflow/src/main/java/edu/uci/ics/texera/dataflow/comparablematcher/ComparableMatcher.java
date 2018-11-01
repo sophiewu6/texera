@@ -27,7 +27,6 @@ import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
  */
 public class ComparableMatcher extends AbstractSingleInputOperator {
 	private String operatorName;
-    private String previousOperatorName;
     private int outputID=1;
     
     private ComparablePredicate predicate;
@@ -40,6 +39,7 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
     @Override
     protected void setUp() throws DataflowException {
         outputSchema = inputOperator.getOutputSchema();
+        outputSchema=DatabaseConnector.addLineageIDAttribute(outputSchema);
         if (! outputSchema.containsAttribute(predicate.getAttributeName())) {
             throw new DataflowException(String.format("attribute %s not contained in input schema %s",
                     predicate.getAttributeName(), outputSchema.getAttributeNames()));
@@ -89,8 +89,6 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
             if(outputID==1) {
                 String className=this.getClass().getName();
                 this.operatorName=className.substring(className.lastIndexOf(".")+1,className.length());
-                String previousClassName=inputOperator.getClass().getName();
-                this.previousOperatorName=previousClassName.substring(previousClassName.lastIndexOf(".")+1,previousClassName.length());
                 Schema schema=getOutputSchema();
                 DatabaseConnector.createResultTable(this.operatorName+"Result", schema);
                 DatabaseConnector.createLineageTable(operatorName+"Lineage");
@@ -99,12 +97,13 @@ public class ComparableMatcher extends AbstractSingleInputOperator {
                 DatabaseConnector.insertTupleIntoResultCatalogTable(operatorName);
                 DatabaseConnector.insertTupleIntoLineageCatalogTable(operatorName);
             }
-            String tupleContent=inputTuple.toString().replaceAll("'", "''");
-            int inputID=DatabaseConnector.selectInputIDFromResultTable(tupleContent, previousOperatorName+"Result");
-            DatabaseConnector.insertTupleToResultTable(operatorName+"Result", outputID, tupleContent);
+            int inputID=DatabaseConnector.getInputTupleLineageID(inputTuple);
+            Tuple outputTuple=DatabaseConnector.addTupleLineageIDToOutput(inputTuple, outputID);
+            String tupleContent=outputTuple.toString().replaceAll("'", "''");
+            DatabaseConnector.insertTupleToResultTable(operatorName+"Result", tupleContent);
             DatabaseConnector.insertTupleIntoLineageTable(operatorName+"Lineage", inputID, outputID);
             outputID++;
-            return inputTuple;
+            return outputTuple;
         }else return null;
     }
 

@@ -9,5 +9,14 @@ import { MOCK_SAVED_PROJECT_LIST } from './mock-saved-project.data';
 @Injectable()
 export class StubSavedProjectService {
 
-  constructor() { }
+  constructor(private http: Http) { }
+
+  public getSavedProjectData(): Observable<SavedProject[]> {
+    return Observable.of(MOCK_SAVED_PROJECT_LIST);
+  }
+
+  public deleteSavedProjectData(deleteProject: SavedProject) {
+    console.log('delete: ', deleteProject.id.toString());
+    return null;
+  }
 }

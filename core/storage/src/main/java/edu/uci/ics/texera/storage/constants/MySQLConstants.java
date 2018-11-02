@@ -6,6 +6,7 @@ package edu.uci.ics.texera.storage.constants;
  */
 public class MySQLConstants {
 
+    public static final String driver = "com.mysql.jdbc.Driver";
     public static final String HOST = "localhost";
     public static final String PORT = "3306";
     public static final String DATABASE = "metadata";

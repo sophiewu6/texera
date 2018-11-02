@@ -1,104 +1,89 @@
 package edu.uci.ics.texera.web.resource.metadata;
 
 import java.util.List;
+import java.util.Arrays;
 
-import static edu.uci.ics.texera.storage.constants.MySQLConstants.*;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import org.jooq.DSLContext;
-import org.jooq.Result;
-import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
-import org.jooq.Record;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import edu.uci.ics.texera.api.exception.StorageException;
 import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.storage.constants.MySQLConstants;
 
-import edu.uci.ics.texera.web.resource.metadata.tables.records.*;
-import edu.uci.ics.texera.web.resource.metadata.Tables;
 
-public class MetadataResource {
-
+public class MetadataResource
+{
     private static MetadataResource instance = null;
-    private static DSLContext create = null;
-    private MetadataResource() throws StorageException {
-        // establish JDBC connection to Database
-        String url = null;
-        Connection connection = null;
-        try {
-            Class.forName(driver).newInstance();
-            url = "jdbc:mysql://" + HOST + ":" + PORT + "/"
-                    + DATABASE + "?autoReconnect=true&useSSL=true";
-            connection = DriverManager.getConnection(url, USERNAME, PASSWORD);
-        } catch (Exception e) {
-            System.out.println("Could not get connection with " + url + e.getMessage());
-        }
-        // get instance of DSLContext
-        try {
-            create = DSL.using(connection, SQLDialect.MYSQL);
-        } catch (Exception e) {
-            System.out.println("Could not get DSLContext with mysql connection established" + e.getMessage());
-        }
+    private static Jdbi jdbi = null;
+    private static Handle handle = null;
+    private static DictionaryDAO dictionaryDAO;
+
+    private MetadataResource() throws StorageException
+    {
+        // establish JDBI connection to MySQL attached to handle
+        MysqlDataSource ds = new MysqlDataSource();
+        ds.setServerName(MySQLConstants.HOST);
+        ds.setPortNumber(Integer.parseInt(MySQLConstants.PORT));
+        ds.setDatabaseName(MySQLConstants.DATABASE);
+        ds.setUser(MySQLConstants.USERNAME);
+        ds.setPassword(MySQLConstants.PASSWORD);
+
+        jdbi = Jdbi.create(ds)
+                   .installPlugin(new SqlObjectPlugin());
+        handle = jdbi.open();
+
+        //generate DAO object from JDBI
+        dictionaryDAO = handle.attach(DictionaryDAO.class);
     }
 
 
     public synchronized static MetadataResource getInstance() throws StorageException {
-        if (instance == null) {
+        if (instance == null)
+        {
             instance = new MetadataResource();
+            instance.createMetadataResource();
         }
         return instance;
     }
 
     /**
-     * add a record into dictionary table
-     * @param fileName
-     * @param dictionaryContent
+     * Create tables for metadata
+     * @throws StorageException
      */
-    public void addDictionary(String fileName, String dictionaryContent) throws StorageException {
-        try {
-            DictionaryRecord dict = new DictionaryRecord(fileName, fileName, dictionaryContent);
-            create.executeInsert(dict);
-        } catch (Exception e) {
-            throw new TexeraException(
-                    "MetadataResource failed to insert record " + fileName + " into table Dictionary " + e.getMessage());
-        }
+    public void createMetadataResource() throws TexeraException
+    {
+        dictionaryDAO.createTable();
     }
 
     /**
-     * get the names of all records in dictionary table
-     * @return list of all names
+     * Add one record into dictionary table
      */
-    public List<DictionaryRecord> getDictionaries() throws StorageException {
-        List<DictionaryRecord> dictionaries = null;
-        try {
-            dictionaries = create.select()
-                                 .from(Tables.DICTIONARY)
-                                 .fetchInto(DictionaryRecord.class);
-        } catch (Exception e) {
-            throw new StorageException(
-                    "MetadataResource failed to get all dictionaries. " + e.getMessage());
-        }
-        return dictionaries;
+    public void addDictionary(String fileName, List<String> dictionaryContent) throws StorageException
+    {
+        dictionaryDAO.insertDictionary(new Dictionary(fileName, fileName, dictionaryContent));
     }
+
     /**
-     * get the content of a record with specified name
-     * @param dictionaryName
-     * @return the content of that record
+     * get all dictionaries as a list of Dictionary obejcts
      */
-    public DictionaryRecord getDictionary(String dictionaryName) throws StorageException {
-        List<DictionaryRecord> dictionaries = null;
-        try {
-            dictionaries = create.select()
-                                 .from(Tables.DICTIONARY)
-                                 .where(Tables.DICTIONARY.ID.eq(dictionaryName))
-                                 .fetchInto(DictionaryRecord.class);
-            if (dictionaries.size() == 1)
-                return dictionaries.get(0);
-        } catch (Exception e) {
-            throw new StorageException(
-                    "MetadataResource failed to get dictionary with id&name == " + dictionaryName + ". " + e.getMessage());
-        }
-        return null;
+    public List<Dictionary> getDictionaries() throws StorageException {
+        return dictionaryDAO.listAllDictionaries();
+    }
+
+    /**
+     * get the dictionary with given name as a Dictionary obejct
+     */
+    public Dictionary getDictionary(String dictionaryName) throws StorageException {
+        return dictionaryDAO.getDictionaryByID(dictionaryName);
+    }
+
+    public boolean checkTableExistence(String tableName) throws StorageException {
+        List<String> result = jdbi.withHandle(handle ->
+            handle.createQuery("SHOW TABLES LIKE '" + tableName + "';")
+                  .mapTo(String.class)
+                  .list());
+        return result.contains(tableName);
     }
 }

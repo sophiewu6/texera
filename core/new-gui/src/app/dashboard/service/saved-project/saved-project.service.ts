@@ -7,13 +7,6 @@ import { SavedProject } from '../../type/saved-project';
 @Injectable()
 export class SavedProjectService {
 
-  constructor(private http: Http) { }
+  constructor() { }
 
-  public getSavedProjectData(): Observable<SavedProject[]> {
-    return Observable.of([]); // change
-  }
-
-  public deleteSavedProjectData(deleteProject: SavedProject) {
-    return null;
-  }
 }

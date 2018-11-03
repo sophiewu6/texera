@@ -5,7 +5,7 @@ export class AppPage {
     return browser.get('/');
   }
 
-  getParagraphText() {
-    return element(by.css('texera-root h1')).getText();
+  getTexeraTitleText() {
+    return element(by.css('.navbar-brand')).getText();
   }
 }

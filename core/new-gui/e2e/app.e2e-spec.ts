@@ -1,4 +1,5 @@
 import { AppPage } from './app.po';
+import { browser, by, element } from 'protractor';
 
 describe('new-gui App', () => {
   let page: AppPage;
@@ -9,6 +10,6 @@ describe('new-gui App', () => {
 
   it('should display welcome message', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toEqual('Welcome to texera!');
+    expect(page.getTexeraTitleText()).toEqual('Texera');
   });
 });

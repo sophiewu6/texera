@@ -13,9 +13,12 @@ import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.span.Span;
 import edu.uci.ics.texera.api.tuple.Tuple;
 import edu.uci.ics.texera.dataflow.common.AbstractSingleInputOperator;
+import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 import edu.uci.ics.texera.dataflow.utils.DataflowUtils;
 
 public class KeywordMatcher extends AbstractSingleInputOperator {
+	private String operatorName;
+    private int outputID=1;
 
     private final KeywordPredicate predicate;
 
@@ -48,6 +51,7 @@ public class KeywordMatcher extends AbstractSingleInputOperator {
         }
 
         outputSchema = transformToOutputSchema(inputOperator.getOutputSchema());
+        outputSchema=DatabaseConnector.addLineageIDAttribute(outputSchema);
         
         if (this.predicate.getMatchingType() == KeywordMatchingType.CONJUNCTION_INDEXBASED) {
             preProcessKeywordTokens();
@@ -83,6 +87,7 @@ public class KeywordMatcher extends AbstractSingleInputOperator {
 
     @Override
     public Tuple processOneInputTuple(Tuple inputTuple) throws TexeraException {
+    	int inputID=DatabaseConnector.getInputTupleLineageID(inputTuple);
         // add payload if needed before passing it to the matching functions
         if (addPayload) {
             Tuple.Builder tupleBuilderPayload = new Tuple.Builder(inputTuple);
@@ -111,7 +116,26 @@ public class KeywordMatcher extends AbstractSingleInputOperator {
         if (addResultAttribute) {
             tupleBuilder.add(predicate.getSpanListName(), AttributeType.LIST, new ListField<Span>(matchingResults));
         }
-        return tupleBuilder.build();
+        Tuple returnedTuple=tupleBuilder.build();
+        if(returnedTuple!=null) {
+        	if(outputID==1) {
+        		String className=this.getClass().getName();
+                this.operatorName=className.substring(className.lastIndexOf(".")+1,className.length());
+                Schema schema=getOutputSchema();
+                DatabaseConnector.createResultTable(this.operatorName+"Result", schema);
+                DatabaseConnector.createLineageTable(operatorName+"Lineage");
+                DatabaseConnector.deleteTupleFromResultCatalogTable(operatorName);
+                DatabaseConnector.deleteTupleFromLineageCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoResultCatalogTable(operatorName);
+                DatabaseConnector.insertTupleIntoLineageCatalogTable(operatorName);
+        	}
+        	Tuple outputTuple=DatabaseConnector.addTupleLineageIDToOutput(returnedTuple, outputID);
+            String tupleContent=outputTuple.toString().replaceAll("'", "''");
+            DatabaseConnector.insertTupleToResultTable(operatorName+"Result", tupleContent);
+            DatabaseConnector.insertTupleIntoLineageTable(operatorName+"Lineage", inputID, outputID);
+            outputID++;
+        }
+        return returnedTuple;
     }
 
     @Override

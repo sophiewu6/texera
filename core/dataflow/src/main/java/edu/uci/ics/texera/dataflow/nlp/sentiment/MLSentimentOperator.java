@@ -131,15 +131,15 @@ public class MLSentimentOperator implements IOperator {
         return popupOneTuple();
     }
 
-    // Process the data file using NLTK
+    // Process the data file using python process reading ML model given by modelPath
     private String computeClassLabel(String filePath) {
         try{
             /*
-             *  In order to use the NLTK package to do classification, we start a
+             *  In order to use the given ML model to do classification, we start a
              *  new process to run the package, and wait for the result of running
              *  the process as the class label of this text field.
              *  Python call format:
-             *      #python3 nltk_sentiment_classify picklePath dataPath resultPath
+             *      #python3 ml_sentiment_classify modelPath dataPath resultPath
              * */
             List<String> args = new ArrayList<String>(
                     Arrays.asList(PYTHON, PYTHONSCRIPT,modelPath, filePath, resultPath));

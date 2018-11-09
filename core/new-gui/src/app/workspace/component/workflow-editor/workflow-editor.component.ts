@@ -15,6 +15,8 @@ import * as joint from 'jointjs';
 // 3. x coordinate, 4. y coordinate
 type JointPaperEvent = [joint.dia.CellView, JQuery.Event, number, number];
 
+type JointBlankEvent = [JQuery.Event, number, number];
+
 /**
  * WorkflowEditorComponent is the componenet for the main workflow editor part of the UI.
  *
@@ -42,6 +44,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
   private paper: joint.dia.Paper | undefined;
 
+  private panPointer: boolean | undefined;
+  private dragStartX: number | undefined;
+  private dragStartY: number | undefined;
+
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
@@ -61,7 +67,13 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     this.handleWindowResize();
     this.handleViewDeleteOperator();
+
+
+
     this.handleCellHighlight();
+
+    this.handleTest();
+
 
     this.dragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_JOINTJS_ID);
 
@@ -79,6 +91,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     this.setJointPaperOriginOffset();
     this.setJointPaperDimensions();
+
+    this.panPointer = false;
   }
 
   private handleWindowResize(): void {
@@ -116,6 +130,50 @@ export class WorkflowEditorComponent implements AfterViewInit {
      *  and users are forced to click the operator again to highlight it,
      *  which would make the UI not user-friendly
      */
+  }
+
+  private handleTest(): void {
+    Observable.fromEvent<JointBlankEvent>(this.getJointPaper(), 'blank:pointerdown')
+      .subscribe(value => {
+        this.panPointer = true;
+        this.dragStartX = value[1];
+        this.dragStartY = value[2];
+      });
+
+    Observable.fromEvent<JointPaperEvent>(this.getJointPaper(), 'blank:pointerup')
+      .subscribe(value => {
+        this.panPointer = false;
+        this.dragStartX = undefined;
+        this.dragStartY = undefined;
+      });
+
+    Observable.fromEvent<MouseEvent>(window, 'mousemove')
+      .filter(event => {
+        if (this.panPointer === undefined) {
+          return false;
+        }
+        return this.panPointer;
+      })
+      .subscribe(event => {
+        const eventElement = event.target;
+        if (!(eventElement instanceof Element)) {
+          throw new Error('Incorrect type: in most cases, this element is type Element');
+        }
+        if (eventElement === undefined) {
+          throw new Error('drag and drop: cannot find element when drag is started');
+        }
+        console.log(eventElement.tagName);
+        if (eventElement.tagName === 'svg' && this.dragStartX !== undefined && this.dragStartY !== undefined) {
+          console.log('Offset X = ' + event.offsetX);
+          console.log('Offset y = ' + event.offsetY);
+          console.log('client X = ' + event.clientX);
+          console.log('client y = ' + event.clientY);
+          this.getJointPaper().translate(
+            event.offsetX - this.dragStartX,
+            event.offsetY - this.dragStartY
+          );
+        }
+      });
   }
 
   private handleOperatorHightlightEvent(): void {

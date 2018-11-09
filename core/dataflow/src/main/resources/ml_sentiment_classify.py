@@ -9,8 +9,10 @@ resultFullPathFileName = sys.argv[3]
 inputDataMap = {}
 recordLabelMap = {}
 
+# This program should be called by edu.uci.ics.texera.dataflow.nlp.sentiment.MLSentimentOperator
 # call format:
 # python3 ml_sentiment_classify dataFullPathFileName resultFullPathFileName
+
 def debugLine(strLine):
 	f = open("python_classifier_loader.log","a+")
 	f.write(strLine)
@@ -21,6 +23,7 @@ def main():
 	classifyData()
 	writeResults()
 
+# Write recordLabelMap (the classified result) to a csv file
 def writeResults():
 	with open(resultFullPathFileName, 'w', newline='') as csvfile:
 		resultWriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -28,12 +31,15 @@ def writeResults():
 		for id, classLabel in recordLabelMap.items():
 			resultWriter.writerow([id, classLabel])
 
+# This is the function to load model and classify data
 def classifyData():
+	# load model from modelFullPathFileName, using pickle
 	CLASSIFIER = pickle.load(open(modelFullPathFileName, 'rb'))
+
 	tknzr = TweetTokenizer()
+
 	for key, value in inputDataMap.items():
-		print(value)
-		print(CLASSIFIER.classify({x: True for x in tknzr.tokenize(value)}))
+		# call classify and write the result to recordLabelMap
 		recordLabelMap[key] = 1 if CLASSIFIER.classify({x: True for x in tknzr.tokenize(value)}) == "POS" else -1
 
 def readData():
@@ -44,4 +50,3 @@ def readData():
 			
 if __name__ == "__main__":
 	main()
-	

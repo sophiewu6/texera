@@ -162,12 +162,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
         if (eventElement === undefined) {
           throw new Error('drag and drop: cannot find element when drag is started');
         }
-        console.log(eventElement.tagName);
         if (eventElement.tagName === 'svg' && this.dragStartX !== undefined && this.dragStartY !== undefined) {
-          console.log('Offset X = ' + event.offsetX);
-          console.log('Offset y = ' + event.offsetY);
-          console.log('client X = ' + event.clientX);
-          console.log('client y = ' + event.clientY);
           this.getJointPaper().translate(
             event.offsetX - this.dragStartX,
             event.offsetY - this.dragStartY

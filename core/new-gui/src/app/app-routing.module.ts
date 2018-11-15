@@ -4,12 +4,6 @@ import { Routes, RouterModule } from '@angular/router';
 import { WorkspaceComponent } from './workspace/component/workspace.component';
 
 import { DashboardComponent } from './dashboard/component/dashboard.component';
-import {
-  SavedProjectSectionComponent
-} from './dashboard/component/feature-container/saved-project-section/saved-project-section.component';
-import {
-  UserDictionarySectionComponent
-} from './dashboard/component/feature-container/user-dictionary-section/user-dictionary-section.component';
 
 const routes: Routes = [
   {
@@ -22,11 +16,11 @@ const routes: Routes = [
     children : [
       {
         path : 'SavedProject',
-        component : SavedProjectSectionComponent,
+        redirectTo: ''
       },
       {
         path : 'UserDictionary',
-        component : UserDictionarySectionComponent
+        redirectTo: ''
       }
     ]
   }

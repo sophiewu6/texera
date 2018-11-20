@@ -47,7 +47,6 @@ import { DashboardComponent } from './dashboard/component/dashboard.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpModule,
     HttpClientModule,
 
     CustomNgMaterialModule,

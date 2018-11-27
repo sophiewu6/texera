@@ -4,7 +4,7 @@ server:
   applicationContextPath: /hiv-ml
   applicationConnectors:
     - type: http
-      port: 8084
+      port: 8080
   adminConnectors:
     - type: http
       port: 8081

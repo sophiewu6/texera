@@ -1,7 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { HttpClientModule } from '@angular/common/http';
-import { HttpModule } from '@angular/http';
 
 import { AppRoutingModule } from './app-routing.module';
 
@@ -29,13 +28,6 @@ import { DashboardComponent } from './dashboard/component/dashboard.component';
 import { TopBarComponent } from './dashboard/component/top-bar/top-bar.component';
 import { UserAccountIconComponent } from './dashboard/component/top-bar/user-account-icon/user-account-icon.component';
 import { FeatureBarComponent } from './dashboard/component/feature-bar/feature-bar.component';
-import { FeatureContainerComponent } from './dashboard/component/feature-container/feature-container.component';
-import { SavedProjectSectionComponent} from './dashboard/component/feature-container/saved-project-section/saved-project-section.component';
-import { RunningJobSectionComponent } from './dashboard/component/feature-container/running-job-section/running-job-section.component';
-import { UserDictionarySectionComponent
-  } from './dashboard/component/feature-container/user-dictionary-section/user-dictionary-section.component';
-import { ResourceSectionComponent } from './dashboard/component/feature-container/resource-section/resource-section.component';
-
 
 @NgModule({
   declarations: [
@@ -52,14 +44,6 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
     TopBarComponent,
     UserAccountIconComponent,
     FeatureBarComponent,
-    FeatureContainerComponent,
-
-    SavedProjectSectionComponent,
-
-    RunningJobSectionComponent,
-    UserDictionarySectionComponent,
-
-    ResourceSectionComponent,
 
     NgbModalComponent,
     OperatorLabelComponent,
@@ -68,7 +52,6 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpModule,
     HttpClientModule,
 
     CustomNgMaterialModule,

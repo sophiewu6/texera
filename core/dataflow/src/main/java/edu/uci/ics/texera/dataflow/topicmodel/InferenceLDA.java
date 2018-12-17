@@ -8,7 +8,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class InferenceLDA {
 	private int K;
@@ -250,19 +256,54 @@ public class InferenceLDA {
 	public List<String> getTopKtopics(int topK) {
 	    List<String> results=new ArrayList<>();
 	    for(int i=0;i<M;i++) {
-	        ArrayList<Float> docTopicCount=new ArrayList<Float>();
+	    	Map<Integer, Float> topicProbabilities=new HashMap<>();
 	        float sum=0;
 	        for(int j=0;j<K;j++) {
 	            sum+=docTopicNum[i][j]+alpha;
-	            docTopicCount.add(docTopicNum[i][j]+alpha);
+	            topicProbabilities.put(j, docTopicNum[i][j]+alpha);
 	        }
-	        Collections.sort(docTopicCount, Collections.reverseOrder());
+	        Map<Integer, Float> sortedTopicPros=sortByComparator(topicProbabilities, false);
 	        String result="";
-	        for(int j=0;j<topK;j++) {
-	            result+=j+":"+(docTopicCount.get(j)/sum)+";";
+	        int count=0;
+	        for(Map.Entry<Integer, Float> entry:sortedTopicPros.entrySet()) {
+	        	if(count<topK){
+	        		result+=entry.getKey()+":"+(entry.getValue()/sum)+";";
+		        	count++;
+	        	}else break;
 	        }
 	        results.add(result);
 	    }
 	    return results;
 	}
+	private static Map<Integer, Float> sortByComparator(Map<Integer, Float> tfidf, final boolean order)
+    {
+
+        List<Entry<Integer, Float>> list = new LinkedList<Entry<Integer, Float>>(tfidf.entrySet());
+
+        // Sorting the list based on values
+        Collections.sort(list, new Comparator<Entry<Integer, Float>>()
+        {
+            public int compare(Entry<Integer, Float> o1,
+                    Entry<Integer, Float> o2)
+            {
+                if (order)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+                else
+                {
+                    return o2.getValue().compareTo(o1.getValue());
+
+                }
+            }
+        });
+        // Maintaining insertion order with the help of LinkedList
+        Map<Integer, Float> sortedMap = new LinkedHashMap<Integer, Float>();
+        for (Entry<Integer, Float> entry : list)
+        {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
 }

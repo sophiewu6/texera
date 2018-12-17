@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 
 import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
+import edu.uci.ics.texera.perftest.bbcnews.BBCnewsSample;
 import edu.uci.ics.texera.perftest.sample.SampleExtraction;
 import edu.uci.ics.texera.perftest.twitter.TwitterSample;
 import edu.uci.ics.texera.web.healthcheck.SampleHealthCheck;
@@ -95,6 +96,9 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
         System.out.println("Writing twitter index");
         TwitterSample.writeTwitterIndex();
         System.out.println("Finished writing twitter index");
+        System.out.println("Writing bbcnews Index");
+        BBCnewsSample.writeBBCnewsIndex();
+        System.out.println("Finished Writing bbcnews Index");
         new TexeraWebApplication().run(args);
     }
 }

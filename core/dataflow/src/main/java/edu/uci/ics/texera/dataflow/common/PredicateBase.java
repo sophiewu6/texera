@@ -40,6 +40,7 @@ import edu.uci.ics.texera.dataflow.sink.tuple.TupleSinkPredicate;
 import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.file.FileSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
+import edu.uci.ics.texera.dataflow.topicmodel.TopicModelOperatorPredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterConverterPredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
@@ -77,6 +78,7 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
         @Type(value = NlpSentimentPredicate.class, name = "NlpSentiment"),
         @Type(value = EmojiSentimentPredicate.class, name = "EmojiSentiment"),
         @Type(value = NltkSentimentOperatorPredicate.class, name = "NltkSentiment"),
+        @Type(value = TopicModelOperatorPredicate.class, name="TopicModel"),
 
         @Type(value = ProjectionPredicate.class, name = "Projection"),
         @Type(value = RegexSplitPredicate.class, name = "RegexSplit"),

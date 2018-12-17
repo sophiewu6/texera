@@ -77,6 +77,13 @@ public class PropertyNameConstants {
     //related to nltk operator
     public static final String NLP_NLTK_BATCH_SIZE = "batchSize";
     public static final String NLP_NLTK_MODEL = "inputAttributeModel";
+    
+    //related to topic model operator
+    public static final String TOPIC_MODEL_BATCH_SIZE="batchSize";
+    public static final String TOPIC_MODEL_K="topicNum";
+    public static final String TOPIC_MODEL_iterNum="iterationNum";
+    public static final String TOPIC_MODEL_TopK_TOPICS="topKtopics";
+    
 
     // related to sampler
     public static final String SAMPLE_SIZE = "sampleSize";

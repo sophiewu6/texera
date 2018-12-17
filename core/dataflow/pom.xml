@@ -118,6 +118,16 @@
             <artifactId>json-schema-validator</artifactId>
             <version>2.2.8</version>
         </dependency>
+        <dependency>
+        	<groupId>org.ansj</groupId>
+        	<artifactId>ansj_seg</artifactId>
+        	<version>5.1.5</version>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.nlpcn</groupId>
+        	<artifactId>nlp-lang</artifactId>
+        	<version>1.7</version>
+    	</dependency>
     </dependencies>
 
     <build>

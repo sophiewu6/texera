@@ -31,6 +31,7 @@ import edu.uci.ics.texera.dataflow.sink.tuple.TupleSinkPredicate;
 import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.file.FileSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
+import edu.uci.ics.texera.dataflow.topicmodel.TopicModelOperatorPredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterConverterPredicate;
 import edu.uci.ics.texera.dataflow.twitterfeed.TwitterFeedSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
@@ -83,6 +84,8 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(ExcelSinkPredicate.class, 1);
         fixedInputArityMap.put(MysqlSinkPredicate.class, 1);
         
+        fixedInputArityMap.put(TopicModelOperatorPredicate.class, 1);
+        
     }
     
     public static Map<Class<? extends PredicateBase>, Integer> fixedOutputArityMap = new HashMap<>();
@@ -124,6 +127,7 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(ExcelSinkPredicate.class, 0);
         fixedOutputArityMap.put(MysqlSinkPredicate.class, 0);
         
+        fixedOutputArityMap.put(TopicModelOperatorPredicate.class, 1);
     }
     
     /**

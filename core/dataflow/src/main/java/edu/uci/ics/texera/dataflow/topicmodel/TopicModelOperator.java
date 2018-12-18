@@ -160,7 +160,7 @@ public class TopicModelOperator implements IOperator {
         inferenceLDA.inferInitial();
         inferenceLDA.inferGibbsSampling();
         
-        labels=inferenceLDA.getTopKtopics(predicate.getTopKtopics());
+        labels=inferenceLDA.getTopKtopicsAndProbabilities(predicate.getTopKtopics());
     }
 
 	@Override

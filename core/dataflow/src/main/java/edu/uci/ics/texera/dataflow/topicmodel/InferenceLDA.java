@@ -253,7 +253,7 @@ public class InferenceLDA {
 		}
 		writer.close();
 	}
-	public List<String> getTopKtopics(int topK) {
+	public List<String> getTopKtopicsAndProbabilities(int topK) {
 	    List<String> results=new ArrayList<>();
 	    for(int i=0;i<M;i++) {
 	    	Map<Integer, Float> topicProbabilities=new HashMap<>();
@@ -264,6 +264,28 @@ public class InferenceLDA {
 	        }
 	        Map<Integer, Float> sortedTopicPros=sortByComparator(topicProbabilities, false);
 	        String result="";
+	        int count=0;
+	        for(Map.Entry<Integer, Float> entry:sortedTopicPros.entrySet()) {
+	        	if(count<topK){
+	        		result+=entry.getKey()+":"+(entry.getValue()/sum)+";";
+		        	count++;
+	        	}else break;
+	        }
+	        results.add(result);
+	    }
+	    return results;
+	}
+	public List<String> getTopKtopics(int topK) {
+	    List<String> results=new ArrayList<>();
+	    for(int i=0;i<M;i++) {
+	    	Map<Integer, Float> topicProbabilities=new HashMap<>();
+	        float sum=0;
+	        for(int j=0;j<K;j++) {
+	            sum+=docTopicNum[i][j]+alpha;
+	            topicProbabilities.put(j, docTopicNum[i][j]+alpha);
+	        }
+	        Map<Integer, Float> sortedTopicPros=sortByComparator(topicProbabilities, false);
+	        String result="{";
 	        int count=0;
 	        for(Map.Entry<Integer, Float> entry:sortedTopicPros.entrySet()) {
 	        	if(count<topK){

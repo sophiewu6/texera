@@ -28,6 +28,7 @@ def writeResults():
         resultWriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         resultWriter.writerow(["TupleID", "ClassLabel"])
         for id, classLabel in recordLabelMap.items():
+            print(id+"\t"+classLabel)
             resultWriter.writerow([id, classLabel])
 
 
@@ -38,7 +39,9 @@ def classifyData():
     naiveBayesClassifierModel = pickle.load(pickleFile)  # for text in sys.argv[2:]:
     for i in range(len(inputDataList)):
         inputData=inputDataList[i]
-        recordLabelMap[inputData[0]]='POS' if naiveBayesClassifierModel.classify({x: True for x in tknzr.tokenize(inputData[1])}) == 'POS' else 'NEG'
+        labelProb=naiveBayesClassifierModel.prob_classify({x: True for x in tknzr.tokenize(inputData[1])})
+        recordLabelMap[inputData[0]]=labelProb.max()+"; {POS: "+str(labelProb.prob("POS"))+", NEG: "+str(labelProb.prob("NEG"))+"}"
+        # recordLabelMap[inputData[0]]='POS' if naiveBayesClassifierModel.classify({x: True for x in tknzr.tokenize(inputData[1])}) == 'POS' else 'NEG'
         # prediction_cnt[(inputData[2],recordLabelMap[inputData[0]])]+=1
     pickleFile.close()
     # precision = 100.0 * prediction_cnt[('POS', 'POS')] / (

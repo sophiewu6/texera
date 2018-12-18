@@ -86,7 +86,7 @@ public class PropertyNameConstants {
     
     //related to nltk naive bayes classifier
     public static final String TEXT_ATTRIBUTE="textAttributeName";
-    public static final String LABEL_ATTRIBUTE="labelAttributeName";
+//    public static final String LABEL_ATTRIBUTE="labelAttributeName";
     
     // related to sampler
     public static final String SAMPLE_SIZE = "sampleSize";

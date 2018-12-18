@@ -53,10 +53,10 @@ public class JsonSchemaHelper {
     }
     
     public static void main(String[] args) throws Exception {
-        generateAllOperatorSchema();
+//        generateAllOperatorSchema();
 //        generateJsonSchema(ComparablePredicate.class);
 //    	generateJsonSchema(TopicModelOperatorPredicate.class);
-//        generateJsonSchema(NaiveBayesClassifierOperatorPredicate.class);
+        generateJsonSchema(NaiveBayesClassifierOperatorPredicate.class);
     }
     
     public static void generateAllOperatorSchema() throws Exception {

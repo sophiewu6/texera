@@ -15,7 +15,7 @@ import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
 public class NaiveBayesClassifierOperatorPredicate extends PredicateBase{
     private final String textInputAttributeName;
-    private final String labelInputAttributeName;
+//    private final String labelInputAttributeName;
     private final String resultAttributeName;
     private final String inputAttributeModel;
     private final int batchSize;
@@ -24,8 +24,8 @@ public class NaiveBayesClassifierOperatorPredicate extends PredicateBase{
     public NaiveBayesClassifierOperatorPredicate(
             @JsonProperty(value = PropertyNameConstants.TEXT_ATTRIBUTE, required = true)
             String textInputAttributeName,
-            @JsonProperty(value = PropertyNameConstants.LABEL_ATTRIBUTE, required = true)
-            String labelInputAttributeName,
+//            @JsonProperty(value = PropertyNameConstants.LABEL_ATTRIBUTE, required = true)
+//            String labelInputAttributeName,
             @JsonProperty(value = PropertyNameConstants.RESULT_ATTRIBUTE_NAME, required = true)
             String resultAttributeName,
             
@@ -38,14 +38,14 @@ public class NaiveBayesClassifierOperatorPredicate extends PredicateBase{
         if (textInputAttributeName.trim().isEmpty()) {
             throw new TexeraException("Text Input Attribute Name Cannot Be Empty");
         }
-        if (labelInputAttributeName.trim().isEmpty()) {
-            throw new TexeraException("Label Input Attribute Name Cannot Be Empty");
-        }
+//        if (labelInputAttributeName.trim().isEmpty()) {
+//            throw new TexeraException("Label Input Attribute Name Cannot Be Empty");
+//        }
         if (resultAttributeName.trim().isEmpty()) {
             throw new TexeraException("Result Attribute Name Cannot Be Empty");
         }
         this.textInputAttributeName=textInputAttributeName;
-        this.labelInputAttributeName=labelInputAttributeName;
+//        this.labelInputAttributeName=labelInputAttributeName;
         this.resultAttributeName = resultAttributeName;
         this.batchSize = batchSize;
         this.inputAttributeModel = inputAttributeModel;
@@ -56,10 +56,10 @@ public class NaiveBayesClassifierOperatorPredicate extends PredicateBase{
     	return this.textInputAttributeName;
     }
     
-    @JsonProperty(PropertyNameConstants.LABEL_ATTRIBUTE)
-    public String getLabelInputAttrName() {
-    	return this.labelInputAttributeName;
-    }
+//    @JsonProperty(PropertyNameConstants.LABEL_ATTRIBUTE)
+//    public String getLabelInputAttrName() {
+//    	return this.labelInputAttributeName;
+//    }
     
     @JsonProperty(PropertyNameConstants.RESULT_ATTRIBUTE_NAME)
     public String getResultAttributeName() {

@@ -65,7 +65,7 @@ public class NaiveBayesClassifierOperator implements IOperator {
      */
     private Schema transformSchema(Schema inputSchema){
         Schema.checkAttributeExists(inputSchema, predicate.getTextInputAttrName());
-        Schema.checkAttributeExists(inputSchema, predicate.getLabelInputAttrName());
+//        Schema.checkAttributeExists(inputSchema, predicate.getLabelInputAttrName());
         Schema.checkAttributeNotExists(inputSchema, predicate.getResultAttributeName());
         return new Schema.Builder().add(inputSchema).add(predicate.getResultAttributeName(), AttributeType.STRING).build();
     }
@@ -97,10 +97,10 @@ public class NaiveBayesClassifierOperator implements IOperator {
             Tuple inputTuple;
             if ((inputTuple = inputOperator.getNextTuple()) != null) {
                 tupleBuffer.add(inputTuple);
-                String[] idTextPair = new String[3];
+                String[] idTextPair = new String[2];
                 idTextPair[0] = inputTuple.getField(SchemaConstants._ID).getValue().toString();
                 idTextPair[1] = inputTuple.<IField>getField(predicate.getTextInputAttrName()).getValue().toString();
-                idTextPair[2] = inputTuple.<IField>getField(predicate.getLabelInputAttrName()).getValue().toString();
+//                idTextPair[2] = inputTuple.<IField>getField(predicate.getLabelInputAttrName()).getValue().toString();
                 csvData.add(idTextPair);
                 i++;
             } else {
@@ -216,12 +216,12 @@ public class NaiveBayesClassifierOperator implements IOperator {
                     predicate.getTextInputAttrName(),
                     inputSchema[0].getAttributeNames()));
         }
-        if (! inputSchema[0].containsAttribute(predicate.getLabelInputAttrName())) {
-            throw new TexeraException(String.format(
-                    "input attribute %s is not in the input schema %s",
-                    predicate.getLabelInputAttrName(),
-                    inputSchema[0].getAttributeNames()));
-        }
+//        if (! inputSchema[0].containsAttribute(predicate.getLabelInputAttrName())) {
+//            throw new TexeraException(String.format(
+//                    "input attribute %s is not in the input schema %s",
+//                    predicate.getLabelInputAttrName(),
+//                    inputSchema[0].getAttributeNames()));
+//        }
 
         // check if the attribute type is valid
         AttributeType inputAttributeType =
@@ -234,16 +234,16 @@ public class NaiveBayesClassifierOperator implements IOperator {
                     predicate.getTextInputAttrName(),
                     inputAttributeType));
         }
-        inputAttributeType =
-                inputSchema[0].getAttribute(predicate.getLabelInputAttrName()).getType();
-        isValidType = inputAttributeType.equals(AttributeType.STRING) ||
-                inputAttributeType.equals(AttributeType.TEXT);
-        if (! isValidType) {
-            throw new TexeraException(String.format(
-                    "input attribute %s must have type String or Text, its actual type is %s",
-                    predicate.getLabelInputAttrName(),
-                    inputAttributeType));
-        }
+//        inputAttributeType =
+//                inputSchema[0].getAttribute(predicate.getLabelInputAttrName()).getType();
+//        isValidType = inputAttributeType.equals(AttributeType.STRING) ||
+//                inputAttributeType.equals(AttributeType.TEXT);
+//        if (! isValidType) {
+//            throw new TexeraException(String.format(
+//                    "input attribute %s must have type String or Text, its actual type is %s",
+//                    predicate.getLabelInputAttrName(),
+//                    inputAttributeType));
+//        }
 
         return transformSchema(inputSchema[0]);
 	}

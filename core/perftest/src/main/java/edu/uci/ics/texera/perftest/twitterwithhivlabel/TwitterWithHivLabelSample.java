@@ -1,9 +1,9 @@
 package edu.uci.ics.texera.perftest.twitterwithhivlabel;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.FileReader;
+import java.util.List;
 
+import au.com.bytecode.opencsv.CSVReader;
 import edu.uci.ics.texera.api.field.StringField;
 import edu.uci.ics.texera.api.field.TextField;
 import edu.uci.ics.texera.api.tuple.Tuple;
@@ -29,27 +29,14 @@ public class TwitterWithHivLabelSample {
         DataWriter dataWriter = relationManager.getTableDataWriter(twitterHivLabelTable);
         dataWriter.open();
         
-//        File bbcnewsFile=new File(twitterHivFilePath);
-		InputStreamReader inStrR = new InputStreamReader(new FileInputStream(twitterHivFilePath+"/"+"hiv_test.pos"));
-		BufferedReader br = new BufferedReader(inStrR);
-		String line=br.readLine();
-		while (line!=null) {
-			Tuple tuple=new Tuple(TwitterWithHivLabeSchema.TWITTER_HIV_LABEL_SCHEMA,new TextField(line),new StringField("POS"));
+        CSVReader csvReader = new CSVReader(new FileReader(twitterHivFilePath+"/"+"hiv_test.csv"));
+        List<String[]> allRows = csvReader.readAll();
+        csvReader.close();
+        for(int i=1;i<allRows.size();i++) {
+        	String[] row=allRows.get(i);
+			Tuple tuple=new Tuple(TwitterWithHivLabeSchema.TWITTER_HIV_LABEL_SCHEMA,new TextField(row[0]),new StringField(row[1]));
 			dataWriter.insertTuple(tuple);
-			line=br.readLine();
-			line=br.readLine();
-		}
-		br.close();
-		inStrR=new InputStreamReader(new FileInputStream(twitterHivFilePath+"/"+"hiv_test.neg"));
-		br=new BufferedReader(inStrR);
-		line=br.readLine();
-		while (line!=null) {
-			Tuple tuple=new Tuple(TwitterWithHivLabeSchema.TWITTER_HIV_LABEL_SCHEMA,new TextField(line),new StringField("NEG"));
-			dataWriter.insertTuple(tuple);
-			line=br.readLine();
-			line=br.readLine();
-		}
-		br.close();
-		dataWriter.close();
+        }
+        dataWriter.close();
     }
 }

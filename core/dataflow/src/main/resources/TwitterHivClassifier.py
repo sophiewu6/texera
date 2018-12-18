@@ -28,8 +28,8 @@ def writeResults():
         resultWriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         resultWriter.writerow(["TupleID", "ClassLabel"])
         for id, classLabel in recordLabelMap.items():
-            print(id+"\t"+classLabel)
             resultWriter.writerow([id, classLabel])
+        csvfile.close()
 
 
 def classifyData():

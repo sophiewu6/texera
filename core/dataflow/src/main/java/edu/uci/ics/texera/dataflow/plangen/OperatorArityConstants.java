@@ -15,6 +15,7 @@ import edu.uci.ics.texera.dataflow.join.JoinDistancePredicate;
 import edu.uci.ics.texera.dataflow.join.SimilarityJoinPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordSourcePredicate;
+import edu.uci.ics.texera.dataflow.naivebayesclassifier.hiv.NaiveBayesClassifierOperatorPredicate;
 import edu.uci.ics.texera.dataflow.nlp.entity.NlpEntityPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.EmojiSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
@@ -85,6 +86,7 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(MysqlSinkPredicate.class, 1);
         
         fixedInputArityMap.put(TopicModelOperatorPredicate.class, 1);
+        fixedInputArityMap.put(NaiveBayesClassifierOperatorPredicate.class, 1);
         
     }
     
@@ -128,6 +130,7 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(MysqlSinkPredicate.class, 0);
         
         fixedOutputArityMap.put(TopicModelOperatorPredicate.class, 1);
+        fixedOutputArityMap.put(NaiveBayesClassifierOperatorPredicate.class, 1);
     }
     
     /**

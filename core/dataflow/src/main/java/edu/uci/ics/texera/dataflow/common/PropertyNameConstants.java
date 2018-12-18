@@ -84,7 +84,10 @@ public class PropertyNameConstants {
     public static final String TOPIC_MODEL_iterNum="iterationNum";
     public static final String TOPIC_MODEL_TopK_TOPICS="topKtopics";
     
-
+    //related to nltk naive bayes classifier
+    public static final String TEXT_ATTRIBUTE="textAttributeName";
+    public static final String LABEL_ATTRIBUTE="labelAttributeName";
+    
     // related to sampler
     public static final String SAMPLE_SIZE = "sampleSize";
     public static final String SAMPLE_TYPE = "sampleType";

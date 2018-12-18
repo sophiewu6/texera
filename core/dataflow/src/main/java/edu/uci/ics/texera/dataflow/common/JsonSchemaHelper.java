@@ -26,6 +26,7 @@ import edu.uci.ics.texera.api.constants.DataConstants;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.utils.Utils;
 import edu.uci.ics.texera.dataflow.annotation.AdvancedOption;
+import edu.uci.ics.texera.dataflow.naivebayesclassifier.hiv.NaiveBayesClassifierOperatorPredicate;
 import edu.uci.ics.texera.dataflow.plangen.OperatorArityConstants;
 import edu.uci.ics.texera.dataflow.topicmodel.TopicModelOperatorPredicate;
 
@@ -55,6 +56,7 @@ public class JsonSchemaHelper {
         generateAllOperatorSchema();
 //        generateJsonSchema(ComparablePredicate.class);
 //    	generateJsonSchema(TopicModelOperatorPredicate.class);
+//        generateJsonSchema(NaiveBayesClassifierOperatorPredicate.class);
     }
     
     public static void generateAllOperatorSchema() throws Exception {

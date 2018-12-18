@@ -8,6 +8,7 @@ import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 import edu.uci.ics.texera.perftest.bbcnews.BBCnewsSample;
 import edu.uci.ics.texera.perftest.sample.SampleExtraction;
 import edu.uci.ics.texera.perftest.twitter.TwitterSample;
+import edu.uci.ics.texera.perftest.twitterwithhivlabel.TwitterWithHivLabelSample;
 import edu.uci.ics.texera.web.healthcheck.SampleHealthCheck;
 import edu.uci.ics.texera.web.resource.DownloadFileResource;
 import edu.uci.ics.texera.web.resource.FileUploadResource;
@@ -99,6 +100,9 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
         System.out.println("Writing bbcnews Index");
         BBCnewsSample.writeBBCnewsIndex();
         System.out.println("Finished Writing bbcnews Index");
+        System.out.println("Writing twitter with hiv label Index");
+        TwitterWithHivLabelSample.writeTwitterHivIndex();
+        System.out.println("Finished Writing twitter with hiv label Index");
         new TexeraWebApplication().run(args);
     }
 }

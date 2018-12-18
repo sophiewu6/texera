@@ -41,6 +41,7 @@ public class BBCnewsSample {
 				text+=line+"\n";
 				line=br.readLine();
 			}
+    		br.close();
     		Tuple tuple=new Tuple(BBCnewsSchema.BBCNEWS_SCHEMA,new TextField(text));
     		dataWriter.insertTuple(tuple);
         }

@@ -32,6 +32,7 @@ import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NltkSentimentOperatorPredicate;
 import edu.uci.ics.texera.dataflow.nlp.splitter.NlpSplitPredicate;
 import edu.uci.ics.texera.dataflow.projection.ProjectionPredicate;
+import edu.uci.ics.texera.dataflow.reformulationInferenceNetwork.ReformulationInferenceNetworkOperatorPredicate;
 import edu.uci.ics.texera.dataflow.regexmatcher.RegexPredicate;
 import edu.uci.ics.texera.dataflow.regexmatcher.RegexSourcePredicate;
 import edu.uci.ics.texera.dataflow.regexsplit.RegexSplitPredicate;
@@ -81,6 +82,7 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
         @Type(value = NltkSentimentOperatorPredicate.class, name = "NltkSentiment"),
         @Type(value = TopicModelOperatorPredicate.class, name="TopicModel"),
         @Type(value = NaiveBayesClassifierOperatorPredicate.class, name="NaiveBayesClassifier"),
+        @Type(value = ReformulationInferenceNetworkOperatorPredicate.class, name="ReformulationInferenceNetwork"),
 
         @Type(value = ProjectionPredicate.class, name = "Projection"),
         @Type(value = RegexSplitPredicate.class, name = "RegexSplit"),

@@ -22,6 +22,7 @@ import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NltkSentimentOperatorPredicate;
 import edu.uci.ics.texera.dataflow.nlp.splitter.NlpSplitPredicate;
 import edu.uci.ics.texera.dataflow.projection.ProjectionPredicate;
+import edu.uci.ics.texera.dataflow.reformulationInferenceNetwork.ReformulationInferenceNetworkOperatorPredicate;
 import edu.uci.ics.texera.dataflow.regexmatcher.RegexPredicate;
 import edu.uci.ics.texera.dataflow.regexmatcher.RegexSourcePredicate;
 import edu.uci.ics.texera.dataflow.regexsplit.RegexSplitPredicate;
@@ -87,6 +88,7 @@ public class OperatorArityConstants {
         
         fixedInputArityMap.put(TopicModelOperatorPredicate.class, 1);
         fixedInputArityMap.put(NaiveBayesClassifierOperatorPredicate.class, 1);
+        fixedInputArityMap.put(ReformulationInferenceNetworkOperatorPredicate.class, 1);
         
     }
     
@@ -131,6 +133,7 @@ public class OperatorArityConstants {
         
         fixedOutputArityMap.put(TopicModelOperatorPredicate.class, 1);
         fixedOutputArityMap.put(NaiveBayesClassifierOperatorPredicate.class, 1);
+        fixedOutputArityMap.put(ReformulationInferenceNetworkOperatorPredicate.class, 1);
     }
     
     /**

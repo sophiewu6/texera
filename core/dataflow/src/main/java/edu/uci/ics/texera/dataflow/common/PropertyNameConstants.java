@@ -88,6 +88,11 @@ public class PropertyNameConstants {
     public static final String TEXT_ATTRIBUTE="textAttributeName";
 //    public static final String LABEL_ATTRIBUTE="labelAttributeName";
     
+    //related to reformulationInferenceNetwork
+    public static final String SESSION_ATTRIBUTE="sessionAttributeName";
+    public static final String DEEPLEARNING_BATCH_SIZE="deepLearningBatchSize";
+    public static final String DEEPLEARNING_MODEL="deepLearningModel";
+    
     // related to sampler
     public static final String SAMPLE_SIZE = "sampleSize";
     public static final String SAMPLE_TYPE = "sampleType";

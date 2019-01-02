@@ -28,6 +28,7 @@ import edu.uci.ics.texera.api.utils.Utils;
 import edu.uci.ics.texera.dataflow.annotation.AdvancedOption;
 import edu.uci.ics.texera.dataflow.naivebayesclassifier.hiv.NaiveBayesClassifierOperatorPredicate;
 import edu.uci.ics.texera.dataflow.plangen.OperatorArityConstants;
+import edu.uci.ics.texera.dataflow.reformulationInferenceNetwork.ReformulationInferenceNetworkOperatorPredicate;
 import edu.uci.ics.texera.dataflow.topicmodel.TopicModelOperatorPredicate;
 
 @SuppressWarnings("unchecked")
@@ -56,7 +57,8 @@ public class JsonSchemaHelper {
 //        generateAllOperatorSchema();
 //        generateJsonSchema(ComparablePredicate.class);
 //    	generateJsonSchema(TopicModelOperatorPredicate.class);
-        generateJsonSchema(NaiveBayesClassifierOperatorPredicate.class);
+//        generateJsonSchema(NaiveBayesClassifierOperatorPredicate.class);
+        generateJsonSchema(ReformulationInferenceNetworkOperatorPredicate.class);
     }
     
     public static void generateAllOperatorSchema() throws Exception {

@@ -6,6 +6,7 @@ import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 
 import edu.uci.ics.texera.dataflow.lineage.DatabaseConnector;
 import edu.uci.ics.texera.perftest.bbcnews.BBCnewsSample;
+import edu.uci.ics.texera.perftest.querySessions.QuerySessionsSample;
 import edu.uci.ics.texera.perftest.sample.SampleExtraction;
 import edu.uci.ics.texera.perftest.twitter.TwitterSample;
 import edu.uci.ics.texera.perftest.twitterwithhivlabel.TwitterWithHivLabelSample;
@@ -97,12 +98,15 @@ public class TexeraWebApplication extends Application<TexeraWebConfiguration> {
         System.out.println("Writing twitter index");
         TwitterSample.writeTwitterIndex();
         System.out.println("Finished writing twitter index");
-        System.out.println("Writing bbcnews Index");
-        BBCnewsSample.writeBBCnewsIndex();
-        System.out.println("Finished Writing bbcnews Index");
-        System.out.println("Writing twitter with hiv label Index");
-        TwitterWithHivLabelSample.writeTwitterHivIndex();
-        System.out.println("Finished Writing twitter with hiv label Index");
+//        System.out.println("Writing bbcnews Index");
+//        BBCnewsSample.writeBBCnewsIndex();
+//        System.out.println("Finished Writing bbcnews Index");
+//        System.out.println("Writing twitter with hiv label Index");
+//        TwitterWithHivLabelSample.writeTwitterHivIndex();
+//        System.out.println("Finished Writing twitter with hiv label Index");
+        System.out.println("Writing Query Sessions Index");
+        QuerySessionsSample.writeQuerySessionIndex();
+        System.out.println("Finished Writing Query Session Index");
         new TexeraWebApplication().run(args);
     }
 }

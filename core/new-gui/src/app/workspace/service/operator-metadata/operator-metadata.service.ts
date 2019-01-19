@@ -13,8 +13,8 @@ export const EMPTY_OPERATOR_METADATA: OperatorMetadata = {
   groups: []
 };
 
-const addDictionaryAPIAddress = '/api/resources/dictionary/';
-const getDictionaryAPIAddress = '/api/upload/dictionary/';
+export const addDictionaryAPIAddress = '/api/resources/dictionary/';
+export const getDictionaryAPIAddress = '/api/upload/dictionary/';
 
 
 /**

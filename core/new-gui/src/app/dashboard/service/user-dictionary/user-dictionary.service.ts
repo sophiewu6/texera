@@ -5,9 +5,9 @@ import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { UserDictionary } from '../../type/user-dictionary';
 
-const apiUrl = 'http://localhost:8080/api';
+import { AppSettings } from '../../../common/app-setting';
 
-const uploadDictionaryUrl = apiUrl + '/upload/dictionary';
+const uploadDictionaryUrl = AppSettings.getApiEndpoint() + '/upload/dictionary';
 
 @Injectable()
 export class UserDictionaryService {

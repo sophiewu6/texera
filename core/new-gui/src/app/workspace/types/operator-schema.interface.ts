@@ -9,6 +9,7 @@ import { JSONSchema4 } from 'json-schema';
  *
  */
 
+ //Map<"string","string">
 export interface OperatorAdditionalMetadata extends Readonly<{
   userFriendlyName: string;
   numInputPorts: number;
@@ -16,6 +17,7 @@ export interface OperatorAdditionalMetadata extends Readonly<{
   operatorGroupName: string;
   advancedOptions?: ReadonlyArray<string>;
   operatorDescription?: string;
+  property_description: object;
 }> { }
 
 export interface OperatorSchema extends Readonly<{
@@ -33,3 +35,5 @@ export interface OperatorMetadata extends Readonly<{
   operators: ReadonlyArray<OperatorSchema>;
   groups: ReadonlyArray<GroupInfo>;
 }> { }
+
+

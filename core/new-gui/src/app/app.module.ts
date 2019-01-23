@@ -18,11 +18,13 @@ import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/component/workspace.component';
 import { NavigationComponent } from './workspace/component/navigation/navigation.component';
 import { OperatorPanelComponent } from './workspace/component/operator-panel/operator-panel.component';
-import { PropertyEditorComponent } from './workspace/component/property-editor/property-editor.component';
+import { PropertyEditorComponent} from './workspace/component/property-editor/property-editor.component';
 import { WorkflowEditorComponent } from './workspace/component/workflow-editor/workflow-editor.component';
 import { ResultPanelComponent, NgbModalComponent } from './workspace/component/result-panel/result-panel.component';
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
+import { NgbdModalContent } from './workspace/component/property-editor/property-description/property-description.component';
+
 
 @NgModule({
   declarations: [
@@ -35,7 +37,8 @@ import { ProductTourComponent } from './workspace/component/product-tour/product
     ResultPanelComponent,
     NgbModalComponent,
     OperatorLabelComponent,
-    ProductTourComponent
+    ProductTourComponent,
+    NgbdModalContent,
   ],
   imports: [
     BrowserModule,
@@ -48,7 +51,9 @@ import { ProductTourComponent } from './workspace/component/product-tour/product
     RouterModule.forRoot([]),
     TourNgBootstrapModule.forRoot(),
 
-    MaterialDesignFrameworkModule
+    MaterialDesignFrameworkModule,
+   
+
 
   ],
   providers: [ HttpClientModule ],

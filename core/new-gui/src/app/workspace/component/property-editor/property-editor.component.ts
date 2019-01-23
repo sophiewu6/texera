@@ -2,7 +2,7 @@ import { OperatorSchema } from './../../types/operator-schema.interface';
 import { OperatorPredicate } from '../../types/workflow-common.interface';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
 import { OperatorMetadataService } from './../../service/operator-metadata/operator-metadata.service';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
@@ -14,6 +14,8 @@ import '../../../common/rxjs-operators';
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
 
+
+import {NgbModal, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 
 /**
  * PropertyEditorComponent is the panel that allows user to edit operator properties.
@@ -71,10 +73,13 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
+  public property_description: Map<String, String> | undefined;
+
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
-    private workflowActionService: WorkflowActionService
+    private workflowActionService: WorkflowActionService,
+    private modalService: NgbModal
   ) {
     // handle getting operator metadata
     this.operatorMetadataService.getOperatorMetadata().subscribe(
@@ -91,6 +96,9 @@ export class PropertyEditorComponent {
 
     // handle highlight / unhighlight event to show / hide the property editor form
     this.handleHighlightEvents();
+
+
+  
 
   }
 
@@ -134,9 +142,13 @@ export class PropertyEditorComponent {
     // set the operator data needed
     this.currentOperatorID = operator.operatorID;
     this.currentOperatorSchema = this.operatorSchemaList.find(schema => schema.operatorType === operator.operatorType);
+
     if (!this.currentOperatorSchema) {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
+
+    this.property_description = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.property_description));
+
     /**
      * Make a deep copy of the initial property data object.
      * It's important to make a deep copy. If it's a reference to the operator's property object,
@@ -227,8 +239,75 @@ export class PropertyEditorComponent {
   private static generateFormLayout(): object {
     return [
       '*',
-      { type: 'submit', condition: 'false' }
+      { type: 'submit', condition: 'false' },
+      { type: 'description', condition: 'false' },
+    
+    
     ];
   }
 
+  // //Map<"string","string">
+  // open(property_description:Map<"string","string">) {
+  //   console.log('oh noes!')
+  //   //this.modalService.open('An inner join is used to return results by combining rows from two or more tables. In its simplest case, where there is no join condition, an inner join would combine all rows from one table with those from another.  If the first table contained three rows, and the second, four, then the final result would contain twelve (3 x 4 = 12) ! The purpose of the join condition is to limit which rows are combined.  In most cases we limit rows to those matching a column.If a person has more than one phone number, then more than one match is made.  From this you can see we may get more rows returned than we have for each person. ');
+  //   console.log(this.currentOperatorID);
+  //   this.modalService.open(this.property_description);
+  // }
+
+  getKeys(property_description:object){
+    console.log('in getkeys!')
+    console.log(typeof(property_description))
+
+
+    let arr: Array<String> = [];
+    for (let entry in property_description) {
+      console.log(entry); 
+      //console.log(property_description[entry]); 
+      arr.push(entry.bold());
+      // arr.push(property_description[entry]);
+      arr.push('-----------');
+      
+   
+  }
+  
+    console.log(arr);
+    return arr
+  }
 }
+
+
+// @Component {
+//   aemfawem
+//   template: {
+//     <div *ngFor=""> </div>
+//   }
+// } Name {
+
+//   private Map<> private map;
+
+//   open(new_map) {
+//     this.privatemap - new_map
+//   }
+// }
+
+
+// @Component({
+//   selector: 'ngbd-modal-content',
+//   template: `
+//     <div class="modal-header">
+//       <h4 class="modal-title">Hi there!</h4>
+//       <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross click')">
+//         <span aria-hidden="true">&times;</span>
+//       </button>
+//     </div>
+//     <div class="modal-body">
+//       <p>Hello, {{name}}!</p>
+//     </div>
+//     <div class="modal-footer">
+//       <button type="button" class="btn btn-outline-dark" (click)="activeModal.close('Close click')">Close</button>
+//     </div>
+//   `
+// })
+// export class NgbdModalContent {
+//   constructor(public activeModal: NgbActiveModal) {}
+// }

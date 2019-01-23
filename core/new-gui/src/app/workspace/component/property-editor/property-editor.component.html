@@ -1,8 +1,10 @@
 <div class="texera-workspace-property-editor-body texera-workflow-component-body">
   <div *ngIf="displayForm">
+
     <h3 class="texera-workspace-property-editor-title" mat-subheader>
       {{currentOperatorSchema?.additionalMetadata.userFriendlyName}}
     </h3>
+
     <json-schema-form
       class="texera-workspace-property-editor-form"
       framework="material-design"
@@ -12,5 +14,29 @@
       [layout]="formLayout"
       (onChanges)="onFormChanges($event)">
     </json-schema-form>
+
+
+    <ng-template #htmlContent>
+      <div class="container" *ngFor="let key of property_description | keyvalue">
+        <div class="property-detail-title">
+          <b>{{key.key}}</b>
+        </div>
+        <!-- <hr> -->
+        <div class="property-detail-description">
+          {{key.value}}
+        </div>
+        <!-- <hr> -->
+      </div>
+    </ng-template>
+
+    <button mat-icon-button  mat-subheader triggers="click" 
+    [ngbTooltip] = "htmlContent" placement = "left">
+      <span>
+        <i id="question-mark-icon" class="fa fa-info-circle" aria-hidden="true" ></i>
+      </span>
+    </button>
+    
   </div>
 </div>
+
+

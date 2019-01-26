@@ -1,1 +1,27 @@
-{"operatorType":"SimilarityJoin","jsonSchema":{"type":"object","id":"urn:jsonschema:edu:uci:ics:texera:dataflow:join:SimilarityJoinPredicate","properties":{"innerAttribute":{"type":"string"},"outerAttribute":{"type":"string"},"similarityThreshold":{"type":"number"}},"required":["innerAttribute","outerAttribute","similarityThreshold"]},"additionalMetadata":{"userFriendlyName":"Join: Similarity","operatorDescription":"Join two tables based on the string similarity of two tuples","operatorGroupName":"Join","numInputPorts":2,"numOutputPorts":1,"advancedOptions":[]}}
+{
+    "operatorType":"SimilarityJoin",
+    "jsonSchema":{
+        "type":"object",
+        "id":"urn:jsonschema:edu:uci:ics:texera:dataflow:join:SimilarityJoinPredicate",
+        "properties":{
+            "innerAttribute":{"type":"string"},
+            "outerAttribute":{"type":"string"},
+            "similarityThreshold":{"type":"number"}
+        },
+        "required":["innerAttribute","outerAttribute","similarityThreshold"]
+        },
+    "additionalMetadata":{
+        "userFriendlyName":"Join: Similarity",
+        "operatorDescription":"Join two tables based on the string similarity of two tuples",
+        "operatorGroupName":"Join",
+        "numInputPorts":2,
+        "numOutputPorts":1,
+        "advancedOptions":[],
+        "property_description":      
+        {
+            "Inner Attribute" :  "An inner join is used to return results by combining rows from two or more tables. In its simplest case, where there is no join condition, an inner join would combine all rows from one table with those from another.  If the first table contained three rows, and the second, four, then the final result would contain twelve (3 x 4 = 12) ! The purpose of the join condition is to limit which rows are combined.  In most cases we limit rows to those matching a column.If a person has more than one phone number, then more than one match is made.  From this you can see we may get more rows returned than we have for each person. ",
+            "Outer Attribute" :  "An outer join is used to return results by combining rows from two or more tables. In its simplest case, where there is no join condition, an inner join would combine all rows from one table with those from another.  If the first table contained three rows, and the second, four, then the final result would contain twelve (3 x 4 = 12) ! The purpose of the join condition is to limit which rows are combined.  In most cases we limit rows to those matching a column.If a person has more than one phone number, then more than one match is made.  From this you can see we may get more rows returned than we have for each person. ",
+            "Similarity Threshold" : "When supporting joists that span 12 feet with no overhang beyond the beam, a double ply beam can span in feet a value equal to its depth in inches. A double 2x12 beam can span 12 feet; a (2) 2x10 can span 10 feet and so on. "
+        }
+    }
+}

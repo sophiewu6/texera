@@ -19,6 +19,8 @@ import { mockResultPredicate, mockScanPredicate, mockPoint } from '../../service
 import { CustomNgMaterialModule } from '../../../common/custom-ng-material.module';
 
 /* tslint:disable:no-non-null-assertion */
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 
 describe('PropertyEditorComponent', () => {
   let component: PropertyEditorComponent;
@@ -37,7 +39,8 @@ describe('PropertyEditorComponent', () => {
         CustomNgMaterialModule,
         BrowserAnimationsModule,
         MaterialDesignFrameworkModule,
-      ]
+        NgbModule.forRoot()
+      ] 
     })
       .compileComponents();
   }));

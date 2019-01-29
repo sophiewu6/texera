@@ -95,7 +95,7 @@ export class PropertyEditorComponent {
     this.handleHighlightEvents();
 
 
-  
+
 
   }
 
@@ -144,7 +144,11 @@ export class PropertyEditorComponent {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
 
-    this.property_description = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.property_description));
+    // currently only Join:Character Distance operator contains property description, this
+    //  if block will prevent error when property_description is undefined for other operators
+    if (this.currentOperatorSchema.additionalMetadata.property_description !== undefined) {
+      this.property_description = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.property_description));
+    }
 
     /**
      * Make a deep copy of the initial property data object.

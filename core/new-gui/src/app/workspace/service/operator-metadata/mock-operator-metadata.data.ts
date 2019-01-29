@@ -43,7 +43,7 @@ export const mockOperatorSchemaList: ReadonlyArray<OperatorSchema> =
         numOutputPorts: 1,
         userFriendlyName: 'Sentiment Analysis',
         property_description: {
-          
+
         }
       },
       jsonSchema: {
@@ -73,7 +73,7 @@ export const mockOperatorSchemaList: ReadonlyArray<OperatorSchema> =
         numOutputPorts: 0,
         userFriendlyName: 'View Results',
         property_description: {
-          
+
         }
       },
       jsonSchema: {

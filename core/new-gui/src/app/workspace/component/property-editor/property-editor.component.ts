@@ -71,7 +71,7 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
-  public property_description: Map<String, String> | undefined;
+  public property_description: Map<String, String> = new Map <String, String>();
 
 
   constructor(

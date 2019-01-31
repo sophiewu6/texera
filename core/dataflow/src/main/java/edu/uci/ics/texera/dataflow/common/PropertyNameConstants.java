@@ -106,7 +106,7 @@ public class PropertyNameConstants {
     public static final String COMPARISON_TYPE = "comparisonType";
     public static final String COMPARE_TO_VALUE = "compareTo";
     
-    // related to MysqlSink
+    // related to MysqlSink, ReadMysql
     public static final String MYSQL_HOST = "host";
     public static final String MYSQL_PORT = "port";
     public static final String MYSQL_DATABASE = "database";

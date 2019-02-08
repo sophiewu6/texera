@@ -18,6 +18,8 @@ const { marbles } = configure({ run: false });
 import { mockResultPredicate, mockScanPredicate, mockPoint } from '../../service/workflow-graph/model/mock-workflow-data';
 import { CustomNgMaterialModule } from '../../../common/custom-ng-material.module';
 
+
+
 /* tslint:disable:no-non-null-assertion */
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -40,7 +42,7 @@ describe('PropertyEditorComponent', () => {
         BrowserAnimationsModule,
         MaterialDesignFrameworkModule,
         NgbModule.forRoot()
-      ] 
+      ]
     })
       .compileComponents();
   }));
@@ -267,4 +269,26 @@ describe('PropertyEditorComponent', () => {
 
   }));
 
+
+  it('should display property description button when property description is provided', () => {
+    let buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
+    expect(buttonState).toBeFalsy();
+
+    component.changePropertyEditor(mockScanPredicate);
+    fixture.detectChanges();
+    buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
+
+    expect(buttonState).toBeTruthy();
+  });
+
+  it('should not display property description button when property description is undefined', () => {
+    let buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
+    expect(buttonState).toBeFalsy();
+
+    component.changePropertyEditor(mockResultPredicate);
+    fixture.detectChanges();
+    buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
+
+    expect(buttonState).toBeFalsy();
+  });
 });

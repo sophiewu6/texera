@@ -9,11 +9,6 @@ import { JSONSchema4 } from 'json-schema';
  *
  */
 
-// Property description is a map from attribute to its description string
-export interface OperatorPropertyDescription extends Readonly <{
-  [attribute: string]: string;
-}> {}
-
 export interface OperatorAdditionalMetadata extends Readonly<{
   userFriendlyName: string;
   numInputPorts: number;
@@ -21,7 +16,9 @@ export interface OperatorAdditionalMetadata extends Readonly<{
   operatorGroupName: string;
   advancedOptions?: ReadonlyArray<string>;
   operatorDescription?: string;
-  property_description: OperatorPropertyDescription;
+  propertyDescription?: Readonly <{
+    [attribute: string]: string;
+  }>;
 }> { }
 
 export interface OperatorSchema extends Readonly<{

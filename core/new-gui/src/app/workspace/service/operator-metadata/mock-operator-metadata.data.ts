@@ -16,15 +16,16 @@ export const mockOperatorSchemaList: ReadonlyArray<OperatorSchema> =
         numInputPorts: 0,
         numOutputPorts: 1,
         userFriendlyName: 'Source: Scan',
-        property_description: {
-
+        propertyDescription: {
+          'tableName' : 'This contains the source of your attribute'
         }
       },
       jsonSchema: {
         id: 'urn:jsonschema:edu:uci:ics:texera:dataflow:source:scan:ScanSourcePredicate',
         properties: {
           tableName: {
-            type: 'string'
+            type: 'string',
+            description: 'The unique identifier for a product',
           }
         },
         required: [
@@ -41,10 +42,7 @@ export const mockOperatorSchemaList: ReadonlyArray<OperatorSchema> =
         operatorGroupName: 'Analysis',
         numInputPorts: 1,
         numOutputPorts: 1,
-        userFriendlyName: 'Sentiment Analysis',
-        property_description: {
-
-        }
+        userFriendlyName: 'Sentiment Analysis'
       },
       jsonSchema: {
         id: 'urn:jsonschema:edu:uci:ics:texera:dataflow:nlp:sentiment:NlpSentimentPredicate',
@@ -71,10 +69,7 @@ export const mockOperatorSchemaList: ReadonlyArray<OperatorSchema> =
         operatorGroupName: 'View Results',
         numInputPorts: 1,
         numOutputPorts: 0,
-        userFriendlyName: 'View Results',
-        property_description: {
-
-        }
+        userFriendlyName: 'View Results'
       },
       jsonSchema: {
         id: 'urn:jsonschema:edu:uci:ics:texera:dataflow:sink:tuple:TupleSinkPredicate',

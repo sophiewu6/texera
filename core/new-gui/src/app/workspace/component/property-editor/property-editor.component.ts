@@ -71,8 +71,7 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
-  public property_description: Map<String, String> = new Map <String, String>();
-
+  public propertyDescription: Map<String, String> | undefined;
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
@@ -144,11 +143,16 @@ export class PropertyEditorComponent {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
 
-    // currently only Join:Character Distance operator contains property description, this
-    //  if block will prevent error when property_description is undefined for other operators
-    if (this.currentOperatorSchema.additionalMetadata.property_description !== undefined) {
-      this.property_description = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.property_description));
+    // this if-else block will prevent undeclared property description to show, to check the effect
+    //  of this change, go to workspace component and use StubOperatorMetadataService as the provider
+
+    if (this.currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
+      this.propertyDescription = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.propertyDescription));
+    } else {
+      this.propertyDescription = undefined;
     }
+
+
 
     /**
      * Make a deep copy of the initial property data object.

@@ -270,7 +270,8 @@ describe('PropertyEditorComponent', () => {
   }));
 
 
-  it('should display property description button when property description is provided', () => {
+  it(`should display property description button when property description is provided, when clicked,
+    should display the tooltip window on the GUI`, () => {
     let buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
     expect(buttonState).toBeFalsy();
 
@@ -279,6 +280,15 @@ describe('PropertyEditorComponent', () => {
     buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
 
     expect(buttonState).toBeTruthy();
+
+    let tooltipWindow = fixture.debugElement.query(By.css('.tooltip'));
+    expect(tooltipWindow).toBeFalsy();
+
+    buttonState.triggerEventHandler('click', null);
+    fixture.detectChanges();
+
+    tooltipWindow = fixture.debugElement.query(By.css('.tooltip'));
+    expect(tooltipWindow).toBeTruthy();
   });
 
   it('should not display property description button when property description is undefined', () => {

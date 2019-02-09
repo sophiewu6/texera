@@ -15,7 +15,6 @@
       (onChanges)="onFormChanges($event)">
     </json-schema-form>
 
-
     <ng-template #htmlContent>
       <div class="container" *ngFor="let attribute of propertyDescription | keyvalue">
         <div class="property-detail-title">
@@ -27,7 +26,7 @@
       </div>
     </ng-template>
 
-    <button class="propertyDescriptionButton" *ngIf="propertyDescription" mat-icon-button  mat-subheader
+    <button class="propertyDescriptionButton" *ngIf="hasPropertyDescription" mat-icon-button  mat-subheader
       triggers="click" [autoClose]="'outside'" [ngbTooltip] = "htmlContent" placement = "left">
       <span>
         <i id="question-mark-icon" class="fa fa-info-circle" aria-hidden="true" ></i>

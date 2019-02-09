@@ -71,7 +71,11 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
-  public propertyDescription: Map<String, String> | undefined;
+  // the map of property description
+  public propertyDescription: Map<String, String> = new Map();
+
+  // boolean to display the property description button
+  public hasPropertyDescription: boolean = false;
 
   constructor(
     private operatorMetadataService: OperatorMetadataService,
@@ -148,8 +152,10 @@ export class PropertyEditorComponent {
 
     if (this.currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
       this.propertyDescription = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.propertyDescription));
+      this.hasPropertyDescription = true;
     } else {
-      this.propertyDescription = undefined;
+      this.propertyDescription = new Map();
+      this.hasPropertyDescription = false;
     }
 
 

@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -86,16 +87,16 @@ public class ReadMysqlOperator implements ISourceOperator {
             	for (int i = 0; i < colNum; ++i) {
             		switch (columnTypes.get(i)) {
             		case 1:
-            			builder.add(rsmd.getColumnName(i), AttributeType.INTEGER, new IntegerField(result.getInt(i)));
+            			builder.add(rsmd.getColumnName(i+1), AttributeType.INTEGER, new IntegerField(result.getInt(i+1)));
             			break;
             		case 2:
-            			builder.add(rsmd.getColumnName(i), AttributeType.DOUBLE, new DoubleField(result.getDouble(i)));
+            			builder.add(rsmd.getColumnName(i+1), AttributeType.DOUBLE, new DoubleField(result.getDouble(i+1)));
             			break;
             		case 3:
-            			builder.add(rsmd.getColumnName(i), AttributeType.DATE, new DateField(result.getDate(i)));
+            			builder.add(rsmd.getColumnName(i+1), AttributeType.DATE, new DateField(new Date(result.getDate(i+1).getDate())));
             			break;
             		case 4:
-            			builder.add(rsmd.getColumnName(i), AttributeType.STRING, new StringField(result.getString(i)));
+            			builder.add(rsmd.getColumnName(i+1), AttributeType.STRING, new StringField(result.getString(i+1)));
             			break;
             		}
             	}
@@ -127,7 +128,30 @@ public class ReadMysqlOperator implements ISourceOperator {
     
     @Override
     public Schema getOutputSchema() throws TexeraException {
-    	return null;
+    	Schema.Builder builder = new Schema.Builder();
+    	int colNum;
+		try {
+			colNum = rsmd.getColumnCount();
+			for (int i = 0; i < colNum; ++i) {
+	    		switch (columnTypes.get(i)) {
+	    		case 1:
+	    			builder.add(rsmd.getColumnName(i+1), AttributeType.INTEGER);
+	    			break;
+	    		case 2:
+	    			builder.add(rsmd.getColumnName(i+1), AttributeType.DOUBLE);
+	    			break;
+	    		case 3:
+	    			builder.add(rsmd.getColumnName(i+1), AttributeType.DATE);
+	    			break;
+	    		case 4:
+	    			builder.add(rsmd.getColumnName(i+1), AttributeType.STRING);
+	    			break;
+	    		}
+	    	}
+			return builder.build();
+		} catch (SQLException e) {
+			throw new DataflowException(e);
+		}
     }
     
     @Override
@@ -165,7 +189,7 @@ public class ReadMysqlOperator implements ISourceOperator {
     	try {
     		columnTypes = new ArrayList<>();
             int colNum = rsmd.getColumnCount();
-            for (int i = 0; i < colNum; ++i) {
+            for (int i = 1; i <= colNum; ++i) {
             	switch (rsmd.getColumnType(i)) {
             	case 4:
             		// Integer

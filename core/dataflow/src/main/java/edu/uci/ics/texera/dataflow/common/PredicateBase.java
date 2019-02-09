@@ -39,6 +39,7 @@ import edu.uci.ics.texera.dataflow.sink.mysql.MysqlSinkPredicate;
 import edu.uci.ics.texera.dataflow.sink.tuple.TupleSinkPredicate;
 import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.file.FileSourcePredicate;
+import edu.uci.ics.texera.dataflow.source.mysql.ReadMysqlPredicate;
 import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterConverterPredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
@@ -69,6 +70,7 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
         @Type(value = KeywordSourcePredicate.class, name = "KeywordSource"), 
         @Type(value = RegexPredicate.class, name = "RegexMatcher"), 
         @Type(value = RegexSourcePredicate.class, name = "RegexSource"), 
+        @Type(value = ReadMysqlPredicate.class, name = "MysqlSource"),
         
         @Type(value = JoinDistancePredicate.class, name = "JoinDistance"),
         @Type(value = SimilarityJoinPredicate.class, name = "SimilarityJoin"),

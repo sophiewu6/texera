@@ -3,7 +3,7 @@
   <!-- Configure the database connection here -->
   <jdbc>
     <driver>org.sqlite.JDBC</driver>
-    <url>jdbc:sqlite:..\user-resources\dictionaries\TexeraDictionariesDB.db</url>
+    <url>jdbc:sqlite:..\..\user-resources\dictionaries\TexeraDictionariesDB.db</url>
     <user>root</user>
     <password></password>
   </jdbc>

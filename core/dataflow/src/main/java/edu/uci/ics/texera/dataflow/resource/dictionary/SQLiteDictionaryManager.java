@@ -109,11 +109,11 @@ public class SQLiteDictionaryManager {
 	public static void main(String[] args ) throws SQLException {
 		// Debug:
 		
-//		SQLiteDictionaryManager.getInstance().getDictionaries();
-//		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", "OKOKOK");
-//		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
-//		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("HenryFIle"));
-//		System.out.println("FINISHES");
+		SQLiteDictionaryManager.getInstance().getDictionaries();
+		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", "OKOKOK");
+		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
+		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("HenryFIle"));
+		System.out.println("FINISHES");
 		
 	}
 }

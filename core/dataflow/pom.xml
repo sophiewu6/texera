@@ -118,8 +118,60 @@
             <artifactId>json-schema-validator</artifactId>
             <version>2.2.8</version>
         </dependency>
+        
+        <!-- dictionary -->
+		<dependency>
+		    <groupId>org.xerial</groupId>
+		    <artifactId>sqlite-jdbc</artifactId>
+		    <version>3.25.2</version>
+		</dependency>
+		
+		<dependency>
+		  <groupId>org.immutables</groupId>
+		  <artifactId>value</artifactId>
+		  <version>2.7.4</version>
+		  <scope>provided</scope>
+		</dependency>
+        
+	    <dependency>
+		  <groupId>org.jooq</groupId>
+		  <artifactId>jooq</artifactId>
+		  <version>3.11.9</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.jooq</groupId>
+		  <artifactId>jooq-meta</artifactId>
+		  <version>3.11.9</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.jooq</groupId>
+		  <artifactId>jooq-codegen</artifactId>
+		  <version>3.11.9</version>
+		</dependency>
+        
+        
     </dependencies>
 
     <build>
+        <!-- dictionary immutables locations -->
+    	<plugins>
+		    <plugin>
+			    <groupId>org.codehaus.mojo</groupId>
+			    <artifactId>build-helper-maven-plugin</artifactId>
+			    <executions>
+			        <execution>
+			            <phase>generate-sources</phase>
+			            <goals>
+			                <goal>add-source</goal>
+			            </goals>
+			            <configuration>
+			                <sources>
+			                    <source>target/generated-sources</source>
+			                </sources>
+			            </configuration>
+			        </execution>
+			    </executions>
+			</plugin>
+    	</plugins>
     </build>
 </project>

@@ -20,6 +20,7 @@ import edu.uci.ics.texera.storage.constants.LuceneAnalyzerConstants;
 public class DictionaryPredicate extends PredicateBase {
 
     private final Dictionary dictionary;
+    private final String dictionaryName;
     private final List<String> attributeNames;
     private final String luceneAnalyzerStr;
     private final KeywordMatchingType keywordMatchingType;
@@ -40,6 +41,9 @@ public class DictionaryPredicate extends PredicateBase {
             @JsonUnwrapped
             Dictionary dictionary, 
             
+            @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
+            String dictionaryName,
+            
             @JsonProperty(value = PropertyNameConstants.ATTRIBUTE_NAMES, required = true)
             List<String> attributeNames, 
             
@@ -57,6 +61,7 @@ public class DictionaryPredicate extends PredicateBase {
             String spanListName) {
         
         this.dictionary = dictionary;
+        this.dictionaryName = dictionaryName;
         this.luceneAnalyzerStr = luceneAnalyzerStr;
         this.attributeNames = attributeNames;
         this.keywordMatchingType = keywordMatchingType;
@@ -72,6 +77,11 @@ public class DictionaryPredicate extends PredicateBase {
     @JsonProperty(value = PropertyNameConstants.DICTIONARY, required = true)
     public Dictionary getDictionary() {
         return dictionary;
+    }
+    
+    @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
+    public String getDictionaryName() {
+    	return dictionaryName;
     }
     
     @JsonProperty(value = PropertyNameConstants.ATTRIBUTE_NAMES)

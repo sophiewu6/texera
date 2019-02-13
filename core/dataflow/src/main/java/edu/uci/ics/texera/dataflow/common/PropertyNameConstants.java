@@ -50,6 +50,7 @@ public class PropertyNameConstants {
     // related to dictionary matcher
     public static final String DICTIONARY = "dictionary";
     public static final String DICTIONARY_ENTRIES = "dictionaryEntries";
+    public static final String DICTIONARY_NAME = "dictionaryName";
     
     // related to regex matcher
     public static final String REGEX = "regex";

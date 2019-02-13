@@ -33,6 +33,9 @@ public class DictionarySourcePredicate extends DictionaryPredicate {
             @JsonUnwrapped
             Dictionary dictionary, 
             
+            @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
+            String dictionaryName,
+            
             @JsonProperty(value = PropertyNameConstants.ATTRIBUTE_NAMES, required = true)
             List<String> attributeNames, 
             
@@ -52,7 +55,7 @@ public class DictionarySourcePredicate extends DictionaryPredicate {
             @JsonProperty(value = PropertyNameConstants.SPAN_LIST_NAME, required = false)
             String spanListName) {
 
-        super(dictionary, attributeNames, luceneAnalyzerStr, keywordMatchingType, spanListName);
+        super(dictionary, dictionaryName, attributeNames, luceneAnalyzerStr, keywordMatchingType, spanListName);
 
         if (tableName == null || tableName.isEmpty()) {
             throw new TexeraException(PropertyNameConstants.EMPTY_NAME_EXCEPTION);

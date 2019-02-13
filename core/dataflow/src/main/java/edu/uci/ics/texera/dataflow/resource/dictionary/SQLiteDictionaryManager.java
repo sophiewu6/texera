@@ -5,12 +5,19 @@ import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.uci.ics.texera.api.exception.StorageException;
 import static edu.uci.ics.texera.dataflow.resource.dictionaryJooq.Tables.*;
@@ -71,12 +78,15 @@ public class SQLiteDictionaryManager {
 		conn.close();
 	}
 	
-	public List<String> addDictionary(String fileName, String dictionaryContent) throws SQLException {
+	public List<String> addDictionary(String fileName, String dictionaryContent) throws SQLException, JsonProcessingException {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
 		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
 		
+		List<String> splitedContent = Arrays.asList(dictionaryContent.split(","));
+		String serializableDictionaryContent = new ObjectMapper().writeValueAsString(splitedContent);
+		
 		create.insertInto(DICTIONARY, DICTIONARY.NAME, DICTIONARY.CONTENT)
-			.values(fileName, dictionaryContent).execute();
+			.values(fileName, serializableDictionaryContent).execute();
 		
 		create.close();
 		conn.close();
@@ -97,7 +107,7 @@ public class SQLiteDictionaryManager {
 	
 	public String getDictionary(String dictionaryName) throws SQLException {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
-		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
+		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);		
 		String content = create.select(DICTIONARY.CONTENT).from(DICTIONARY)
 				.where(DICTIONARY.NAME.eq(dictionaryName)).fetchAny().into(String.class);
 		
@@ -106,14 +116,22 @@ public class SQLiteDictionaryManager {
 		return content;
 	}
 	
-	public static void main(String[] args ) throws SQLException {
+	public static void main(String[] args ) throws SQLException, JsonProcessingException {
 		// Debug:
 		
-		SQLiteDictionaryManager.getInstance().getDictionaries();
-		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", "OKOKOK");
-		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
+//		ImmutableDictionary hi = create.select().from(DICTIONARY).where(DICTIONARY.NAME.eq(dictionaryName))
+//				.fetchAny().into(ImmutableDictionary.class);
+//		
+//		System.out.println(hi.getDictionaryEntries().toString());
+		
+		
+//		SQLiteDictionaryManager.getInstance().getDictionaries();
+//		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", "OKOKOK, faewfawe, feawf, fwefihe, wefjawjef, fawe");
+//		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
 		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("HenryFIle"));
-		System.out.println("FINISHES");
+//		System.out.println("FINISHES");
+		
+//		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", test.toString());
 		
 	}
 }

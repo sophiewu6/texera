@@ -1,11 +1,11 @@
 package edu.uci.ics.texera.dataflow.dictionarymatcher;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.ImmutableMap;
 
 import edu.uci.ics.texera.api.exception.TexeraException;
@@ -30,8 +30,8 @@ public class DictionarySourcePredicate extends DictionaryPredicate {
      */
     @JsonCreator
     public DictionarySourcePredicate(
-            @JsonUnwrapped
-            Dictionary dictionary, 
+            @JsonProperty(value = PropertyNameConstants.DICTIONARY_ENTRIES)
+            List<String> dictionaryEntries,
             
             @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
             String dictionaryName,
@@ -55,7 +55,8 @@ public class DictionarySourcePredicate extends DictionaryPredicate {
             @JsonProperty(value = PropertyNameConstants.SPAN_LIST_NAME, required = false)
             String spanListName) {
 
-        super(dictionary, dictionaryName, attributeNames, luceneAnalyzerStr, keywordMatchingType, spanListName);
+    	
+        super(dictionaryEntries, dictionaryName, attributeNames, luceneAnalyzerStr, keywordMatchingType, spanListName);
 
         if (tableName == null || tableName.isEmpty()) {
             throw new TexeraException(PropertyNameConstants.EMPTY_NAME_EXCEPTION);

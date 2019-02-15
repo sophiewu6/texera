@@ -107,7 +107,7 @@ public class DictionaryMatcherSourceOperator implements ISourceOperator {
             // For Substring matching and Regex matching, create a scan source operator followed by a dictionary matcher.
             indexSource = new ScanBasedSourceOperator(new ScanSourcePredicate(predicate.getTableName()));
 
-            dictionaryMatcher = new DictionaryMatcher(new DictionaryPredicate(predicate.getDictionary(), predicate.getDictionaryName(),
+            dictionaryMatcher = new DictionaryMatcher(new DictionaryPredicate(predicate.getDictionaryEntries(), predicate.getDictionaryName(),
             		predicate.getAttributeNames(),
                     predicate.getAnalyzerString(), predicate.getKeywordMatchingType(), predicate.getSpanListName()));
 

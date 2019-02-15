@@ -119,7 +119,7 @@ public class DictionaryMatcherPerformanceTest {
         List<String> attributeNames = Arrays.asList(MedlineIndexWriter.ABSTRACT);
 
         Dictionary dictionary = new Dictionary(queryList);
-        DictionarySourcePredicate dictionarySourcePredicate = new DictionarySourcePredicate(dictionary, attributeNames, luceneAnalyzerStr,
+        DictionarySourcePredicate dictionarySourcePredicate = new DictionarySourcePredicate(queryList, "SampleName", attributeNames, luceneAnalyzerStr,
                 opType, tableName, SchemaConstants.SPAN_LIST);
         DictionaryMatcherSourceOperator dictionaryMatcher = new DictionaryMatcherSourceOperator(dictionarySourcePredicate);
 

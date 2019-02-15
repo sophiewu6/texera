@@ -127,6 +127,12 @@ public class PropertyNameConstants {
     public static final String TWEET_TOKEN = "token";
     public static final String TWEET_TOKEN_SECRET = "tokenSecret";
 
+    // related to dictionary exception
+    public static final String EMPTY_DICTIONARY_OR_NAME_EXCEPTION = "Must provide at least the name of the dictionary or dictionary entries";
+    public static final String XOR_DICTIONARY_AND_NAME_EXCEPTION = "Must provide either name of the dictionary or the dictioanry entires, not both";
+    public static final String NON_EXISTING_DICTIONARY = "Must provide dictionary existing in the database";
+    
+    
     public static final String EMPTY_NAME_EXCEPTION = "Table Name Cannot be Empty";
     public static final String EMPTY_REGEX_EXCEPTION = "regex should not be empty";
     public static final String EMPTY_QUERY_EXCEPTION = "query should not be empty";

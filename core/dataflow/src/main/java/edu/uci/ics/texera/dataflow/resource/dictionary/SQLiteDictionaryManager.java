@@ -105,15 +105,17 @@ public class SQLiteDictionaryManager {
 		return dictionaries;
 	}
 	
-	public String getDictionary(String dictionaryName) throws SQLException {
+	public List<String> getDictionary(String dictionaryName) throws SQLException {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
-		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);		
-		String content = create.select(DICTIONARY.CONTENT).from(DICTIONARY)
-				.where(DICTIONARY.NAME.eq(dictionaryName)).fetchAny().into(String.class);
+		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
+		
+		System.out.println("dictionary name = '" + dictionaryName.trim() + "'");
+		ImmutableDictionary dictionary = create.select().from(DICTIONARY)
+				.where(DICTIONARY.NAME.eq(dictionaryName.trim())).fetchAny().into(ImmutableDictionary.class);
 		
 		create.close();
 		conn.close();
-		return content;
+		return dictionary.getDictionaryEntries();
 	}
 	
 	public static void main(String[] args ) throws SQLException, JsonProcessingException {
@@ -126,9 +128,9 @@ public class SQLiteDictionaryManager {
 		
 		
 //		SQLiteDictionaryManager.getInstance().getDictionaries();
-//		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", "OKOKOK, faewfawe, feawf, fwefihe, wefjawjef, fawe");
+//		SQLiteDictionaryManager.getInstance().addDictionary("sample", "trump, climate");
 //		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
-		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("HenryFIle"));
+		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("sample"));
 //		System.out.println("FINISHES");
 		
 //		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", test.toString());

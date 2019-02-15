@@ -121,7 +121,7 @@ public class DictionaryMatcherTestHelper {
         ScanBasedSourceOperator scanSource = new ScanBasedSourceOperator(new ScanSourcePredicate(tableName));
         
         DictionaryPredicate dictiaonryPredicate = new DictionaryPredicate(
-                dictionary, attributeNames, luceneAnalyzerStr, matchingType, RESULTS);
+                dictionary.getDictionaryEntries(), "SampleName", attributeNames, luceneAnalyzerStr, matchingType, RESULTS);
         DictionaryMatcher dictionaryMatcher = new DictionaryMatcher(dictiaonryPredicate);
         
         dictionaryMatcher.setLimit(limit);
@@ -160,7 +160,7 @@ public class DictionaryMatcherTestHelper {
         String luceneAnalyzerStr = relationManager.getTableAnalyzerString(tableName);
         
         DictionarySourcePredicate dictiaonrySourcePredicate = new DictionarySourcePredicate(
-                dictionary, attributeNames, luceneAnalyzerStr, matchingType, tableName, RESULTS);
+                dictionary.getDictionaryEntries(), "SampleName", attributeNames, luceneAnalyzerStr, matchingType, tableName, RESULTS);
         DictionaryMatcherSourceOperator dictionarySource = new DictionaryMatcherSourceOperator(
                 dictiaonrySourcePredicate);
 

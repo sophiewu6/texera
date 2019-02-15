@@ -1,25 +1,29 @@
 package edu.uci.ics.texera.dataflow.dictionarymatcher;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.google.common.collect.ImmutableMap;
 
 import edu.uci.ics.texera.api.dataflow.IOperator;
+import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.dataflow.annotation.AdvancedOption;
 import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordMatchingType;
+import edu.uci.ics.texera.dataflow.resource.dictionary.SQLiteDictionaryManager;
 import edu.uci.ics.texera.storage.constants.LuceneAnalyzerConstants;
 
 public class DictionaryPredicate extends PredicateBase {
 
     private final Dictionary dictionary;
+    private final List<String> dictionaryEntries;
     private final String dictionaryName;
     private final List<String> attributeNames;
     private final String luceneAnalyzerStr;
@@ -38,8 +42,9 @@ public class DictionaryPredicate extends PredicateBase {
      */
     @JsonCreator
     public DictionaryPredicate(
-            @JsonUnwrapped
-            Dictionary dictionary, 
+            
+            @JsonProperty(value = PropertyNameConstants.DICTIONARY_ENTRIES)
+            List<String> dictionaryEntries,
             
             @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
             String dictionaryName,
@@ -59,8 +64,27 @@ public class DictionaryPredicate extends PredicateBase {
             
             @JsonProperty(value = PropertyNameConstants.SPAN_LIST_NAME, required = false)
             String spanListName) {
-        
-        this.dictionary = dictionary;
+    	if (dictionaryEntries == null && dictionaryName == null) {
+    		throw new TexeraException(PropertyNameConstants.EMPTY_DICTIONARY_OR_NAME_EXCEPTION);
+    	} else if (dictionaryEntries != null && dictionaryEntries.size() > 0 && 
+    			dictionaryName != null && dictionaryName.trim().length() > 0) {
+    		throw new TexeraException(PropertyNameConstants.XOR_DICTIONARY_AND_NAME_EXCEPTION);
+    	}
+    	
+    	if (dictionaryEntries != null && dictionaryEntries.size() > 0) {
+    		this.dictionaryEntries = dictionaryEntries;
+    	} else {
+    		try {
+				List<String> storedDictionaryEntries = SQLiteDictionaryManager.getInstance().getDictionary(dictionaryName);
+				if (storedDictionaryEntries.size() == 0) {
+					throw new TexeraException(PropertyNameConstants.NON_EXISTING_DICTIONARY);
+				}
+				this.dictionaryEntries = storedDictionaryEntries;
+			} catch (SQLException e) {
+				throw new TexeraException(e.getMessage());
+			}
+    	}
+        this.dictionary = new Dictionary(this.dictionaryEntries);
         this.dictionaryName = dictionaryName;
         this.luceneAnalyzerStr = luceneAnalyzerStr;
         this.attributeNames = attributeNames;
@@ -73,10 +97,15 @@ public class DictionaryPredicate extends PredicateBase {
         }
     }
     
-    @JsonUnwrapped
-    @JsonProperty(value = PropertyNameConstants.DICTIONARY, required = true)
-    public Dictionary getDictionary() {
+//    @JsonProperty(value = PropertyNameConstants.DICTIONARY, required = true)
+    @JsonIgnore
+    public Dictionary getDictionary() {    	
         return dictionary;
+    }
+    
+    @JsonProperty(value = PropertyNameConstants.DICTIONARY_ENTRIES)
+    public List<String> getDictionaryEntries() {
+        return dictionaryEntries;
     }
     
     @JsonProperty(value = PropertyNameConstants.DICTIONARY_NAME)
@@ -115,6 +144,11 @@ public class DictionaryPredicate extends PredicateBase {
             .put(PropertyNameConstants.OPERATOR_DESCRIPTION, "Search the documents using a dictionary (multiple keywords)")
             .put(PropertyNameConstants.OPERATOR_GROUP_NAME, OperatorGroupConstants.SEARCH_GROUP)
             .build();
+    }
+    
+    public static void main(String[] args) throws SQLException {
+    	String dictionaryName = " sample ";
+    	System.out.println(SQLiteDictionaryManager.getInstance().getDictionary(dictionaryName));
     }
     
 }

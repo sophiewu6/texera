@@ -76,7 +76,7 @@ public class DictionaryPredicate extends PredicateBase {
     	} else {
     		try {
 				List<String> storedDictionaryEntries = SQLiteDictionaryManager.getInstance().getDictionary(dictionaryName);
-				if (storedDictionaryEntries.size() == 0) {
+				if (storedDictionaryEntries == null || storedDictionaryEntries.size() == 0) {
 					throw new TexeraException(PropertyNameConstants.NON_EXISTING_DICTIONARY);
 				}
 				this.dictionaryEntries = storedDictionaryEntries;

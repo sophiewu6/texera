@@ -1,0 +1,6 @@
+.DS_Store
+
+# ignore intellij generated folder
+target/
+**/scr/text
+**/scr/resources

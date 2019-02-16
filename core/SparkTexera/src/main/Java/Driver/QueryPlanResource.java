@@ -111,13 +111,6 @@ public class QueryPlanResource {
             TupleSink sink = (TupleSink) (DAG.get(sinkId));
             ArrayNode resultNode = sink.transferToTuple();
 
-//            for (String operatorID : sinkList) {
-//                TupleSink sink = (TupleSink) (DAG.get(operatorID));
-////                resultNode.add(sink.transferToTuple());
-//                System.out.println(sink.transferToTuple());
-//                resultNode = sink.transferToTuple();
-//            }
-
             System.out.println();
             System.out.println("Spark workflow execution time: " + ((System.nanoTime() - startTime) / Math.pow(10, 9)));
             System.out.println();

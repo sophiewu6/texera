@@ -23,6 +23,7 @@ import { WorkflowEditorComponent } from './workspace/component/workflow-editor/w
 import { ResultPanelComponent, NgbModalComponent } from './workspace/component/result-panel/result-panel.component';
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
+import { ResultPanelToggleComponent } from './workspace/component/result-panel-toggle/result-panel-toggle.component';
 
 import { DashboardComponent } from './dashboard/component/dashboard.component';
 import { TopBarComponent } from './dashboard/component/top-bar/top-bar.component';
@@ -47,7 +48,8 @@ import { FeatureBarComponent } from './dashboard/component/feature-bar/feature-b
 
     NgbModalComponent,
     OperatorLabelComponent,
-    ProductTourComponent
+    ProductTourComponent,
+    ResultPanelToggleComponent
   ],
   imports: [
     BrowserModule,

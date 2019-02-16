@@ -25,6 +25,9 @@ import { OperatorLabelComponent } from './workspace/component/operator-panel/ope
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
 
 import { DashboardComponent } from './dashboard/component/dashboard.component';
+import { TopBarComponent } from './dashboard/component/top-bar/top-bar.component';
+import { UserAccountIconComponent } from './dashboard/component/top-bar/user-account-icon/user-account-icon.component';
+import { FeatureBarComponent } from './dashboard/component/feature-bar/feature-bar.component';
 
 @NgModule({
   declarations: [
@@ -38,6 +41,9 @@ import { DashboardComponent } from './dashboard/component/dashboard.component';
     OperatorLabelComponent,
 
     DashboardComponent,
+    TopBarComponent,
+    UserAccountIconComponent,
+    FeatureBarComponent,
 
     NgbModalComponent,
     OperatorLabelComponent,

@@ -20,32 +20,32 @@ public class Worker extends AbstractActor {
     return receiveBuilder()
       .match(Matcher.class, matcher -> {
         System.out.println("Match request receive");
-//        if (!Operator.PAUSE)
-//        {
-//          matcher.getText();
-//          sender().tell(matcher, self());
-//          System.out.println("searching batch finished \n");
-//        }
-//        else {
-//          System.out.println("paused");
-//          matcher.getText();
-//          buff = matcher;
-////          buff.text = matcher.getText();
-//        }
+        if (!Operator.PAUSE)
+        {
+          matcher.getText();
+          sender().tell(matcher, self());
+          System.out.println("searching batch finished \n");
+        }
+        else {
+          System.out.println("paused");
+          matcher.getText();
+          buff = matcher;
+//          buff.text = matcher.getText();
+        }
       })
       .match(Sink.class, sink -> {
         System.out.println("Sink request receive");
-//        if (!Operator.PAUSE)
-//        {
-//          sink.getText();
-//          sender().tell(sink, self());
-//          System.out.println("sinking batch finished \n");
-//        }
-//        else
-//        {
-//          System.out.println("paused");
-//          buff = sink;
-//        }
+        if (!Operator.PAUSE)
+        {
+          sink.getText();
+          sender().tell(sink, self());
+          System.out.println("sinking batch finished \n");
+        }
+        else
+        {
+          System.out.println("paused");
+          buff = sink;
+        }
 
       })
 

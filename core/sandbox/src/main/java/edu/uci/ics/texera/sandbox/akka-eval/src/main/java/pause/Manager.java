@@ -15,7 +15,7 @@ import static pause.Operator.BACKEND_REGISTRATION;
 public class Manager extends AbstractActor {
     private static ArrayList<ActorRef> workers = new ArrayList<>();
     private static ArrayList<ActorRef> idles = new ArrayList<>();
-    private int batch = 500;
+    private int batch = 500; //temporary use
     private ArrayList<String[]> source = new ArrayList<>();
     private int counter = 0;
     public ArrayList<String[]> text = new ArrayList<>();

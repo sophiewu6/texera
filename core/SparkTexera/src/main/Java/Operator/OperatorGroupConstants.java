@@ -50,7 +50,7 @@ public class OperatorGroupConstants {
 //        OperatorGroupOrderList.add(new GroupOrder(ANALYTICS_GROUP, 2));
 //        OperatorGroupOrderList.add(new GroupOrder(SPLIT_GROUP, 3));
 //        OperatorGroupOrderList.add(new GroupOrder(JOIN_GROUP, 4));
-//        OperatorGroupOrderList.add(new GroupOrder(UTILITY_GROUP, 5));
+        OperatorGroupOrderList.add(new GroupOrder(UTILITY_GROUP, 5));
 //        OperatorGroupOrderList.add(new GroupOrder(DATABASE_GROUP, 6));
         OperatorGroupOrderList.add(new GroupOrder(RESULT_GROUP, 7));
     }

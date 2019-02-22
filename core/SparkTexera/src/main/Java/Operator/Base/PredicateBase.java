@@ -5,6 +5,7 @@ import Utility.PropertyNameConstants;
 import Operator.Sink.TupleSinkPredicate;
 import Operator.Source.File.FileSourcePredicate;
 import Operator.common.KeywordPredicate;
+import Operator.common.Compare.ComparablePredicate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -58,7 +59,7 @@ import java.util.UUID;
 
         // remove comparable matcher because of the json schema "any" issue
         // TODO: fix the problem and add Comparable matcher back later
-//        @Type(value = ComparablePredicate.class, name = "Comparison"),
+        @Type(value = ComparablePredicate.class, name = "Comparison"),
 //
 //        @Type(value = AsterixSourcePredicate.class, name = "AsterixSource"),
 //        @Type(value = TwitterConverterPredicate.class, name = "TwitterConverter"),

@@ -4,6 +4,7 @@ import Operator.Base.PredicateBase;
 import Operator.Sink.TupleSinkPredicate;
 import Operator.common.KeywordPredicate;
 import Operator.Source.File.FileSourcePredicate;
+import Operator.common.Compare.ComparablePredicate;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class OperatorArityConstants {
 //        fixedInputArityMap.put(SamplerPredicate.class, 1);
 //        fixedInputArityMap.put(WordCountIndexSourcePredicate.class, 0);
 //        fixedInputArityMap.put(WordCountOperatorPredicate.class, 1);
-//        fixedInputArityMap.put(ComparablePredicate.class, 1);
+        fixedInputArityMap.put(ComparablePredicate.class, 1);
 //        fixedInputArityMap.put(AggregatorPredicate.class, 1);
 
 //        fixedInputArityMap.put(AsterixSourcePredicate.class, 0);
@@ -83,7 +84,7 @@ public class OperatorArityConstants {
 //        fixedOutputArityMap.put(SamplerPredicate.class, 1);
 //        fixedOutputArityMap.put(WordCountIndexSourcePredicate.class, 1);
 //        fixedOutputArityMap.put(WordCountOperatorPredicate.class, 1);
-//        fixedOutputArityMap.put(ComparablePredicate.class, 1);
+        fixedOutputArityMap.put(ComparablePredicate.class, 1);
 //        fixedOutputArityMap.put(AggregatorPredicate.class, 1);
 //
 //        fixedOutputArityMap.put(AsterixSourcePredicate.class, 1);

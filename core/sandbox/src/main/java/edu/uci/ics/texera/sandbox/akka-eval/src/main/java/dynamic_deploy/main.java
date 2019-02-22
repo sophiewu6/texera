@@ -10,6 +10,9 @@ import akka.remote.RemoteScope;
 import scala.concurrent.duration.Duration;
 
 import com.typesafe.config.ConfigFactory;
+// To run:
+// mvn compile exec:java -Dexec.mainClass="dynamic_deploy.main" -Dexec.args="Worker"
+// mvn compile exec:java -Dexec.mainClass="dynamic_deploy.main" -Dexec.args="Manager"
 
 public class main {
 
@@ -29,7 +32,7 @@ public class main {
   public static void startFrontendSystem() {
     final ActorSystem system = ActorSystem.create("FrontendSystem",
         ConfigFactory.load("no_deploy"));
-    Address addr = AddressFromURIString.parse("akka.tcp://BackendSystem@127.0.0.1:2552");
+    Address addr = AddressFromURIString.parse("akka.tcp://BackendWorkerSystem@127.0.0.1:2552");
     final ActorRef actor = system.actorOf(Props.create(Frontend.class).withDeploy(
             new Deploy(new RemoteScope(addr))), "frontend");
 

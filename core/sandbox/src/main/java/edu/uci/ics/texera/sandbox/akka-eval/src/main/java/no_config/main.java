@@ -13,6 +13,11 @@ import com.typesafe.config.ConfigFactory;
 // for using google cloud, replace 127.0.0.1 with 10.138.0.3 to make
 // frontend system running on some port, replace 127.0.0.1 with 10.138.0.2 to make
 // backend system ruuning on some port
+
+// To run:
+// mvn compile exec:java -Dexec.mainClass="no_config.main" -Dexec.args="Worker 2551"
+// mvn compile exec:java -Dexec.mainClass="no_config.main" -Dexec.args="Manager 2552 2551"
+
 public class main {
 
   public static void main(String[] args) {

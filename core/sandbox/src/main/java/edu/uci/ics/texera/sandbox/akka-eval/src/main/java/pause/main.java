@@ -13,6 +13,11 @@ import java.util.Scanner;
 // for using google cloud, replace 127.0.0.1 with 10.138.0.3 to make
 // frontend system running on some port, replace 127.0.0.1 with 10.138.0.2 to make
 // worker system ruuning on some port
+
+// To run:
+// mvn compile exec:java -Dexec.mainClass="pause.main" -Dexec.args="Manager 2551"
+// mvn compile exec:java -Dexec.mainClass="pause.main" -Dexec.args="Worker 2552"
+
 public class main {
 
   public static void main(String[] args) {

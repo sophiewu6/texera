@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import edu.uci.ics.texera.api.constants.DataConstants;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.utils.Utils;
@@ -34,7 +36,8 @@ public class JsonSchemaHelper {
     private static ObjectMapper objectMapper = DataConstants.defaultObjectMapper;
     
     // a map of all predicate classes (declared in PredicateBase) and their operatorType string
-    public static HashMap<Class<? extends PredicateBase>, String> operatorTypeMap = new HashMap<>();
+    public static BiMap<Class<? extends PredicateBase>, String> operatorTypeMap = HashBiMap.create();
+
     static {
         // find all the operator type declarations in PredicateBase annotation
         Collection<NamedType> types = objectMapper.getSubtypeResolver().collectAndResolveSubtypesByClass(

@@ -2,11 +2,12 @@ import { AppSettings } from './../../../../common/app-setting';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Operator } from 'rxjs';
 import { OperatorSchema } from '../../../types/operator-schema.interface';
 import { DynamicSchemaService } from './../dynamic-schema.service';
 import { ExecuteWorkflowService } from './../../execute-workflow/execute-workflow.service';
 import { WorkflowActionService } from './../../workflow-graph/model/workflow-action.service';
+import isEqual from 'lodash-es/isEqual';
 
 
 // endpoint for schema propagation
@@ -68,18 +69,32 @@ export class SchemaPropagationService {
     // for each operator, try to apply schema propagation result
     Array.from(this.dynamicSchemaService.getDynamicSchemaMap().keys()).forEach(operatorID => {
       const currentDynamicSchema = this.dynamicSchemaService.getDynamicSchema(operatorID);
+      if (!(DynamicSchemaService.propertyNameExists(currentDynamicSchema, attributeInJsonSchema) ||
+        DynamicSchemaService.propertyNameExists(currentDynamicSchema, attributeListInJsonSchema)
+      )) {
+        return;
+      }
+
+      let newSchema: OperatorSchema;
       // if operator input attributes are in the result, set them in dynamic schema
       if (schemaPropagationResult[operatorID]) {
-        const newSchema = SchemaPropagationService.setOperatorInputAttrs(currentDynamicSchema, schemaPropagationResult[operatorID]);
-        this.dynamicSchemaService.setDynamicSchema(operatorID, newSchema);
+        newSchema = SchemaPropagationService.setOperatorInputAttrs(currentDynamicSchema, schemaPropagationResult[operatorID]);
       } else {
         // otherwise, the input attributes of the operator is unknown
         // if the operator is not a source operator, restore its original schema of input attributes
         if (currentDynamicSchema.additionalMetadata.numInputPorts > 0) {
-          const newSchema = SchemaPropagationService.restoreOperatorInputAttrs(currentDynamicSchema);
-          this.dynamicSchemaService.setDynamicSchema(operatorID, newSchema);
+          newSchema = SchemaPropagationService.restoreOperatorInputAttrs(currentDynamicSchema);
+        } else {
+          newSchema = currentDynamicSchema;
         }
       }
+      // compare the old and new dynamic schema, if the schema propagation causes the input attributes
+      if (! isEqual(currentDynamicSchema, newSchema)) {
+        // this.workflowActionService.setOperatorProperty()
+        this.dynamicSchemaService.setDynamicSchema(operatorID, newSchema);
+
+      }
+
 
     });
   }
@@ -101,11 +116,7 @@ export class SchemaPropagationService {
       { headers: { 'Content-Type': 'application/json' } });
   }
 
-  public static setOperatorInputAttrs(operatorSchema: OperatorSchema, inputAttributes: ReadonlyArray<string> | undefined): OperatorSchema {
-    // If the inputSchema is empty, just return the original operator metadata.
-    if (!inputAttributes || inputAttributes.length === 0) {
-      return operatorSchema;
-    }
+  public static setOperatorInputAttrs(operatorSchema: OperatorSchema, inputAttributes: ReadonlyArray<string>): OperatorSchema {
 
     // TODO: Join operators have two inputs - inner and outer. Autocomplete API currently returns all attributes
     //       in a single array. So, we can't differentiate between inner and outer. Therefore, autocomplete isn't applicable
@@ -137,6 +148,15 @@ export class SchemaPropagationService {
       ...operatorSchema,
       jsonSchema: newJsonSchema
     };
+  }
+
+  private static hasAttributeInSchema(operatorSchema: OperatorSchema): boolean {
+    const jsonSchemaProperties = operatorSchema.jsonSchema.properties;
+
+    if (jsonSchemaProperties && jsonSchemaProperties) {
+
+    }
+    return false;
   }
 
 }

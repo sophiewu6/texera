@@ -2,10 +2,13 @@ package edu.uci.ics.texera.dataflow.plangen;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimaps;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.dataflow.ISink;
 import edu.uci.ics.texera.api.dataflow.ISourceOperator;
@@ -104,7 +107,7 @@ public class LogicalPlan {
 
         buildOperators();
         checkGraphCyclicity();
-        connectOperators(operatorObjectMap);
+        connectOperators();
 
         IOperator currentOperator = operatorObjectMap.get(operatorID);
         currentOperator.open();
@@ -117,37 +120,34 @@ public class LogicalPlan {
     /**
      * Updates the current plan and fetch the schema from an operator
      * @param operatorID, the ID of an operator
-     * @param operatorInputSchemaMap Map of operators to their input schemas
+     * @param inputSchemas input schemas to the operator
      * @return Schema, which includes the attributes setting of the operator
      */
-    public Optional<Schema> getOperatorOutputSchema(String operatorID, Map<String, List<Schema>> operatorInputSchemaMap)
+    public Optional<Schema> getOperatorOutputSchema(String operatorID, Schema... inputSchemas)
             throws PlanGenException, DataflowException {
 
         IOperator currentOperator = operatorObjectMap.get(operatorID);
-        Optional<Schema> outputSchema = Optional.empty();
+
         if (currentOperator instanceof ISourceOperator) {
-            outputSchema = Optional.ofNullable(currentOperator.transformToOutputSchema());
-        } else if (operatorInputSchemaMap.containsKey(operatorID)) {
-            List<Schema> inputSchemaList = operatorInputSchemaMap.get(operatorID);
-            try {
-                outputSchema = Optional.ofNullable(currentOperator.transformToOutputSchema(
-                        inputSchemaList.toArray(new Schema[inputSchemaList.size()])));
-            } catch (TexeraException e) {
-                System.out.println(e.getMessage());
-            }
+            currentOperator.open();
+            Schema outputSchema = currentOperator.getOutputSchema();
+            currentOperator.close();
+            return Optional.ofNullable(outputSchema);
         }
-        return outputSchema;
+
+        return Optional.ofNullable(currentOperator.transformToOutputSchema(inputSchemas));
     }
 
     /**
-     * For each operator, get its input schema based on the topological order of the graph
+     * For each operator, get its output schema based on the topological order of the graph
      * @return Map where id of the operator as the key and input schema as the value
      * @throws PlanGenException
      */
-    public Map<String, List<Schema>> retrieveAllOperatorInputSchema() throws PlanGenException {
+    public Map<String, Schema> retrieveAllOperatorOutputSchema() throws PlanGenException {
 
         buildOperators();
         checkGraphCyclicity();
+        checkOperatorInputArity();
 
         // Calculate the in-edge count of each operator
         Map<String, Integer> inEdgeCount = new HashMap<>();
@@ -166,39 +166,39 @@ public class LogicalPlan {
             }
         }
 
-        // Retrieve input schema based on topological order. Initially, the queue contains only source operators and we find their output schemas.
+        ArrayListMultimap<String, String> adjacencyListMap = ArrayListMultimap.create();
+        this.adjacencyList.forEach(adjacencyListMap::putAll);
+        ArrayListMultimap<String, String> inverseAdjacencyList = Multimaps.invertFrom(adjacencyListMap, ArrayListMultimap.create());
+
+
+        // Retrieve output schema based on topological order. Initially, the queue contains only source operators and we find their output schemas.
         // The output schema of an operator becomes the input schema of another. When, we find output schema of one operator, we record that for the
         // next operator, we have found one of its input schema and decrease its in-edge count by one (in-edge count represents the inputs for which schema hasn't yet been determined).
         // When in-edge count reaches 0, all input schemas of the operator has been found. So, the operator is put into queue (as an operator for which we can find output schema).
-        Map<String, List<Schema>> inputSchemas = new HashMap<>();
+        Map<String, Schema> outputSchemas = new HashMap<>();
         while (!operatorQueue.isEmpty()) {
-            String origin = operatorQueue.poll();
-            Optional<Schema> currentOutputSchema = getOperatorOutputSchema(origin, inputSchemas);
+            String operator = operatorQueue.poll();
 
-            if(!currentOutputSchema.isPresent()) {
-                continue;
+            List<Optional<Schema>> inputSchemaList = inverseAdjacencyList.get(operator).stream()
+                    .map(origin -> Optional.ofNullable(outputSchemas.get(origin)))
+                    .collect(Collectors.toList());
+
+            if (inputSchemaList.stream().allMatch(Optional::isPresent)) {
+                Schema[] inputSchemaArray = inputSchemaList.stream().map(schema -> schema.get()).toArray(Schema[]::new);
+                getOperatorOutputSchema(operator, inputSchemaArray).ifPresent(s -> outputSchemas.put(operator, s));
             }
 
-            for (String destination: adjacencyList.get(origin)) {
-                if(operatorObjectMap.get(destination) instanceof ISink) {
-                    continue;
-                }
 
-                if (inputSchemas.containsKey(destination)) {
-                    inputSchemas.get(destination).add(currentOutputSchema.get());
-                } else {
-                    inputSchemas.put(destination, new ArrayList<>(Arrays.asList(currentOutputSchema.get())));
-                }
-
-                inEdgeCount.put(destination, inEdgeCount.get(destination) - 1);
-                if (inEdgeCount.get(destination) == 0) {
-                    inEdgeCount.remove(destination);
-                    operatorQueue.offer(destination);
+            for (String dest : adjacencyList.get(operator)) {
+                inEdgeCount.put(dest, inEdgeCount.get(dest) - 1);
+                if (inEdgeCount.get(dest) == 0) {
+                    inEdgeCount.remove(dest);
+                    operatorQueue.offer(dest);
                 }
             }
-
         }
-        return inputSchemas;
+
+        return outputSchemas;
     }
 
     /**
@@ -249,9 +249,9 @@ public class LogicalPlan {
 
         buildOperators();
         validateOperatorGraph();
-        connectOperators(operatorObjectMap);
+        connectOperators();
 
-        ISink sink = findSinkOperator(operatorObjectMap);
+        ISink sink = findSinkOperator();
         
         Plan queryPlan = new Plan(sink);
         return queryPlan;
@@ -459,7 +459,7 @@ public class LogicalPlan {
      * It goes through every link, and invokes
      * the corresponding "setInputOperator" function to connect operators.
      */
-    private void connectOperators(HashMap<String, IOperator> operatorObjectMap) throws PlanGenException { 
+    private void connectOperators() throws PlanGenException {
         for (String vertex : adjacencyList.keySet()) {
             IOperator currentOperator = operatorObjectMap.get(vertex);
             int outputArity = adjacencyList.get(vertex).size();
@@ -511,7 +511,7 @@ public class LogicalPlan {
      * 
      * This function assumes that the graph is valid and there is only one sink in the graph.
      */
-    private ISink findSinkOperator(HashMap<String, IOperator> operatorObjectMap) throws PlanGenException {
+    private ISink findSinkOperator() throws PlanGenException {
         IOperator sinkOperator = adjacencyList.keySet().stream()
                 .filter(operator -> operatorPredicateMap.get(operator)
                         .getClass().toString().toLowerCase().contains("sink"))

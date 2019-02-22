@@ -139,9 +139,9 @@ export class ExecuteWorkflowService {
 
     const operators: LogicalOperator[] = workflowGraph
       .getAllOperators().map(op => ({
-        ...op.operatorProperties,
         operatorID: op.operatorID,
-        operatorType: op.operatorType
+        operatorType: op.operatorType,
+        operatorProperties: op.operatorProperties
       }));
 
     const links: LogicalLink[] = workflowGraph

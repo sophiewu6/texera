@@ -130,6 +130,9 @@ export class DynamicSchemaService {
     return initialSchema;
   }
 
+  public static propertyNameExists(jsonSchema: JSONSchema4, propertyName: string): boolean {
+    return DynamicSchemaService.findPropertyByNameRecurse(jsonSchema, propertyName) !== undefined;
+  }
 
   /**
    * Helper function to change a property in a json schema of an operator schema.
@@ -143,34 +146,48 @@ export class DynamicSchemaService {
     jsonSchemaToChange: JSONSchema4, propertyName: string, mutationFunc: (arg: JSONSchema4) => JSONSchema4
   ): JSONSchema4 {
 
-    // recursively walks the JSON schema property tree to find the property name
-    const mutatePropertyRecurse = (jsonSchema: JSONSchema4) => {
-      const schemaProperties = jsonSchema.properties;
-      const schemaItems = jsonSchema.items;
-      // nested JSON schema property can have 2 types: object or array
-      if (schemaProperties) {
-        Object.keys(schemaProperties).forEach(property => {
-          if (property === propertyName) {
-            schemaProperties[propertyName] = mutationFunc(schemaProperties[propertyName]);
-          } else {
-            mutatePropertyRecurse(schemaProperties[property]);
-          }
-        });
-      }
-      if (schemaItems) {
-        if (Array.isArray(schemaItems)) {
-          schemaItems.forEach(item => mutatePropertyRecurse(item));
-        } else {
-          mutatePropertyRecurse(schemaItems);
-        }
-      }
-    };
-
     // deep copy the schema first to avoid changing the original schema object
     const jsonSchemaCopy = cloneDeep(jsonSchemaToChange);
-    mutatePropertyRecurse(jsonSchemaCopy);
-
+    const propertyObject = DynamicSchemaService.findPropertyByNameRecurse(jsonSchemaCopy, propertyName);
+    if (propertyObject) {
+      propertyObject[propertyName] = mutationFunc(propertyObject[propertyName]);
+    }
     return jsonSchemaCopy;
+  }
+
+  /**
+   * Recursively walks the JSON schema property tree to find the property name
+   */
+  private static findPropertyByNameRecurse(jsonSchema: JSONSchema4, propertyName: string): {[k: string]: JSONSchema4} | undefined {
+    const schemaProperties = jsonSchema.properties;
+    const schemaItems = jsonSchema.items;
+    // nested JSON schema property can have 2 types: object or array
+    if (schemaProperties) {
+      if (Object.keys(schemaProperties).includes(propertyName)) {
+        return schemaProperties;
+      }
+      Object.keys(schemaProperties).forEach(property => {
+        const propertyFound = DynamicSchemaService.findPropertyByNameRecurse(schemaProperties, propertyName);
+        if (propertyFound) {
+          return propertyFound;
+        }
+      });
+    }
+
+    if (schemaItems) {
+      if (Array.isArray(schemaItems)) {
+        schemaItems.forEach(item => {
+          const propertyFound = DynamicSchemaService.findPropertyByNameRecurse(item, propertyName);
+          if (propertyFound) {
+            return propertyFound;
+          }
+        });
+      } else {
+        return DynamicSchemaService.findPropertyByNameRecurse(schemaItems, propertyName);
+      }
+    }
+
+    return undefined;
   }
 
 }

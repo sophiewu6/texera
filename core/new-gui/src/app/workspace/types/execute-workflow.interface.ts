@@ -12,9 +12,7 @@ export interface LogicalLink extends Readonly<{
 export interface LogicalOperator extends Readonly<{
   operatorID: string,
   operatorType: string,
-  // reason for not using `any` in this case is to
-  //  prevent types such as `undefined` or `null`
-  [uniqueAttributes: string]: string | number | boolean | object
+  operatorProperties: Readonly<object>
 }> { }
 
 /**
@@ -23,8 +21,8 @@ export interface LogicalOperator extends Readonly<{
  * However, the format and content of the backend interface is different.
  */
 export interface LogicalPlan extends Readonly<{
-  operators: LogicalOperator[],
-  links: LogicalLink[]
+  operators: ReadonlyArray<LogicalOperator>,
+  links: ReadonlyArray<LogicalLink>
 }> { }
 
 /**

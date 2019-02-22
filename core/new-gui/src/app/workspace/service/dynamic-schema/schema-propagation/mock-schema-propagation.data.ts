@@ -9,7 +9,7 @@ export const mockSchemaPropagationOperatorID = '2';
 export const mockSchemaPropagationResponse: Readonly<SchemaPropagationResponse> = {
   code: 0,
   result: {
-    // [var] means using the variable value as key instead of variable name
+    // [variable] means using the variable value as key instead of variable name
     [mockSchemaPropagationOperatorID]: [
       'city',
       'user_screen_name',

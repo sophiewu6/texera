@@ -175,19 +175,12 @@ export class SchemaPropagationService {
  * }
  */
 export interface SchemaPropagationResponse extends Readonly<{
-  code: 0,
-  result: {
-    [key: string]: string[]
+  [key: string]: {
+    [key: string]: {
+      attributes: ReadonlyArray<{
+        attributeName: string;
+        attributeType: string;
+      }>
+    }
   }
 }> { }
-
-/**
- * The backend interface of the return object of a failed execution of
- * autocomplete API
- */
-export interface SchemaPropagationError extends Readonly<{
-  code: -1,
-  message: string
-}> { }
-
-export type SchemaPropagationResult = SchemaPropagationResponse | SchemaPropagationError;

@@ -101,44 +101,6 @@ public class SchemaPropagation {
     */
 
 
-    public static WorkflowUnvalidated applySchemaAutocomplete(WorkflowUnvalidated workflowUnvalidated) {
-        Map<String, Map<String, Schema>> availableSchemasOfOperator = schemaPropagation(workflowUnvalidated);
-
-        workflowUnvalidated.getOperators().forEach(operator -> {
-
-            try {
-                Class<? extends PredicateBase> predicateClass = JsonSchemaHelper.operatorTypeMap.inverse().get(operator.getOperatorType());
-                JsonNode jsonSchemaNode = new ObjectMapper().readTree(Files.readAllBytes(JsonSchemaHelper.getJsonSchemaPath(predicateClass)));
-
-
-
-            } catch (IOException | NullPointerException e) {
-                e.printStackTrace();
-            }
-        });
-
-
-
-
-
-        return null;
-    }
-
-    public static JsonNode mutateJsonProperty(JsonNode jsonSchema, String propertyName, Function<JsonNode, JsonNode> mutateFunc) {
-
-        return null;
-    }
-
-    private static List<JsonNode> findPropertyContainerRecurse(JsonNode jsonSchema, String propertyName) {
-
-
-    }
-
-
-
-
-
-
     public static Map<String, Map<String, Schema>> schemaPropagation(WorkflowUnvalidated workflowUnvalidated) {
 
         LogicalPlan validPartialLogicalPlan = getValidPartialLogicalPlan(workflowUnvalidated);

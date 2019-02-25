@@ -135,7 +135,14 @@ public class LogicalPlan {
             return Optional.ofNullable(outputSchema);
         }
 
-        return Optional.ofNullable(currentOperator.transformToOutputSchema(inputSchemas));
+        try {
+            return Optional.ofNullable(currentOperator.transformToOutputSchema(inputSchemas));
+        } catch (Exception e) {
+            // TODO: return an error to tell ues
+            e.printStackTrace();
+            return Optional.empty();
+        }
+
     }
 
     /**

@@ -110,7 +110,7 @@ public class SchemaPropagation {
 
     }
 
-    private static Map<String, Map<String, Schema>> getAvailableSchemasForOperators(
+    public static Map<String, Map<String, Schema>> getAvailableSchemasForOperators(
             WorkflowUnvalidated workflowUnvalidated, Map<String, Schema> outputSchemas) {
 
         ArrayListMultimap<String, String> inverseAdjacencyList = ArrayListMultimap.create();
@@ -146,7 +146,7 @@ public class SchemaPropagation {
      *
      * A valid link would be a link that connects two valid operators
      */
-    private static LogicalPlan getValidPartialLogicalPlan(WorkflowUnvalidated workflowUnvalidated) {
+    public static LogicalPlan getValidPartialLogicalPlan(WorkflowUnvalidated workflowUnvalidated) {
 
         LogicalPlan logicalPlan = new LogicalPlan();
 
@@ -166,7 +166,7 @@ public class SchemaPropagation {
         return logicalPlan;
     }
 
-    private static OperatorValidationResult validateOperator(OperatorUnvalidated operator) {
+    public static OperatorValidationResult validateOperator(OperatorUnvalidated operator) {
         ObjectNode objectNode  = new ObjectMapper().createObjectNode();
         objectNode.put("operatorID", operator.getOperatorID());
         objectNode.put("operatorType", operator.getOperatorType());

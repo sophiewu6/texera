@@ -22,21 +22,21 @@ public class ComparableMatcher extends OperatorBase {
 
     //perform conparison
     private Dataset<Row> compare(Dataset<Row> dataFrame, ComparisonType comparisonType , int compareToValue){
-    	String attributeName = predicate.getAttributeName();
-    	// return dataFrame;
+		String attributeName = predicate.getAttributeName();
+		
     	switch (comparisonType) {
 	        case EQUAL_TO:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) == compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).equalTo(compareToValue));
 	        case GREATER_THAN:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) > compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).gt(compareToValue));
 	        case GREATER_THAN_OR_EQUAL_TO:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) >= compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).geq(compareToValue));
 	        case LESS_THAN:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) < compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).lt(compareToValue));
 	        case LESS_THAN_OR_EQUAL_TO:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) <= compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).leq(compareToValue));
 	        case NOT_EQUAL_TO:
-	        	return dataFrame.filter((FilterFunction<Row>) x -> Integer.valueOf(x.getAs(attributeName).toString()) != compareToValue);
+	        	return dataFrame.filter(dataFrame.col(attributeName).notEqual(compareToValue));
 	        default:
 	        	return dataFrame;
 	        }

@@ -21,7 +21,7 @@ public class ComparableMatcher extends OperatorBase {
     }
 
     //perform conparison
-    private Dataset<Row> compare(Dataset<Row> dataFrame, ComparisonType comparisonType , int compareToValue){
+    private Dataset<Row> compare(Dataset<Row> dataFrame, ComparisonType comparisonType , Object compareToValue){
 		String attributeName = predicate.getAttributeName();
 		
     	switch (comparisonType) {
@@ -44,7 +44,7 @@ public class ComparableMatcher extends OperatorBase {
     
     @Override
     public void execute(){
-        addOutput(compare(getInput().get(0), predicate.getComparisonType(), (int) predicate.getCompareToValue()));
+        addOutput(compare(getInput().get(0), predicate.getComparisonType(), predicate.getCompareToValue()));
         super.execute();
     }
 }

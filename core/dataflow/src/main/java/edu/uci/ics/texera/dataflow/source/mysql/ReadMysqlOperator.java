@@ -40,20 +40,8 @@ public class ReadMysqlOperator implements ISourceOperator {
 
     public ReadMysqlOperator(ReadMysqlPredicate predicate) {
         this.predicate = predicate;
-    }
-    
-    public void getResult() throws TexeraException {
-    	// get query result and store its information
-    	String sqlStatemnt = "SELECT * FROM " + predicate.getTable();
-        try {
-            prepStatement = connection.prepareStatement(sqlStatemnt);
-            result = prepStatement.executeQuery();
-            rsmd = result.getMetaData();
-            updateColumnTypes();
-        } catch (SQLException e) {
-            throw new DataflowException(
-                    "ReadMysql processTuples fails to execute prepared statement. " + e.getMessage());
-        }
+        connection = null;
+        prepStatement = null;
     }
 
     @Override
@@ -66,10 +54,12 @@ public class ReadMysqlOperator implements ISourceOperator {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             String url = "jdbc:mysql://" + predicate.getHost() + ":" + predicate.getPort() + "/"
                     + predicate.getDatabase() + "?autoReconnect=true&useSSL=true";
-            this.connection = DriverManager.getConnection(url, predicate.getUsername(), predicate.getPassword());
-            statement = connection.createStatement();
+            connection = DriverManager.getConnection(url, predicate.getUsername(), predicate.getPassword());
+            String sqlStatemnt = predicate.getQuery() + " FROM " + predicate.getTable() + " " + predicate.getConstraint();
+            prepStatement = connection.prepareCall(sqlStatemnt);
+            updateColumnTypes();
             cursor = OPENED;
-            getResult();
+            
         } catch (SQLException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             throw new DataflowException("ReadMysql failed to connect to mysql database." + e.getMessage());
         }
@@ -79,6 +69,15 @@ public class ReadMysqlOperator implements ISourceOperator {
     public Tuple getNextTuple() throws TexeraException {
         if (cursor == CLOSED) {
             return null;
+        }
+        if (cursor == OPENED) {
+        	try {
+                result = prepStatement.executeQuery();
+                cursor += 1; // Separate from OPENED
+            } catch (SQLException e) {
+                throw new DataflowException(
+                        "ReadMysql processTuples fails to execute prepared statement. " + e.getMessage());
+            }
         }
         try {
         	if (result.next()) {
@@ -115,8 +114,6 @@ public class ReadMysqlOperator implements ISourceOperator {
             return;
         }
         try {
-            if (statement != null)
-                statement.close();
             if (prepStatement != null)
                 prepStatement.close();
             connection.close();
@@ -155,10 +152,10 @@ public class ReadMysqlOperator implements ISourceOperator {
     }
     
     @Override
-	public Schema transformToOutputSchema(Schema... inputSchema) {
+	public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {
 		// TODO Auto-generated method stub
-		return null;
-	}
+		throw new TexeraException(ErrorMessages.INVALID_INPUT_SCHEMA_FOR_SOURCE);
+    }
     
     // Helper Function
     private void updateColumnTypes() {
@@ -187,31 +184,34 @@ public class ReadMysqlOperator implements ISourceOperator {
 			1111 	OTHER
         */
     	try {
-    		columnTypes = new ArrayList<>();
-            int colNum = rsmd.getColumnCount();
-            for (int i = 1; i <= colNum; ++i) {
-            	switch (rsmd.getColumnType(i)) {
-            	case 4:
-            		// Integer
-            		columnTypes.add(1);
-            		break;
-            	case 6:
-            	case 8:
-            		// Double
-            		columnTypes.add(2);
-            		break;
-            	case 91:
-            		// Date
-            		columnTypes.add(3);
-            		break;
-            	default:
-            		// String
-            		columnTypes.add(4);
-            		break;
-            	}
-            }
+    		if (prepStatement != null) {
+    			rsmd = prepStatement.getMetaData();
+        		columnTypes = new ArrayList<>();
+                int colNum = rsmd.getColumnCount();
+                for (int i = 1; i <= colNum; ++i) {
+                	switch (rsmd.getColumnType(i)) {
+                	case 4:
+                		// Integer
+                		columnTypes.add(1);
+                		break;
+                	case 6:
+                	case 8:
+                		// Double
+                		columnTypes.add(2);
+                		break;
+                	case 91:
+                		// Date
+                		columnTypes.add(3);
+                		break;
+                	default:
+                		// String
+                		columnTypes.add(4);
+                		break;
+                	}
+                }
+        	}
     	} catch (SQLException e) {
-            throw new DataflowException("ReadMysql fail to close. " + e.getMessage());
+            throw new DataflowException(e.getMessage());
         }
     }
 }

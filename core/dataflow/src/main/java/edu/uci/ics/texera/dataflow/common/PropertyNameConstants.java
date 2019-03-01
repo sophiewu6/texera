@@ -111,6 +111,8 @@ public class PropertyNameConstants {
     public static final String MYSQL_PORT = "port";
     public static final String MYSQL_DATABASE = "database";
     public static final String MYSQL_TABLE = "table";
+    public static final String MYSQL_QUERY = "query";
+    public static final String MYSQL_CONSTRAINT = "constraint";
     public static final String MYSQL_USERNAME = "username";
     public static final String MYSQL_PASSWORD = "password";
     public static final String MYSQL_LIMIT = "limit";

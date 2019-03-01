@@ -52,7 +52,7 @@ public class JsonSchemaHelper {
     }
     
     public static void main(String[] args) throws Exception {
-//        generateAllOperatorSchema();
+    	// generateAllOperatorSchema();
         generateJsonSchema(ReadMysqlPredicate.class);
     }
     

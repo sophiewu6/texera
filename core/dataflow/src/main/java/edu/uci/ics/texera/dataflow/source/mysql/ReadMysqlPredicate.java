@@ -17,19 +17,25 @@ public class ReadMysqlPredicate extends PredicateBase {
     private final Integer port;
     private final String database;
     private final String table;
+    private final String query;
+    private final String constraint;
     private final String username;
     private final String password;
     
     @JsonCreator
     public ReadMysqlPredicate(
-            @JsonProperty(value = PropertyNameConstants.MYSQL_HOST, required=true)
+            @JsonProperty(value = PropertyNameConstants.MYSQL_HOST, required=true, defaultValue = "localhost")
             String host,
-            @JsonProperty(value = PropertyNameConstants.MYSQL_PORT, required=true)
+            @JsonProperty(value = PropertyNameConstants.MYSQL_PORT, required=true, defaultValue = "3306")
             Integer port,
             @JsonProperty(value = PropertyNameConstants.MYSQL_DATABASE, required=true)
             String database,
             @JsonProperty(value = PropertyNameConstants.MYSQL_TABLE, required=true)
             String table,
+            @JsonProperty(value = PropertyNameConstants.MYSQL_QUERY, required=false)
+            String query,
+            @JsonProperty(value = PropertyNameConstants.MYSQL_CONSTRAINT, required=false)
+            String constraint,
             @JsonProperty(value = PropertyNameConstants.MYSQL_USERNAME, required=true)
             String username,
             @JsonProperty(value = PropertyNameConstants.MYSQL_PASSWORD, required=true)
@@ -45,6 +51,12 @@ public class ReadMysqlPredicate extends PredicateBase {
         if (table == null || table.isEmpty()) {
             throw new TexeraException(PropertyNameConstants.EMPTY_NAME_EXCEPTION);
         }
+        if (query == null || query.trim().isEmpty()) {
+        	query = "SELECT *";
+        }
+        if (constraint == null || constraint.trim().isEmpty()) {
+        	constraint = "";
+        }
         if (username == null || username.isEmpty()) {
             throw new TexeraException(PropertyNameConstants.EMPTY_NAME_EXCEPTION);
         }
@@ -52,6 +64,8 @@ public class ReadMysqlPredicate extends PredicateBase {
         this.port = port;
         this.database = database.trim();
         this.table = table.trim();
+        this.query = query;
+        this.constraint = constraint;
         this.username = username.trim();
         this.password = password;
     }
@@ -74,6 +88,16 @@ public class ReadMysqlPredicate extends PredicateBase {
     @JsonProperty(value = PropertyNameConstants.MYSQL_TABLE)
     public String getTable() {
         return table;
+    }
+    
+    @JsonProperty(value = PropertyNameConstants.MYSQL_QUERY)
+    public String getQuery() {
+        return query;
+    }
+    
+    @JsonProperty(value = PropertyNameConstants.MYSQL_CONSTRAINT)
+    public String getConstraint() {
+        return constraint;
     }
     
     @JsonProperty(value = PropertyNameConstants.MYSQL_USERNAME)

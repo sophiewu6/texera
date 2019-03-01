@@ -10,7 +10,7 @@ public class ReadMysqlTest {
 	
 	public static void main(String[] args) throws Exception {
 		ReadMysqlPredicate predicate = new ReadMysqlPredicate(
-				"localhost", 3306, "movie_search", "sales", "root", "1a2b3c4d5e!");
+				"localhost", 3306, "movie_search", "sales", "", "", "root", "1a2b3c4d5e!");
 		
 		ReadMysqlOperator operator = predicate.newOperator();
 		

@@ -13,6 +13,7 @@ import Operator.Base.OperatorBase;
 import Operator.Base.PredicateBase;
 import Utility.PropertyNameConstants;
 
+
 /**
  *
  * <p>
@@ -22,6 +23,7 @@ import Utility.PropertyNameConstants;
  *
  * @author avinash
  */
+
 
 public class AggregatorPredicate extends PredicateBase {
 

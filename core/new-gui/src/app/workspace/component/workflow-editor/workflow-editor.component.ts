@@ -1,9 +1,10 @@
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
+import { WorkflowUtilService } from './../../service/workflow-graph/util/workflow-util.service';
 import { Component, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
- 
+
 import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
@@ -63,6 +64,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
+    private workflowUtilService: WorkflowUtilService,
+    private jointUIService: JointUIService
   ) {
   }
 
@@ -85,6 +88,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.handleCellHighlight();
     this.handleWindowDrag();
     this.handlePaperMouseZoom();
+    this.handlePaperUtility();
     this.dragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_JOINTJS_ID);
   }
 
@@ -113,6 +117,12 @@ export class WorkflowEditorComponent implements AfterViewInit {
       });
     }
 
+    private handlePaperUtility(): void {
+      this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUitilityIndex) => {
+        const operatorGroup: string[] = ['KeywordMatcher', 'WordCount'];
+        this.dragDropService.createNewOperator(operatorGroup);
+      });
+    }
     /**
      * Handles zoom events when user slides the mouse wheel.
      */

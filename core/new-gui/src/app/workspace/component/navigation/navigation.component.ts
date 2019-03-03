@@ -68,6 +68,11 @@ export class NavigationComponent implements OnInit {
     this.executeWorkflowService.executeWorkflow();
   }
 
+  public onClickUtility(): void {
+    // initial version, default index is 0;
+    this.dragDropService.setUtilityIndex(0);
+  }
+
   /**
    * send the offset value to the work flow editor panel using drag and drop service.
    * when users click on the button, we change the zoomoffset to make window larger or smaller.

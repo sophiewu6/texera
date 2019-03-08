@@ -101,7 +101,7 @@ public class SchemaPropagation {
     */
 
 
-    public static Map<String, Map<String, Schema>> schemaPropagation(WorkflowUnvalidated workflowUnvalidated) {
+    public static Map<String, Schema> schemaPropagation(WorkflowUnvalidated workflowUnvalidated) {
 
         LogicalPlan validPartialLogicalPlan = getValidPartialLogicalPlan(workflowUnvalidated);
         // Get all input schema for valid operator with valid links
@@ -110,23 +110,24 @@ public class SchemaPropagation {
 
     }
 
-    public static Map<String, Map<String, Schema>> getAvailableSchemasForOperators(
+    public static Map<String, Schema> getAvailableSchemasForOperators(
             WorkflowUnvalidated workflowUnvalidated, Map<String, Schema> outputSchemas) {
 
         ArrayListMultimap<String, String> inverseAdjacencyList = ArrayListMultimap.create();
         workflowUnvalidated.getLinks().forEach(link -> inverseAdjacencyList.put(link.getDestination(), link.getOrigin()));
 
-        Map<String, Map<String, Schema>> availableSchemas = new HashMap<>();
+        Map<String, Schema> availableSchemas = new HashMap<>();
 
         inverseAdjacencyList.keySet().forEach(operator -> {
             List<String> inputOperators = inverseAdjacencyList.get(operator);
 
             if (inputOperators.isEmpty()) {
-                availableSchemas.put(operator, ImmutableMap.of(operator, outputSchemas.get(operator)));
+                availableSchemas.put(operator, outputSchemas.get(operator));
             } else {
-                ImmutableMap.Builder<String, Schema> builder = ImmutableMap.builder();
-                inverseAdjacencyList.get(operator).forEach(input -> builder.put(input, outputSchemas.get(input)));
-                availableSchemas.put(operator, builder.build());
+                // if an operator has multiple inputs, we combine all schemas into a single schema
+                Schema.Builder schemaBuilder = new Schema.Builder();
+                inverseAdjacencyList.get(operator).forEach(input -> schemaBuilder.add(outputSchemas.get(input)));
+                availableSchemas.put(operator, schemaBuilder.build());
             }
         });
         

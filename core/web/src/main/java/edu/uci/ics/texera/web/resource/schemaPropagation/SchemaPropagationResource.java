@@ -14,7 +14,7 @@ public class SchemaPropagationResource {
 
     @POST
     @Path("/schema-propagation")
-    public Map<String, Map<String, Schema>> schemaPropagationApi(WorkflowUnvalidated workflowUnvalidated) {
+    public Map<String, Schema> schemaPropagationApi(WorkflowUnvalidated workflowUnvalidated) {
         return SchemaPropagation.schemaPropagation(workflowUnvalidated);
     }
 

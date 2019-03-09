@@ -123,6 +123,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
         this.dragDropService.createNewOperator(operatorGroup);
       });
     }
+
     /**
      * Handles zoom events when user slides the mouse wheel.
      */
@@ -329,6 +330,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
   /**
    * Gets the document offset coordinates of the wrapper element's top-left corner.
    */
+
   private getWrapperElementOffset(): { x: number, y: number } {
     const offset = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).offset();
     if (offset === undefined) {

@@ -225,7 +225,7 @@ export class DragDropService {
         // create an operator and get the UI element from the operator type
         const operator = this.workflowUtilService.getNewOperatorPredicate(this.currentOperatorType);
         operators[i] = operator;
-
+        console.log('input ports : ', operator, i);
         const operatorPort: OperatorPort = {
           operatorID: operators[i].operatorID,
           portID: operators[i].inputPorts[0]
@@ -233,7 +233,7 @@ export class DragDropService {
         operatorPorts[i] = operatorPort;
 
         const newOperatorOffset: Point = {
-          x:  (i + 1) * 200,
+          x:  200 + 100 * (i + 1),
           y:  200
         };
         // add the operator

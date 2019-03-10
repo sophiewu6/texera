@@ -119,8 +119,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     private handlePaperUtility(): void {
       this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUitilityIndex) => {
-        const operatorGroup: string[] = ['KeywordMatcher', 'WordCount'];
-        this.dragDropService.createNewOperator(operatorGroup);
+        this.dragDropService.createNewOperator(0);
       });
     }
 

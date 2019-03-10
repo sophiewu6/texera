@@ -17,12 +17,9 @@ import { Observable } from 'rxjs/Observable';
 import { marbles } from 'rxjs-marbles';
 import { HttpClient } from '@angular/common/http';
 import { mockExecutionResult } from '../../service/execute-workflow/mock-result-data';
-<<<<<<< HEAD
 import { DragDropService } from '../../service/drag-drop/drag-drop.service';
 import { WorkflowUtilService } from '../../service/workflow-graph/util/workflow-util.service';
-=======
 import { environment } from '../../../../environments/environment';
->>>>>>> 420acc4babe98488c66adfeba1a8a5db1adf9bd8
 
 class StubHttpClient {
 
@@ -159,7 +156,7 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -169,7 +166,6 @@ describe('NavigationComponent', () => {
       });
   }));
 
-<<<<<<< HEAD
   it('should change zoom to be smaller when user click on the zoom out buttons', marbles((m) => {
      // expect initially the zoom ratio is 1;
    const originalZoomRatio = 1;
@@ -215,7 +211,6 @@ describe('NavigationComponent', () => {
     m.expect(zoomEndStream).toBeObservable(expectedStream);
   }));
 
-=======
   it('it should update isWorkflowPaused variable to false when 1 is returned from getExecutionPauseResumeStream', marbles((m) => {
     const endMarbleString = '-e-|';
     const endMarblevalues = {
@@ -226,7 +221,7 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -235,5 +230,4 @@ describe('NavigationComponent', () => {
         }
       });
   }));
->>>>>>> 420acc4babe98488c66adfeba1a8a5db1adf9bd8
 });

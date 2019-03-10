@@ -1,13 +1,10 @@
 import { Component, OnInit, NgModule } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
-<<<<<<< HEAD
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { Observable } from 'rxjs';
-=======
 import { environment } from '../../../../environments/environment';
 
->>>>>>> 420acc4babe98488c66adfeba1a8a5db1adf9bd8
 /**
  * NavigationComponent is the top level navigation bar that shows
  *  the Texera title and workflow execution button
@@ -31,26 +28,20 @@ import { environment } from '../../../../environments/environment';
 
 export class NavigationComponent implements OnInit {
 
-<<<<<<< HEAD
   // zoomDifference represents the ratio that is zoom in/out everytime.
   public static readonly ZOOM_DIFFERENCE: number = 0.02;
-
+  public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
+  public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
   // variable binded with HTML to decide if the running spinner should show
   public showSpinner = false;
 
   // the newZoomRatio represents the ratio of the size of the the new window to the original one.
   private newZoomRatio: number = 1;
 
-
   constructor(private dragDropService: DragDropService,
     private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
     // hide the spinner after the execution is finished, either
-=======
-  public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
-  public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
-  constructor(private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
     // return the run button after the execution is finished, either
->>>>>>> 420acc4babe98488c66adfeba1a8a5db1adf9bd8
     //  when the value is valid or invalid
     executeWorkflowService.getExecuteEndedStream().subscribe(
       () => {

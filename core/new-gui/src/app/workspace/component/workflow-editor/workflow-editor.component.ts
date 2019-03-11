@@ -118,8 +118,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
 
     private handlePaperUtility(): void {
-      this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUitilityIndex) => {
-        this.dragDropService.createNewOperator(0);
+      this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUtilityIndex) => {
+        this.dragDropService.createNewOperator(newUtilityIndex);
       });
     }
 

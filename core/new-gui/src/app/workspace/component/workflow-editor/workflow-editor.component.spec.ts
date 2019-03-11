@@ -142,12 +142,8 @@ describe('WorkflowEditorComponent', () => {
           JointUIService,
           WorkflowUtilService,
           WorkflowActionService,
-<<<<<<< HEAD
           DragDropService,
           { provide: OperatorMetadataService, useClass: StubOperatorMetadataService },
-=======
-          { provide: OperatorMetadataService, useClass: StubOperatorMetadataService }
->>>>>>> b4966773f23f607ae9b3107263db9994d975aeff
         ]
       })
         .compileComponents();

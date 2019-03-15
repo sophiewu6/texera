@@ -13,9 +13,6 @@ import '../../../common/rxjs-operators';
 // to import only the function that we use
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
-import { forEach } from '@angular/router/src/utils/collection';
-import { CompileMetadataResolver } from '@angular/compiler';
-import { NoneComponent } from 'angular6-json-schema-form';
 import { JSONSchema4 } from 'json-schema';
 
 
@@ -209,11 +206,19 @@ export class PropertyEditorComponent {
       }
     );
 
-    const modifiedJsonSchema: JSONSchema4 = {
-      ...currentSchema,
-      properties: currentSchemaProperties,
-      required: currentSchemaRequired
-    };
+    let modifiedJsonSchema: JSONSchema4;
+    if (currentSchemaRequired === undefined) {
+      modifiedJsonSchema = {
+        ...currentSchema,
+        properties: currentSchemaProperties
+      };
+    } else {
+      modifiedJsonSchema = {
+        ...currentSchema,
+        properties: currentSchemaProperties,
+        required: currentSchemaRequired
+      };
+    }
 
     const newOperatorSchema: OperatorSchema = {
       ...operatorSchema,
@@ -231,12 +236,15 @@ export class PropertyEditorComponent {
       throw new Error(`change property editor: operator is undefined`);
     }
 
+
     // set displayForm to false first to hide the view while constructing data
     this.displayForm = false;
 
     // set the operator data needed
     this.currentOperatorID = operator.operatorID;
     this.currentOperatorSchema = this.autocompleteService.getDynamicSchema(this.currentOperatorID);
+
+    console.log(this.currentOperatorSchema);
 
     this.showAdvanced = operator.showAdvanced;
 
@@ -247,6 +255,8 @@ export class PropertyEditorComponent {
 
     if (!this.showAdvanced) {
       this.currentOperatorSchema = this.hideAdvancedSchema(this.currentOperatorSchema);
+      console.log('hide');
+      console.log(this.currentOperatorSchema);
     }
     if (!this.currentOperatorSchema) {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
@@ -266,6 +276,7 @@ export class PropertyEditorComponent {
      *      which prevents the
      */
     this.currentOperatorInitialData = cloneDeep(operator.operatorProperties);
+    console.log(this.currentOperatorInitialData);
 
     // set displayForm to true in the end - first initialize all the data then show the view
     this.displayForm = true;

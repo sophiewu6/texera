@@ -1,3 +1,4 @@
+import { ValidationWorkflowService } from './../../service/validation/validation-workflow.service';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
@@ -8,12 +9,9 @@ import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
 import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-graph-wrapper';
-import { forEach } from 'lodash-es';
-import { element } from '@angular/core/src/render3/instructions';
 
 import { MiniMapService } from './../../service/workflow-graph/model/mini-map.service';
 import { ResultPanelToggleService } from '../../service/result-panel-toggle/result-panel-toggle.service';
-
 
 // argument type of callback event on a JointJS Paper
 // which is a 4-element tuple:
@@ -66,7 +64,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     private dragDropService: DragDropService,
     private elementRef: ElementRef,
     private miniMapService: MiniMapService,
-    private resultPanelToggleService: ResultPanelToggleService
+    private resultPanelToggleService: ResultPanelToggleService,
+    private validationWorkflowService: ValidationWorkflowService
   ) {
   }
 
@@ -87,6 +86,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.handleCellHighlight();
     this.handleWindowDrag();
     this.handlePaperMouseZoom();
+    this.handleOperatorValidation();
     this.dragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_JOINTJS_ID);
   }
 
@@ -324,6 +324,22 @@ export class WorkflowEditorComponent implements AfterViewInit {
         }
       );
   }
+  /**
+   * if the operator is valid , the border of the box will be green
+   */
+  private handleOperatorValidation(): void {
+
+    this.validationWorkflowService.getOperatorValidationStream()
+      .subscribe( value => {
+        if (value.status) {
+          // find the operator element by its ID and change the css style of the stroke
+          this.getJointPaper().getModelById(value.operatorID).attr('rect/stroke', 'green');
+        } else {
+          this.getJointPaper().getModelById(value.operatorID).attr('rect/stroke', 'red');
+        }
+
+      });
+  }
 
   /**
    * Gets the width and height of the parent wrapper element
@@ -421,6 +437,4 @@ function validateOperatorMagnet(cellView: joint.dia.CellView, magnet: SVGElement
   }
   return false;
 }
-
-
 

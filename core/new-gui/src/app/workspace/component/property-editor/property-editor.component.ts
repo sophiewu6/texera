@@ -13,6 +13,10 @@ import '../../../common/rxjs-operators';
 // to import only the function that we use
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
+import { forEach } from '@angular/router/src/utils/collection';
+import { CompileMetadataResolver } from '@angular/compiler';
+import { NoneComponent } from 'angular6-json-schema-form';
+import { JSONSchema4 } from 'json-schema';
 
 
 /**
@@ -51,11 +55,15 @@ export class PropertyEditorComponent {
 
   // the operatorID corresponds to the property editor's current operator
   public currentOperatorID: string | undefined;
+
   // a *copy* of the operator property as the initial input to the json schema form
   // see details of why making a copy below at where the copy is made
   public currentOperatorInitialData: object | undefined;
-  // the operator schema of the current operator
+
+  // the operator schemas of the current operator
   public currentOperatorSchema: OperatorSchema | undefined;
+  public advancedOperatorSchema: OperatorSchema | undefined;
+
   // used in HTML template to control if the form is displayed
   public displayForm: boolean = false;
 
@@ -70,6 +78,14 @@ export class PropertyEditorComponent {
 
   // the operator data need to be stored if the Json Schema changes, else the currently modified changes will be lost
   public cachedFormData: object | undefined;
+  // the current operator schema list, used to find the operator schema of current operator
+  public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
+
+  // the variables used for showing/hiding advanced options
+  public showAdvanced: boolean = false;
+  public hasAdvanced: boolean = false;
+
+  private onClickHide: boolean = false;
 
   constructor(
     private workflowActionService: WorkflowActionService,
@@ -96,6 +112,42 @@ export class PropertyEditorComponent {
   }
 
   /**
+   *hide the advancedOptions field
+  */
+  public hideshowAdvanced() {
+    if (this.currentOperatorID) {
+      this.showAdvanced = false;
+      this.onClickHide = true;
+      let currentData;
+      if (this.cachedFormData === undefined) {
+        currentData = cloneDeep(this.currentOperatorInitialData);
+      } else {
+        currentData = cloneDeep(this.cachedFormData);
+      }
+      this.workflowActionService.setOperatorAdvanceStatus(this.currentOperatorID, this.showAdvanced);
+      this.currentOperatorSchema = this.hideAdvancedSchema(this.currentOperatorSchema);
+      this.currentOperatorInitialData = currentData;
+    }
+
+  }
+  /**
+   *show the advanced options by switching back to the original form layout
+  */
+  public onshowAdvanced() {
+    if (this.currentOperatorID) {
+      this.showAdvanced = true;
+      let currentData;
+      if (this.cachedFormData === undefined) {
+        currentData = cloneDeep(this.currentOperatorInitialData);
+      } else {
+        currentData = cloneDeep(this.cachedFormData);
+      }
+      this.workflowActionService.setOperatorAdvanceStatus(this.currentOperatorID, this.showAdvanced);
+      this.currentOperatorSchema = this.advancedOperatorSchema;
+      this.currentOperatorInitialData = currentData;
+    }
+  }
+  /**
    * Callback function provided to the Angular Json Schema Form library,
    *  whenever the form data is changed, this function is called.
    * It only serves as a bridge from a callback function to RxJS Observable
@@ -112,13 +164,63 @@ export class PropertyEditorComponent {
     // set displayForm to false in the very beginning
     // hide the view first and then make everything null
     this.displayForm = false;
-
+    this.showAdvanced = false;
     this.currentOperatorID = undefined;
     this.currentOperatorInitialData = undefined;
+    this.cachedFormData = undefined;
     this.currentOperatorSchema = undefined;
-
+    this.advancedOperatorSchema = undefined;
   }
 
+  /**
+   * Hides the advanced options in the operator.
+   * Generate the form with advanced options hidden.
+   * @param operator
+   */
+  public hideAdvancedSchema(operatorSchema: OperatorSchema | undefined): OperatorSchema {
+    if (! operatorSchema) {
+      throw new Error('Parameter operator schema is undefined');
+    }
+    if (! this.currentOperatorSchema) {
+      throw new Error('Current operator schema is undefined');
+    }
+    this.advancedOperatorSchema = cloneDeep(this.currentOperatorSchema);
+    const advancedOptionsList = this.currentOperatorSchema.additionalMetadata.advancedOptions;
+    if (! advancedOptionsList) {
+      return this.currentOperatorSchema;
+    }
+    // make a deep clone of the operator schema and change its properties
+    const currentSchema = operatorSchema.jsonSchema;
+    let currentSchemaProperties = currentSchema.properties;
+    const currentSchemaRequired = cloneDeep(currentSchema.required);
+    advancedOptionsList.forEach(
+      advancedOption => {
+        if (currentSchemaProperties && advancedOption in currentSchemaProperties) {
+          const { [advancedOption] : [], ...newProperties} = currentSchemaProperties;
+          currentSchemaProperties = newProperties;
+        }
+
+        if (currentSchemaRequired && currentSchemaRequired.includes(advancedOption)) {
+          const index = currentSchemaRequired.indexOf(advancedOption);
+          if (index !== -1) {
+            currentSchemaRequired.splice(index, 1);
+          }
+        }
+      }
+    );
+
+    const modifiedJsonSchema: JSONSchema4 = {
+      ...currentSchema,
+      properties: currentSchemaProperties,
+      required: currentSchemaRequired
+    };
+
+    const newOperatorSchema: OperatorSchema = {
+      ...operatorSchema,
+      jsonSchema: modifiedJsonSchema
+    };
+    return newOperatorSchema;
+  }
   /**
    * Changes the property editor to use the new operator data.
    * Sets all the data needed by the json schema form and displays the form.
@@ -135,6 +237,17 @@ export class PropertyEditorComponent {
     // set the operator data needed
     this.currentOperatorID = operator.operatorID;
     this.currentOperatorSchema = this.autocompleteService.getDynamicSchema(this.currentOperatorID);
+
+    this.showAdvanced = operator.showAdvanced;
+
+    // only show the button if the operator has advanced options
+    if (this.currentOperatorSchema && this.currentOperatorSchema.additionalMetadata.advancedOptions) {
+      this.hasAdvanced = this.currentOperatorSchema.additionalMetadata.advancedOptions.length === 0 ? false : true;
+    }
+
+    if (!this.showAdvanced) {
+      this.currentOperatorSchema = this.hideAdvancedSchema(this.currentOperatorSchema);
+    }
     if (!this.currentOperatorSchema) {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
@@ -235,7 +348,22 @@ export class PropertyEditorComponent {
     this.autocompleteService.getOperatorDynamicSchemaChangedStream().subscribe(
       event => {
         if (event.operatorID === this.currentOperatorID) {
+          const operator = this.workflowActionService.getTexeraGraph().getOperator(event.operatorID);
+          if (operator === undefined) {
+            throw new Error(`operator ${event.operatorID} is undefined`);
+          }
+
           this.currentOperatorSchema = this.autocompleteService.getDynamicSchema(this.currentOperatorID);
+          this.showAdvanced = operator.showAdvanced;
+
+          // only show the button if the operator has advanced options
+          if (this.currentOperatorSchema && this.currentOperatorSchema.additionalMetadata.advancedOptions) {
+            this.hasAdvanced = this.currentOperatorSchema.additionalMetadata.advancedOptions.length === 0 ? false : true;
+          }
+
+          if (!this.showAdvanced) {
+            this.currentOperatorSchema = this.hideAdvancedSchema(this.currentOperatorSchema);
+          }
         }
       }
     );
@@ -266,7 +394,13 @@ export class PropertyEditorComponent {
       .subscribe(formData => {
       // set the operator property to be the new form data
       if (this.currentOperatorID) {
+        console.log('form change');
+        console.log(formData);
         this.cachedFormData = formData;
+        if (this.onClickHide) {
+          this.cachedFormData = this.currentOperatorInitialData;
+          this.onClickHide = false;
+        }
         this.workflowActionService.setOperatorProperty(this.currentOperatorID, formData);
       }
     });
@@ -283,5 +417,4 @@ export class PropertyEditorComponent {
       { type: 'submit', condition: 'false' }
     ];
   }
-
 }

@@ -8,6 +8,11 @@ import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
 import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-graph-wrapper';
+import { forEach } from 'lodash-es';
+import { element } from '@angular/core/src/render3/instructions';
+
+import { MiniMapService } from './../../service/workflow-graph/model/mini-map.service';
+import { ResultPanelToggleService } from '../../service/result-panel-toggle/result-panel-toggle.service';
 
 
 // argument type of callback event on a JointJS Paper
@@ -59,7 +64,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private miniMapService: MiniMapService,
+    private resultPanelToggleService: ResultPanelToggleService
   ) {
   }
 
@@ -67,6 +74,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     if (this.paper === undefined) {
       throw new Error('JointJS paper is undefined');
     }
+
     return this.paper;
   }
 
@@ -91,6 +99,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     jointPaperOptions.el = $(`#${this.WORKFLOW_EDITOR_JOINTJS_ID}`);
     // create the JointJS paper
     this.paper = new joint.dia.Paper(jointPaperOptions);
+    // initialize mini-map paper
+    this.miniMapService.initializeMapPaper(this.paper);
 
     this.setJointPaperOriginOffset();
     this.setJointPaperDimensions();
@@ -204,7 +214,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
   private handleWindowResize(): void {
     // when the window is resized (limit to at most one event every 30ms)
-    Observable.fromEvent(window, 'resize').auditTime(30).subscribe(
+    Observable.merge(
+      Observable.fromEvent(window, 'resize').auditTime(30),
+      this.resultPanelToggleService.getToggleChangeStream().debounceTime(50)
+      ).subscribe(
       () => {
         // reset the origin cooredinates
         this.setJointPaperOriginOffset();
@@ -212,6 +225,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
         this.setJointPaperDimensions();
       }
     );
+
   }
 
   private handleCellHighlight(): void {
@@ -288,6 +302,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.getJointPaper().setDimensions(elementSize.width, elementSize.height);
   }
 
+
   /**
    * Handles the event where the Delete button is clicked for an Operator,
    *  and call workflowAction to delete the corresponding operator.
@@ -334,6 +349,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
     return { x: offset.left, y: offset.top };
   }
+
 
   /**
    * Gets our customize options for the JointJS Paper object, which is the JointJS view object responsible for

@@ -6,7 +6,7 @@ public class javaTest {
 
         long start = System.currentTimeMillis();
 
-        File file = new File("/Users/yuranyan/Downloads/datasets/very_super_large_input.csv");
+        File file = new File("/home/yuran/Downloads/Twelve_g_input.csv");
         BufferedReader reader = null;
         int count = 0;
 
@@ -14,10 +14,10 @@ public class javaTest {
             reader = new BufferedReader(new FileReader(file));
             String text;
             while ((text = reader.readLine()) != null) {
-//                String[] row = text.split(",");
-//                if(row[0].contains("Africa")){
-//                    count++;
-//                }
+                String[] row = text.split(",");
+                if(row[0].contains("Africa")){
+                    count++;
+                }
             }
 
         }catch (FileNotFoundException e) {

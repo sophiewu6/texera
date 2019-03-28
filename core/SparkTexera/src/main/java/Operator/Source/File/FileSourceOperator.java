@@ -32,39 +32,46 @@ public class FileSourceOperator extends OperatorBase {
         this.pathList = new ArrayList<>();
         setOutput(new ArrayList<>());
 
-        Path filePath = Paths.get(predicate.getFilePath());
-        if (! Files.exists(filePath)) {
-            throw new TexeraException(String.format("file %s doesn't exist", filePath));
-        }
-
-        if (Files.isDirectory(filePath)) {
-            try {
-                if (this.predicate.isRecursive()) {
-                    pathList.addAll(Files.walk(filePath, this.predicate.getMaxDepth()).collect(Collectors.toList()));
-                } else {
-                    pathList.addAll(Files.list(filePath).collect(Collectors.toList()));
-                }
-
-            } catch (IOException e) {
-                throw new TexeraException(String.format(
-                        "opening directory %s failed: " + e.getMessage(), filePath));
+        if(!predicate.getFilePath().startsWith("hdfs")){
+            Path filePath = Paths.get(predicate.getFilePath());
+            if (! Files.exists(filePath)) {
+                throw new TexeraException(String.format("file %s doesn't exist", filePath));
             }
-        } else {
-            pathList.add(filePath);
+
+            if (Files.isDirectory(filePath)) {
+                try {
+                    if (this.predicate.isRecursive()) {
+                        pathList.addAll(Files.walk(filePath, this.predicate.getMaxDepth()).collect(Collectors.toList()));
+                    } else {
+                        pathList.addAll(Files.list(filePath).collect(Collectors.toList()));
+                    }
+
+                } catch (IOException e) {
+                    throw new TexeraException(String.format(
+                            "opening directory %s failed: " + e.getMessage(), filePath));
+                }
+            } else {
+                pathList.add(filePath);
+            }
+
+            // filter directories, files starting with ".",
+            //   and files that don't end with allowedExtensions
+            this.pathList = pathList.stream()
+                    .filter(path -> ! Files.isDirectory(path))
+                    .filter(path -> ! path.getFileName().startsWith("."))
+                    .collect(Collectors.toList());
+
+            // check if the path list is empty
+            if (pathList.isEmpty()) {
+                throw new TexeraException(String.format(
+                        "the filePath: %s doesn't contain any files. ", filePath));
+            }
+        }
+        else {
+            pathList.add(Paths.get(predicate.getFilePath()));
         }
 
-        // filter directories, files starting with ".",
-        //   and files that don't end with allowedExtensions
-        this.pathList = pathList.stream()
-                .filter(path -> ! Files.isDirectory(path))
-                .filter(path -> ! path.getFileName().startsWith("."))
-                .collect(Collectors.toList());
 
-        // check if the path list is empty
-        if (pathList.isEmpty()) {
-            throw new TexeraException(String.format(
-                    "the filePath: %s doesn't contain any files. ", filePath));
-        }
 
     }
 
@@ -99,8 +106,12 @@ public class FileSourceOperator extends OperatorBase {
      * @return
      */
     Dataset<Row> readPatition(Path path, int minPartition){
-        Dataset<Row> file = sparkSession.read().format("csv").load(path.toString());
-        return  file.coalesce(minPartition);
+        String p = path.toString();
+        if(p.startsWith("hdfs")){
+            p = p.substring(0,5) + '/' + p.substring(5);
+        }
+        Dataset<Row> file = sparkSession.read().format("csv").load(p);
+        return  file;
     }
 
     @Override
@@ -126,7 +137,7 @@ public class FileSourceOperator extends OperatorBase {
                 Dataset<Row> dataFrame;
 
                 if(p.endsWith("1.txt")) {
-                    dataset = readPartitionText(p.toString(), 10);
+                    dataset = readPartitionText(p.toString(), 72);
                     List<String> name = new ArrayList<>();
                     name.add(0, predicate.getAttributeName());
                     Seq newName = scala.collection.JavaConverters.collectionAsScalaIterableConverter(name).asScala().toSeq();
@@ -134,7 +145,7 @@ public class FileSourceOperator extends OperatorBase {
                     System.out.println(1);
                 }
                 else {
-                    dataFrame = readPatition(p, 10);
+                    dataFrame = readPatition(p, 72);
                     System.out.println("Partition number");
                     System.out.println(dataFrame.rdd().getNumPartitions());
                 }

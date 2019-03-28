@@ -71,7 +71,8 @@ public class QueryPlanResource {
             SparkSession sparkSession = SparkSession
                     .builder()
                     .appName("Simple Texera Spark Backend")
-                    .config("spark.master", "local[*]")
+                    .config("spark.master", "local[6]")
+                    //.config("spark.sql.files.maxPartitionBytes", 1342177000)
                     .getOrCreate();
 
             LogicalPlan logicalPlan = new ObjectMapper().readValue(logicalPlanJson, LogicalPlan.class);

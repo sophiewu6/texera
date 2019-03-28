@@ -76,6 +76,7 @@ public class JsonSchemaHelper {
         // find the operator json schema path by its predicate class
         Path operatorSchemaPath = getJsonSchemaPath(predicateClass);
 
+        System.out.println(operatorSchemaPath.toRealPath());
         // create the json schema file of the operator
         Files.deleteIfExists(operatorSchemaPath);
         Files.createFile(operatorSchemaPath);

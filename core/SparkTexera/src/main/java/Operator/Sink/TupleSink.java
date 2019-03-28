@@ -25,20 +25,20 @@ public class TupleSink extends OperatorBase {
         ArrayNode arrayNode = new ObjectMapper().createArrayNode();
 
         for(Dataset<Row> output: getInput()) {
-            List<Row> outputTuple = output.limit(predicate.getLimit()).collectAsList();
-            for (Row row : outputTuple) {
-                ObjectNode objectNode = new ObjectMapper().createObjectNode();
-                for (String column : row.schema().fieldNames()) {
-                    objectNode.put(column,  (String) row.getAs(column));
-                }
-                arrayNode.add(objectNode);
-            }
+//            List<Row> outputTuple = output.limit(predicate.getLimit()).collectAsList();
+//            for (Row row : outputTuple) {
+//                ObjectNode objectNode = new ObjectMapper().createObjectNode();
+//                for (String column : row.schema().fieldNames()) {
+//                    objectNode.put(column,  (String) row.getAs(column));
+//                }
+//                arrayNode.add(objectNode);
+//            }
 
             // Change Sink to Count operator
-//            Long count = output.count();
-//            ObjectNode objectNode = new ObjectMapper().createObjectNode();
-//            objectNode.put("Count",count);
-//            arrayNode.add(objectNode);
+            Long count = output.count();
+            ObjectNode objectNode = new ObjectMapper().createObjectNode();
+            objectNode.put("Count",count);
+            arrayNode.add(objectNode);
         }
 
         return arrayNode;

@@ -71,7 +71,7 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
-  // the map of property description
+  // the map of property description (key = property name, value = property description)
   public propertyDescription: Map<String, String> = new Map();
 
   // boolean to display the property description button

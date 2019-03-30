@@ -13,7 +13,7 @@ import '../../../common/rxjs-operators';
 // to import only the function that we use
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
-
+import { environment } from '../../../../environments/environment';
 
 /**
  * PropertyEditorComponent is the panel that allows user to edit operator properties.
@@ -76,6 +76,7 @@ export class PropertyEditorComponent {
 
   // boolean to display the property description button
   public hasPropertyDescription: boolean = false;
+
   // the operator data need to be stored if the Json Schema changes, else the currently modified changes will be lost
   public cachedFormData: object | undefined;
 
@@ -150,18 +151,8 @@ export class PropertyEditorComponent {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
 
-    // this if-else block will prevent undeclared property description to show, to check the effect
-    //  of this change, go to workspace component and use StubOperatorMetadataService as the provider
-
-    if (this.currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
-      this.propertyDescription = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.propertyDescription));
-      this.hasPropertyDescription = true;
-    } else {
-      this.propertyDescription = new Map();
-      this.hasPropertyDescription = false;
-    }
-
-
+    // show operator description or not
+    this.handleOperatorPropertyDescription(this.currentOperatorSchema);
 
     /**
      * Make a deep copy of the initial property data object.
@@ -243,6 +234,28 @@ export class PropertyEditorComponent {
       // share() because the original observable is a hot observable
       .share();
 
+  }
+
+  /**
+   * This function is a handler for displaying property description option on the property panel
+   *
+   * The if-else block will prevent undeclared property description to be displayed on the UI
+   *
+   * @param currentOperatorSchema
+   */
+  private handleOperatorPropertyDescription(currentOperatorSchema: OperatorSchema): void {
+    if (!environment.propertyDescriptionEnabled) {
+      this.propertyDescription = new Map();
+      this.hasPropertyDescription = false;
+    }
+
+    if (currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
+      this.propertyDescription = new Map(Object.entries(currentOperatorSchema.additionalMetadata.propertyDescription));
+      this.hasPropertyDescription = true;
+    } else {
+      this.propertyDescription = new Map();
+      this.hasPropertyDescription = false;
+    }
   }
 
   /**

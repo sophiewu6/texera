@@ -107,7 +107,6 @@ public class SQLiteDictionaryManager {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
 		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
 		
-		System.out.println("dictionary name = '" + dictionaryName.trim() + "'");
 		ImmutableDictionary dictionary = create.select().from(DICTIONARY)
 				.where(DICTIONARY.NAME.eq(dictionaryName.trim())).fetchAny().into(ImmutableDictionary.class);
 		
@@ -117,6 +116,6 @@ public class SQLiteDictionaryManager {
 	}
 	
 	public static void main(String[] args) throws JsonProcessingException, SQLException {
-		SQLiteDictionaryManager.getInstance().addDictionary("sample", "trump, climate, vote");
+		SQLiteDictionaryManager.getInstance().getDictionaries();
 	}
 }

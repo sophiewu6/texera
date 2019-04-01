@@ -115,4 +115,8 @@ public class SQLiteDictionaryManager {
 		conn.close();
 		return dictionary.getDictionaryEntries();
 	}
+	
+	public static void main(String[] args) throws JsonProcessingException, SQLException {
+		SQLiteDictionaryManager.getInstance().addDictionary("sample", "trump, climate, vote");
+	}
 }

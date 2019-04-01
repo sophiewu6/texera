@@ -13,6 +13,7 @@ import edu.uci.ics.texera.dataflow.common.JsonSchemaHelper;
 import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants;
 import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants.GroupOrder;
 import edu.uci.ics.texera.dataflow.resource.dictionary.DictionaryManager;
+import edu.uci.ics.texera.dataflow.resource.dictionary.SQLiteDictionaryManager;
 import edu.uci.ics.texera.storage.RelationManager;
 import edu.uci.ics.texera.storage.TableMetadata;
 import edu.uci.ics.texera.web.TexeraWebException;
@@ -22,6 +23,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import java.nio.file.Files;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -75,25 +77,24 @@ public class SystemResource {
 
     /**
      * Get the list of dictionaries
+     * @throws SQLException 
+     * @throws JsonProcessingException 
      */
 	@GET
 	@Path("/dictionaries")
-	public TexeraWebResponse getDictionaries() throws StorageException, JsonProcessingException {
-		DictionaryManager dictionaryManager = DictionaryManager.getInstance();
-		List<String> dictionaries = dictionaryManager.getDictionaries();
-
+	public TexeraWebResponse getDictionaries() throws SQLException, JsonProcessingException {
+		List<String> dictionaries = SQLiteDictionaryManager.getInstance().getDictionaries();
 		return new TexeraWebResponse(0, new ObjectMapper().writeValueAsString(dictionaries));
 	}
 
 	 /**
-     * Get the content of dictionary
+     * Get the content of dictionary in String
+	 * @throws SQLException 
      */
 	@GET
 	@Path("/dictionary")
-	public TexeraWebResponse getDictionary(@QueryParam("name") String name) {
-        DictionaryManager dictionaryManager = DictionaryManager.getInstance();
-        String dictionaryContent = dictionaryManager.getDictionary(name);
-
+	public TexeraWebResponse getDictionary(@QueryParam("name") String name) throws SQLException {
+        String dictionaryContent = SQLiteDictionaryManager.getInstance().getDictionary(name).toString();
 		return new TexeraWebResponse(0, dictionaryContent);
 	}
 

@@ -64,9 +64,7 @@ public class Dictionary {
                 this.dictionaryEntries.add(entryTrimed);
             }
         }
-        
-        System.out.println("dictionary entries = " + this.dictionaryEntries);
-        
+                
         this.dictionaryIterator = this.dictionaryEntries.iterator();
         this.tokenSetsNoStopwords = null;
         this.tokenListsNoStopwords = null;

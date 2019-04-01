@@ -115,7 +115,7 @@ public class PredicateBaseTest {
     public void testDictionary() throws Exception {
         DictionaryPredicate dictionaryPredicate = new DictionaryPredicate(
         		Arrays.asList("entry1", "entry2"),
-        		"SampleName",
+        		"",
         		attributeNames,
                 "standard",
                 KeywordMatchingType.CONJUNCTION_INDEXBASED,
@@ -124,7 +124,7 @@ public class PredicateBaseTest {
         
         DictionarySourcePredicate dictionarySourcePredicate = new DictionarySourcePredicate(
         		Arrays.asList("entry1", "entry2"),
-        		"SampleName",
+        		"",
                 attributeNames,
                 "standard",
                 KeywordMatchingType.CONJUNCTION_INDEXBASED, 

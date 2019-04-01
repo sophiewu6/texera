@@ -28,4 +28,4 @@ query-results/
 .DS_Store
 
 # Ignoring jOOQ codegen generated code
-dataflow/jooqCodeGen/src/
+# dataflow/jooqCodeGen/src/

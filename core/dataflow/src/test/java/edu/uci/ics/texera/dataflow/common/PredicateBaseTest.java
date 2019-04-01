@@ -285,7 +285,7 @@ public class PredicateBaseTest {
     @Test
     public void testAsterixSource() throws Exception {
         testPredicate(new AsterixSourcePredicate(
-                "host", 19002, "twitter", "ds_tweet", "text", "zika", "2000-01-01", "2017-05-18", 10));
+                "resultField", "host", 19002, "twitter", "ds_tweet", "text", "zika", "2000-01-01", "2017-05-18", 10));
     }
     
     @Test

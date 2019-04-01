@@ -78,7 +78,7 @@ public class SQLiteDictionaryManager {
 		conn.close();
 	}
 	
-	public List<String> addDictionary(String fileName, String dictionaryContent) throws SQLException, JsonProcessingException {
+	public void addDictionary(String fileName, String dictionaryContent) throws SQLException, JsonProcessingException {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
 		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
 		
@@ -90,8 +90,6 @@ public class SQLiteDictionaryManager {
 		
 		create.close();
 		conn.close();
-		
-		return null;
 	}
 	
 	public List<String> getDictionaries() throws SQLException {
@@ -116,24 +114,5 @@ public class SQLiteDictionaryManager {
 		create.close();
 		conn.close();
 		return dictionary.getDictionaryEntries();
-	}
-	
-	public static void main(String[] args ) throws SQLException, JsonProcessingException {
-		// Debug:
-		
-//		ImmutableDictionary hi = create.select().from(DICTIONARY).where(DICTIONARY.NAME.eq(dictionaryName))
-//				.fetchAny().into(ImmutableDictionary.class);
-//		
-//		System.out.println(hi.getDictionaryEntries().toString());
-		
-		
-//		SQLiteDictionaryManager.getInstance().getDictionaries();
-//		SQLiteDictionaryManager.getInstance().addDictionary("sample", "trump, climate");
-//		System.out.println(SQLiteDictionaryManager.getInstance().getDictionaries());
-		System.out.println(SQLiteDictionaryManager.getInstance().getDictionary("sample"));
-//		System.out.println("FINISHES");
-		
-//		SQLiteDictionaryManager.getInstance().addDictionary("HenryFIle", test.toString());
-		
 	}
 }

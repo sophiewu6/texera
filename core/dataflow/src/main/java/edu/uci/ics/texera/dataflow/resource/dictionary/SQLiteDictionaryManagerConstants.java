@@ -11,7 +11,7 @@ public class SQLiteDictionaryManagerConstants {
 	public static final String INDEX_NAME = TABLE_NAME + "_NAME_INDEX";
 	
 	public static final String DATABASE_FILE_NAME = "TexeraDictionariesDB.db";
-	
+		
 	public static final Path DICTIONARY_DIR_PATH = Utils.getTexeraHomePath().resolve("user-resources").resolve("dictionaries");
 	
 	public static final Path DATABASE_FILE_PATH = DICTIONARY_DIR_PATH.resolve(DATABASE_FILE_NAME);

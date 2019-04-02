@@ -38,8 +38,8 @@ public class SQLiteDictionaryManager {
 		return instance;
 	}
 	
-	public void createDictionaryManager() throws SQLException {		
-		// create directory if not exist
+	public static void generateUserDictionaryResource() {
+
 		if (!Files.exists(SQLiteDictionaryManagerConstants.DICTIONARY_DIR_PATH)) {
 			try {
 				Files.createDirectories(SQLiteDictionaryManagerConstants.DICTIONARY_DIR_PATH);
@@ -55,6 +55,11 @@ public class SQLiteDictionaryManager {
 				throw new StorageException(e);
 			}
 		}
+	}
+	
+	public void createDictionaryManager() throws SQLException {		
+		// create directory if not exist
+		generateUserDictionaryResource();
 		
 		// create table if not exist
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
@@ -128,7 +133,7 @@ public class SQLiteDictionaryManager {
 	}
 	
 	public static void main(String[] args) throws JsonProcessingException, SQLException {
-		// Run this during build to generate required files and tables
+		// Run this during maven compile to generate required files and tables (before jooq generates code)
 		SQLiteDictionaryManager.getInstance();	
 	}
 }

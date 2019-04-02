@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.uci.ics.texera.api.exception.StorageException;
 import static edu.uci.ics.texera.dataflow.resource.dictionaryJooq.Tables.*;
-
+//edu.uci.ics.texera.dataflow.resource.dictionary.SQLiteDictionaryManager
 public class SQLiteDictionaryManager {
 	
 	private static SQLiteDictionaryManager instance = null;
@@ -43,6 +43,14 @@ public class SQLiteDictionaryManager {
 		if (!Files.exists(SQLiteDictionaryManagerConstants.DICTIONARY_DIR_PATH)) {
 			try {
 				Files.createDirectories(SQLiteDictionaryManagerConstants.DICTIONARY_DIR_PATH);
+			} catch (IOException e) {
+				throw new StorageException(e);
+			}
+		}
+		
+		if (!Files.exists(SQLiteDictionaryManagerConstants.DATABASE_FILE_PATH)) {
+			try {
+				Files.createFile(SQLiteDictionaryManagerConstants.DATABASE_FILE_PATH);
 			} catch (IOException e) {
 				throw new StorageException(e);
 			}
@@ -85,8 +93,11 @@ public class SQLiteDictionaryManager {
 		List<String> splitedContent = Arrays.asList(dictionaryContent.split(","));
 		String serializableDictionaryContent = new ObjectMapper().writeValueAsString(splitedContent);
 		
+		
+		System.out.println(serializableDictionaryContent);
 		create.insertInto(DICTIONARY, DICTIONARY.NAME, DICTIONARY.CONTENT)
-			.values(fileName, serializableDictionaryContent).execute();
+			.values(fileName, serializableDictionaryContent)
+			.execute();
 		
 		create.close();
 		conn.close();
@@ -106,9 +117,10 @@ public class SQLiteDictionaryManager {
 	public List<String> getDictionary(String dictionaryName) throws SQLException {
 		Connection conn = DriverManager.getConnection(SQLiteDictionaryManagerConstants.SQLITE_CONNECTION_URL);
 		DSLContext create = DSL.using(conn, SQLDialect.SQLITE);
-		
+
 		ImmutableDictionary dictionary = create.select().from(DICTIONARY)
-				.where(DICTIONARY.NAME.eq(dictionaryName.trim())).fetchAny().into(ImmutableDictionary.class);
+				.where(DSL.field(DICTIONARY.NAME).eq(dictionaryName.trim()))
+				.fetchAny().into(ImmutableDictionary.class);
 		
 		create.close();
 		conn.close();
@@ -116,6 +128,7 @@ public class SQLiteDictionaryManager {
 	}
 	
 	public static void main(String[] args) throws JsonProcessingException, SQLException {
-		SQLiteDictionaryManager.getInstance().getDictionaries();
+		// Run this during build to generate required files and tables
+		SQLiteDictionaryManager.getInstance();	
 	}
 }

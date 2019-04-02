@@ -26,6 +26,3 @@ query-results/
 
 # Ignoring Mac OSX specific files
 .DS_Store
-
-# Ignoring jOOQ codegen generated code
-dataflow/jooqCodeGen/src/

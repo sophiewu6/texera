@@ -143,5 +143,4 @@ describe('DragDropService', () => {
 
     m.expect(zoomStream).toBeObservable(expectedStream);
   }));
-
 });

@@ -131,7 +131,9 @@ export class NavigationComponent implements OnInit {
       }
     }
   }
-
+  /*
+   First set to 0 since it maybe extended to more utility templates, 0 means the first one.
+  */
   public onClickUtility(): void {
     // initial version, default index is 0;
     this.dragDropService.setUtilityIndex(0);

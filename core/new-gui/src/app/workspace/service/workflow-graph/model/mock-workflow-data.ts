@@ -1,5 +1,6 @@
 import { Point, OperatorPredicate, OperatorLink } from './../../../types/workflow-common.interface';
 
+
 /**
  * Provides mock data related operators and links:
  *
@@ -20,13 +21,9 @@ import { Point, OperatorPredicate, OperatorLink } from './../../../types/workflo
  */
 
 
-
-
 export const mockPoint: Point = {
   x: 100, y: 100
 };
-
-
 
 export const mockScanPredicate: OperatorPredicate = {
   operatorID: '1',

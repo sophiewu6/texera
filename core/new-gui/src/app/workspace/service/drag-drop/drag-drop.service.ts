@@ -1,6 +1,6 @@
 import { Point, OperatorPredicate, OperatorLink, OperatorPort } from './../../types/workflow-common.interface';
 import { keyWordSearchPredicate, wordCountPredicate,
-  keyWordSearchWordCountLink, viewResultPredicate, 
+  keyWordSearchWordCountLink, viewResultPredicate,
     wordCountViewResultLink } from './../../service/workflow-graph/model/mock-workflow-data';
 import { WorkflowActionService } from './../workflow-graph/model/workflow-action.service';
 import { Observable } from 'rxjs/Observable';
@@ -159,6 +159,9 @@ export class DragDropService {
       this.workflowEditorUtilitySubject.next(this.utilityIndex);
   }
 
+  public getUtilityIndex() {
+      return this.utilityIndex;
+  }
   /**
    * This method will update the zoom ratio, which will be used
    *  in calculating the position of the operator dropped on the UI.
@@ -212,18 +215,19 @@ export class DragDropService {
    *
    */
 
-  public createNewOperator(utilityIndex: number) {
+  public createNewOperator(utilityIndex: number, paperSize: { x: number, y: number }) {
+    console.log(paperSize);
     const firstOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset,
-      y:  200
+      x:  paperSize.x * 2,
+      y:  paperSize.y * 4
     };
     const secondOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset * 2,
-      y:  200
+      x:  paperSize.x * 3,
+      y:  paperSize.y * 4
     };
     const thirdOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset * 3,
-      y:  200
+      x:  paperSize.x * 4,
+      y:  paperSize.y * 4
     };
     if (utilityIndex === 0) {
         this.workflowActionService.addOperator(keyWordSearchPredicate, firstOperatorOffset);

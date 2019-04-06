@@ -230,4 +230,12 @@ describe('NavigationComponent', () => {
         }
       });
   }));
+
+  it('should triiger load utility templates when the start button is clicked on', marbles((m) => {
+    const utilityIndex = 0;
+    m.hot('-e-').do(event => dragDropService.setUtilityIndex(utilityIndex)).subscribe();
+    const getUtilityIndex = dragDropService.getUtilityIndex();
+
+    expect(utilityIndex).toEqual(getUtilityIndex);
+  }));
 });

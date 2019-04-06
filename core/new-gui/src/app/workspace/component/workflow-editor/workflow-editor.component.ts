@@ -76,6 +76,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return this.paper;
   }
 
+ 
   public getZoomRatio(): number {
     return this.newZoomRatio;
   }
@@ -105,7 +106,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.setJointPaperOriginOffset();
     this.setJointPaperDimensions();
   }
-
     /**
      * Handles zoom events passed from navigation-component, which can be used to
      *  make the jointJS paper larger or smaller.
@@ -119,7 +119,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     private handlePaperUtility(): void {
       this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUtilityIndex) => {
-        this.dragDropService.createNewOperator(newUtilityIndex);
+        this.dragDropService.createNewOperator(newUtilityIndex, this.getWrapperElementOffset());
       });
     }
 
@@ -290,7 +290,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
     const elementSize = this.getWrapperElementSize();
     this.getJointPaper().setDimensions(elementSize.width, elementSize.height);
   }
-
   /**
    * Handles the event where the Delete button is clicked for an Operator,
    *  and call workflowAction to delete the corresponding operator.
@@ -327,6 +326,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return { width, height };
   }
 
+  
   /**
    * Gets the document offset coordinates of the wrapper element's top-left corner.
    */
@@ -338,6 +338,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
     return { x: offset.left, y: offset.top };
   }
+
+ 
 
   /**
    * Gets our customize options for the JointJS Paper object, which is the JointJS view object responsible for
@@ -370,7 +372,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     return jointPaperOptions;
   }
-}
+
+
+
 /**
 * This function is provided to JointJS to disable some invalid connections on the UI.
 * If the connection is invalid, users are not able to connect the links on the UI.

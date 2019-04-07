@@ -326,7 +326,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return { width, height };
   }
 
-  
+
   /**
    * Gets the document offset coordinates of the wrapper element's top-left corner.
    */
@@ -339,7 +339,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return { x: offset.left, y: offset.top };
   }
 
- 
+
 
   /**
    * Gets our customize options for the JointJS Paper object, which is the JointJS view object responsible for
@@ -372,6 +372,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     return jointPaperOptions;
   }
+}
 
 
 

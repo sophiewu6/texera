@@ -1,3 +1,5 @@
+package NaivePerformanceTest;
+
 import java.io.*;
 
 public class javaTest {

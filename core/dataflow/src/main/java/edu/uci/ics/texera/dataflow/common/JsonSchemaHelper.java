@@ -29,6 +29,7 @@ import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.utils.Utils;
 import edu.uci.ics.texera.dataflow.annotation.AdvancedOption;
 import edu.uci.ics.texera.dataflow.plangen.OperatorArityConstants;
+import edu.uci.ics.texera.dataflow.source.mysql.ReadMysqlPredicate;
 
 @SuppressWarnings("unchecked")
 public class JsonSchemaHelper {
@@ -54,8 +55,8 @@ public class JsonSchemaHelper {
     }
     
     public static void main(String[] args) throws Exception {
-        generateAllOperatorSchema();
-//        generateJsonSchema(ComparablePredicate.class);
+    	// generateAllOperatorSchema();
+        generateJsonSchema(ReadMysqlPredicate.class);
     }
     
     public static void generateAllOperatorSchema() throws Exception {

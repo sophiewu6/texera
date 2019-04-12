@@ -30,6 +30,7 @@ import edu.uci.ics.texera.dataflow.sink.mysql.MysqlSinkPredicate;
 import edu.uci.ics.texera.dataflow.sink.tuple.TupleSinkPredicate;
 import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 import edu.uci.ics.texera.dataflow.source.file.FileSourcePredicate;
+import edu.uci.ics.texera.dataflow.source.mysql.ReadMysqlPredicate;
 import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterConverterPredicate;
 import edu.uci.ics.texera.dataflow.twitterfeed.TwitterFeedSourcePredicate;
@@ -54,6 +55,7 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(KeywordSourcePredicate.class, 0); 
         fixedInputArityMap.put(RegexPredicate.class, 1); 
         fixedInputArityMap.put(RegexSourcePredicate.class, 0); 
+        fixedInputArityMap.put(ReadMysqlPredicate.class, 0);
 
         fixedInputArityMap.put(JoinDistancePredicate.class, 2);
         fixedInputArityMap.put(SimilarityJoinPredicate.class, 2);
@@ -95,6 +97,7 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(KeywordSourcePredicate.class, 1); 
         fixedOutputArityMap.put(RegexPredicate.class, 1); 
         fixedOutputArityMap.put(RegexSourcePredicate.class, 1); 
+        fixedOutputArityMap.put(ReadMysqlPredicate.class, 1);
 
         fixedOutputArityMap.put(JoinDistancePredicate.class, 1);
         fixedOutputArityMap.put(SimilarityJoinPredicate.class, 1);

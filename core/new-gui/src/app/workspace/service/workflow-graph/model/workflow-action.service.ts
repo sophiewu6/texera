@@ -111,6 +111,16 @@ export class WorkflowActionService {
     // JointJS operator delete event will propagate and trigger Texera operator delete
   }
 
+  public deleteAll(): void {
+    const operatorNumber = this.texeraGraph.getAllOperators().length;
+    if (operatorNumber !== 0) {
+      for (let i = 0; i < operatorNumber; i++) {
+        console.log(this.texeraGraph.getAllOperators()[i].operatorType);
+        this.deleteOperator(this.texeraGraph.getAllOperators()[i].operatorID);
+      }
+    }
+  }
+
   /**
    * Adds a link to the workflow graph
    * Throws an Error if the link ID or the link with same source and target already exists.

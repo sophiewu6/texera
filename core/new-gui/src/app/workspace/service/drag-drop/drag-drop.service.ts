@@ -216,7 +216,6 @@ export class DragDropService {
    */
 
   public createNewOperator(utilityIndex: number, paperSize: { x: number, y: number }) {
-    console.log(paperSize);
     const firstOperatorOffset: Point = {
       x:  paperSize.x * 2,
       y:  paperSize.y * 4

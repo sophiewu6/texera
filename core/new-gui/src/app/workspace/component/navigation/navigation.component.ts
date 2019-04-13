@@ -1,9 +1,14 @@
-import { Component, OnInit, NgModule } from '@angular/core';
+import { Component, OnInit, NgModule, Input, Output } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import {NgbModal, ModalDismissReasons,NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
+
+
+
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -32,6 +37,7 @@ export class NavigationComponent implements OnInit {
   public static readonly ZOOM_DIFFERENCE: number = 0.02;
   public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
   public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
+  public closeResult: string;
   // variable binded with HTML to decide if the running spinner should show
   public showSpinner = false;
 
@@ -39,7 +45,9 @@ export class NavigationComponent implements OnInit {
   private newZoomRatio: number = 1;
 
   constructor(private dragDropService: DragDropService,
-    private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
+    private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService,
+    private modalService: NgbModal, private workflowActionService: WorkflowActionService,
+    ) {
     // hide the spinner after the execution is finished, either
     // return the run button after the execution is finished, either
     //  when the value is valid or invalid
@@ -61,6 +69,12 @@ export class NavigationComponent implements OnInit {
       .subscribe(state => this.isWorkflowPaused = (state === 0));
   }
 
+  /**
+   * in order to solve the static inject error
+   */
+  public getWorkflowActionService(): WorkflowActionService {
+    return this.workflowActionService;
+  }
   ngOnInit() {
     /**
      * Get the new value from the mouse wheel zoom function.
@@ -71,6 +85,17 @@ export class NavigationComponent implements OnInit {
     });
   }
 
+  public open() {
+    /**
+     * check if there is any operator on the graph
+     */
+    const operatorNumber = this.workflowActionService.getTexeraGraph().getAllOperators().length;
+    if (operatorNumber === 0) {
+        this.onClickUtility();
+    } else {
+      this.modalService.open(NagivationNgbModalComponent);
+    }
+  }
   /**
    * Executes the current existing workflow on the JointJS paper. It will
    *  also set the `isWorkflowRunning` variable to true to show that the backend
@@ -154,3 +179,30 @@ export class NavigationComponent implements OnInit {
     this.dragDropService.setZoomProperty(this.newZoomRatio);
   }
 }
+/**
+ *
+ * NgbModalComponent is the pop-up window that will be
+ *  displayed when the user clicks on a specific row
+ *  to show the displays of that row.
+ *
+ * User can exit the pop-up window by
+ *  1. Clicking the dismiss button on the top-right hand corner
+ *      of the Modal
+ *  2. Clicking the `Close` button at the bottom-right
+ *  3. Clicking any shaded area that is not the pop-up window
+ *  4. Pressing `Esc` button on the keyboard
+ */
+
+
+@Component({
+  selector: 'texera-navigation-ngbmodal',
+  templateUrl: './navigation-modal.component.html',
+  styleUrls: ['./navigation.component.scss']
+})
+
+export class NagivationNgbModalComponent {
+
+  constructor(private activeModal: NgbActiveModal,
+  ) {}
+}
+

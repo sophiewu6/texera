@@ -16,7 +16,7 @@ import { NgxJsonViewerModule } from 'ngx-json-viewer';
 
 import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/component/workspace.component';
-import { NavigationComponent } from './workspace/component/navigation/navigation.component';
+import { NavigationComponent, NagivationNgbModalComponent } from './workspace/component/navigation/navigation.component';
 import { OperatorPanelComponent } from './workspace/component/operator-panel/operator-panel.component';
 import { PropertyEditorComponent } from './workspace/component/property-editor/property-editor.component';
 import { WorkflowEditorComponent } from './workspace/component/workflow-editor/workflow-editor.component';
@@ -24,7 +24,6 @@ import { ResultPanelComponent, NgbModalComponent } from './workspace/component/r
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
 import { ResultPanelToggleComponent } from './workspace/component/result-panel-toggle/result-panel-toggle.component';
-
 @NgModule({
   declarations: [
     AppComponent,
@@ -37,7 +36,8 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
     NgbModalComponent,
     OperatorLabelComponent,
     ProductTourComponent,
-    ResultPanelToggleComponent
+    ResultPanelToggleComponent,
+    NagivationNgbModalComponent
   ],
   imports: [
     BrowserModule,
@@ -57,6 +57,6 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
   providers: [ HttpClientModule ],
   bootstrap: [AppComponent],
   // dynamically created component must be placed in the entryComponents attribute
-  entryComponents: [ NgbModalComponent ]
+  entryComponents: [ NgbModalComponent, NagivationNgbModalComponent ]
 })
 export class AppModule { }

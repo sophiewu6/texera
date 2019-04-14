@@ -2,10 +2,11 @@ import { Component, OnInit, NgModule, Input, Output } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import {NgbModal, ModalDismissReasons,NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal, ModalDismissReasons, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
+import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
 
 
 
@@ -47,6 +48,7 @@ export class NavigationComponent implements OnInit {
   constructor(private dragDropService: DragDropService,
     private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService,
     private modalService: NgbModal, private workflowActionService: WorkflowActionService,
+    // private loadUtilitiesTemplateService: LoadUtilitiesTemplatesService
     ) {
     // hide the spinner after the execution is finished, either
     // return the run button after the execution is finished, either
@@ -96,6 +98,14 @@ export class NavigationComponent implements OnInit {
       this.modalService.open(NagivationNgbModalComponent);
     }
   }
+
+  // public onButtonClickDeleteAll(): void {
+  //   this.loadUtilitiesTemplateService.getUtilitiesTemplatesSubject().subscribe(event => {
+  //     if (event === 0) {
+  //       this.workflowActionService.deleteAll();
+  //     }
+  //   });
+  // }
   /**
    * Executes the current existing workflow on the JointJS paper. It will
    *  also set the `isWorkflowRunning` variable to true to show that the backend
@@ -193,16 +203,25 @@ export class NavigationComponent implements OnInit {
  *  4. Pressing `Esc` button on the keyboard
  */
 
-
+// import { WorkflowActionService } from '../../service/workflow-graph/model/workflow-action.service';
 @Component({
   selector: 'texera-navigation-ngbmodal',
   templateUrl: './navigation-modal.component.html',
-  styleUrls: ['./navigation.component.scss']
+  styleUrls: []
 })
 
 export class NagivationNgbModalComponent {
 
+  // private deleteOperatorSubject: Subject;
   constructor(private activeModal: NgbActiveModal,
+    // private loadUtilitiesTemplateService: LoadUtilitiesTemplatesService,
+    // private workflowActionService: WorkflowActionService
   ) {}
+
+  public DeleteAll() {
+    // this.loadUtilitiesTemplateService.setDeleteValue(0);
+    // this.workflowActionService.deleteAll();
+    console.log('delete event should be triggered!');
+  }
 }
 

@@ -214,13 +214,11 @@ export class NagivationNgbModalComponent {
 
   // private deleteOperatorSubject: Subject;
   constructor(private activeModal: NgbActiveModal,
-    // private loadUtilitiesTemplateService: LoadUtilitiesTemplatesService,
-    // private workflowActionService: WorkflowActionService
+    private workflowActionService: WorkflowActionService
   ) {}
 
   public DeleteAll() {
-    // this.loadUtilitiesTemplateService.setDeleteValue(0);
-    // this.workflowActionService.deleteAll();
+    this.workflowActionService.deleteAll();
     console.log('delete event should be triggered!');
   }
 }

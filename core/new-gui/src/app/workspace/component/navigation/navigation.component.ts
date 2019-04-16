@@ -38,7 +38,7 @@ export class NavigationComponent implements OnInit {
   public static readonly ZOOM_DIFFERENCE: number = 0.02;
   public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
   public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
-  public closeResult: string;
+  public closeResult: string = '';
   // variable binded with HTML to decide if the running spinner should show
   public showSpinner = false;
 
@@ -71,12 +71,6 @@ export class NavigationComponent implements OnInit {
       .subscribe(state => this.isWorkflowPaused = (state === 0));
   }
 
-  /**
-   * in order to solve the static inject error
-   */
-  public getWorkflowActionService(): WorkflowActionService {
-    return this.workflowActionService;
-  }
   ngOnInit() {
     /**
      * Get the new value from the mouse wheel zoom function.
@@ -87,15 +81,26 @@ export class NavigationComponent implements OnInit {
     });
   }
 
-  public open() {
-    /**
-     * check if there is any operator on the graph
-     */
-    const operatorNumber = this.workflowActionService.getTexeraGraph().getAllOperators().length;
-    if (operatorNumber === 0) {
-        this.onClickUtility();
+
+  /**
+   * This method will handle the load template action, there will be 2 scenario
+   *  1. If there is nothing in the UI, load the template
+   *  2. If there are other operators on the paper, prompt the user to confirm this action, then
+   *      load the template if the user confirmed.
+   */
+  public loadTemplate() {
+    if ( this.workflowActionService.getTexeraGraph().getAllOperators().length === 0) {
+      this.onClickUtility();
     } else {
-      this.modalService.open(NagivationNgbModalComponent);
+      const modelRef = this.modalService.open(NagivationNgbModalComponent);
+      Observable.from(modelRef.result)
+        .filter(userDecision => userDecision === true)
+        .subscribe(() => {
+          this.workflowActionService.deleteAllOperators();
+          this.onClickUtility();
+        },
+        error => {}
+      );
     }
   }
 
@@ -202,24 +207,17 @@ export class NavigationComponent implements OnInit {
  *  3. Clicking any shaded area that is not the pop-up window
  *  4. Pressing `Esc` button on the keyboard
  */
-
-// import { WorkflowActionService } from '../../service/workflow-graph/model/workflow-action.service';
 @Component({
   selector: 'texera-navigation-ngbmodal',
   templateUrl: './navigation-modal.component.html',
-  styleUrls: []
+  styleUrls: ['./navigation.component.scss']
 })
-
 export class NagivationNgbModalComponent {
 
-  // private deleteOperatorSubject: Subject;
-  constructor(private activeModal: NgbActiveModal,
-    private workflowActionService: WorkflowActionService
-  ) {}
+  constructor(public activeModal: NgbActiveModal) {}
 
-  public DeleteAll() {
-    this.workflowActionService.deleteAll();
-    console.log('delete event should be triggered!');
+  public confirmDelete() {
+    this.activeModal.close(true);
   }
 }
 

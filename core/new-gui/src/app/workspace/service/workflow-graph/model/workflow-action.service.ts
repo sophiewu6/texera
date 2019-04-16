@@ -111,14 +111,13 @@ export class WorkflowActionService {
     // JointJS operator delete event will propagate and trigger Texera operator delete
   }
 
-  public deleteAll(): void {
-    const operatorNumber = this.texeraGraph.getAllOperators().length;
-    if (operatorNumber !== 0) {
-      for (let i = 0; i < operatorNumber; i++) {
-        console.log(this.texeraGraph.getAllOperators()[i].operatorType);
-        this.deleteOperator(this.texeraGraph.getAllOperators()[i].operatorID);
-      }
-    }
+  /**
+   * Deletes all operators from the workflow graph
+   */
+  public deleteAllOperators(): void {
+    this.texeraGraph.getAllOperators().forEach(
+      operator => this.deleteOperator(operator.operatorID)
+    );
   }
 
   /**

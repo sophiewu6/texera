@@ -8,6 +8,7 @@ import { ExecutionResult, SuccessExecutionResult } from './../../types/execute-w
 import { TableColumn, IndexableObject } from './../../types/result-table.interface';
 import { ResultPanelToggleService } from './../../service/result-panel-toggle/result-panel-toggle.service';
 import deepMap from 'deep-map';
+import { WorkflowActionService } from '../../service/workflow-graph/model/workflow-action.service';
 
 /**
  * ResultPanelCompoent is the bottom level area that displays the

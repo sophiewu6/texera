@@ -4,7 +4,7 @@ import { TourService } from 'ngx-tour-ng-bootstrap';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import {NgbModal, ModalDismissReasons, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
 import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
 
@@ -38,7 +38,6 @@ export class NavigationComponent implements OnInit {
   public static readonly ZOOM_DIFFERENCE: number = 0.02;
   public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
   public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
-  public closeResult: string;
   // variable binded with HTML to decide if the running spinner should show
   public showSpinner = false;
 
@@ -214,7 +213,7 @@ export class NagivationNgbModalComponent {
 
   // private deleteOperatorSubject: Subject;
   constructor(private activeModal: NgbActiveModal,
-    private workflowActionService: WorkflowActionService
+    public workflowActionService: WorkflowActionService
   ) {}
 
   public DeleteAll() {

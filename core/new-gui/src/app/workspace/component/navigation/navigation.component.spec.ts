@@ -2,6 +2,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+
 import { NavigationComponent } from './navigation.component';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
@@ -20,6 +22,7 @@ import { mockExecutionResult } from '../../service/execute-workflow/mock-result-
 import { DragDropService } from '../../service/drag-drop/drag-drop.service';
 import { WorkflowUtilService } from '../../service/workflow-graph/util/workflow-util.service';
 import { environment } from '../../../../environments/environment';
+import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
 
 class StubHttpClient {
 
@@ -32,6 +35,9 @@ describe('NavigationComponent', () => {
   let fixture: ComponentFixture<NavigationComponent>;
   let executeWorkFlowService: ExecuteWorkflowService;
   let dragDropService: DragDropService;
+  let workflowActionService: WorkflowActionService;
+  let loadUtilitiesTemplatesService: LoadUtilitiesTemplatesService;
+  let modalService:  NgbModal;
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [NavigationComponent],
@@ -41,10 +47,12 @@ describe('NavigationComponent', () => {
       ],
       providers: [
         WorkflowActionService,
+        LoadUtilitiesTemplatesService,
         WorkflowUtilService,
         JointUIService,
         ExecuteWorkflowService,
         DragDropService,
+        NgbModal,
         { provide: OperatorMetadataService, useClass: StubOperatorMetadataService },
         { provide: HttpClient, useClass: StubHttpClient },
         TourService,
@@ -55,9 +63,15 @@ describe('NavigationComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NavigationComponent);
     component = fixture.componentInstance;
+
     executeWorkFlowService = TestBed.get(ExecuteWorkflowService);
     dragDropService = TestBed.get(DragDropService);
+    workflowActionService = TestBed.get(WorkflowActionService);
+    loadUtilitiesTemplatesService = TestBed.get(LoadUtilitiesTemplatesService);
+    modalService = TestBed.get(NgbModal);
+
     fixture.detectChanges();
+
     environment.pauseResumeEnabled = true;
   });
 
@@ -156,7 +170,8 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService),
+    modalService, workflowActionService, loadUtilitiesTemplatesService);
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -221,7 +236,8 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService)
+    , modalService, workflowActionService, loadUtilitiesTemplatesService);
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -231,11 +247,8 @@ describe('NavigationComponent', () => {
       });
   }));
 
-  it('should triiger load utility templates when the start button is clicked on', marbles((m) => {
-    const utilityIndex = 0;
-    m.hot('-e-').do(event => dragDropService.setUtilityIndex(utilityIndex)).subscribe();
-    const getUtilityIndex = dragDropService.getUtilityIndex();
+  // it('should trigger load utility templates when the number of the operators on the graph is 0', marbles((m) => {
+  //   const utilityIndex = 0;
+  // }));
 
-    expect(utilityIndex).toEqual(getUtilityIndex);
-  }));
 });

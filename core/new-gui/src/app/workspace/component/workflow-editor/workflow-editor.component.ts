@@ -5,6 +5,7 @@ import { WorkflowUtilService } from './../../service/workflow-graph/util/workflo
 import { Component, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
+import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
 import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
@@ -61,8 +62,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
-    private workflowUtilService: WorkflowUtilService,
-    private jointUIService: JointUIService
+    private loadUtilitiesTemplatesService: LoadUtilitiesTemplatesService
   ) {
   }
 
@@ -115,8 +115,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
 
     private handlePaperUtility(): void {
-      this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUtilityIndex) => {
-        this.dragDropService.createNewOperator(newUtilityIndex, this.getWrapperElementOffset());
+      this.loadUtilitiesTemplatesService.getUtilitiesTemplatesSubject().subscribe((newUtilityIndex) => {
+        this.loadUtilitiesTemplatesService.createNewOperator(newUtilityIndex, this.getWrapperElementOffset());
       });
     }
 

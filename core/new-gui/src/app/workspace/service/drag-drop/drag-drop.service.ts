@@ -215,27 +215,7 @@ export class DragDropService {
    *
    */
 
-  public createNewOperator(utilityIndex: number, paperSize: { x: number, y: number }) {
-    const firstOperatorOffset: Point = {
-      x:  paperSize.x * 2,
-      y:  paperSize.y * 4
-    };
-    const secondOperatorOffset: Point = {
-      x:  paperSize.x * 3,
-      y:  paperSize.y * 4
-    };
-    const thirdOperatorOffset: Point = {
-      x:  paperSize.x * 4,
-      y:  paperSize.y * 4
-    };
-    if (utilityIndex === 0) {
-        this.workflowActionService.addOperator(keyWordSearchPredicate, firstOperatorOffset);
-        this.workflowActionService.addOperator(wordCountPredicate, secondOperatorOffset);
-        this.workflowActionService.addOperator(viewResultPredicate, thirdOperatorOffset);
-        this.workflowActionService.addLink(keyWordSearchWordCountLink);
-        this.workflowActionService.addLink(wordCountViewResultLink);
-    }
-  }
+  
 
   /**
    * Creates a DOM Element that visually looks identical to the operator when dropped on main workflow editor

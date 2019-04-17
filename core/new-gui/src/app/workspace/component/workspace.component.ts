@@ -11,6 +11,8 @@ import { DynamicSchemaService } from '../service/dynamic-schema/dynamic-schema.s
 import { SourceTablesService } from '../service/dynamic-schema/source-tables/source-tables.service';
 import { SchemaPropagationService } from '../service/dynamic-schema/schema-propagation/schema-propagation.service';
 import { ResultPanelToggleService } from '../service/result-panel-toggle/result-panel-toggle.service';
+import { LoadUtilitiesTemplatesService } from '../service/load-utilities-templates/load-utilities-templates.service';
+
 
 @Component({
   selector: 'texera-workspace',
@@ -28,7 +30,8 @@ import { ResultPanelToggleService } from '../service/result-panel-toggle/result-
     WorkflowUtilService,
     DragDropService,
     ExecuteWorkflowService,
-    ResultPanelToggleService
+    ResultPanelToggleService,
+    LoadUtilitiesTemplatesService
   ]
 })
 export class WorkspaceComponent {

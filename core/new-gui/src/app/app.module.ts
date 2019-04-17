@@ -19,7 +19,7 @@ import { WorkspaceComponent } from './workspace/component/workspace.component';
 import { NavigationComponent } from './workspace/component/navigation/navigation.component';
 import { OperatorPanelComponent } from './workspace/component/operator-panel/operator-panel.component';
 import { PropertyEditorComponent } from './workspace/component/property-editor/property-editor.component';
-import { WorkflowEditorComponent } from './workspace/component/workflow-editor/workflow-editor.component';
+import { WorkflowEditorComponent, NgbModalPausedComponent } from './workspace/component/workflow-editor/workflow-editor.component';
 import { ResultPanelComponent, NgbModalComponent } from './workspace/component/result-panel/result-panel.component';
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
@@ -37,7 +37,8 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
     NgbModalComponent,
     OperatorLabelComponent,
     ProductTourComponent,
-    ResultPanelToggleComponent
+    ResultPanelToggleComponent,
+    NgbModalPausedComponent
   ],
   imports: [
     BrowserModule,
@@ -56,6 +57,6 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
   providers: [ HttpClientModule ],
   bootstrap: [AppComponent],
   // dynamically created component must be placed in the entryComponents attribute
-  entryComponents: [ NgbModalComponent ]
+  entryComponents: [ NgbModalComponent, NgbModalPausedComponent ]
 })
 export class AppModule { }

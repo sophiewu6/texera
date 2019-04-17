@@ -1,10 +1,12 @@
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, Input } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
+
+import { NgbModal, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 // argument type of callback event on a JointJS Paper
 // which is a 4-element tuple:
@@ -43,6 +45,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
+    private modalService: NgbModal
   ) {
   }
 
@@ -59,6 +62,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     this.handleWindowResize();
     this.handleViewDeleteOperator();
+    this.handleViewPauseOperator();
     this.handleCellHighlight();
 
     this.dragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_JOINTJS_ID);
@@ -184,6 +188,18 @@ export class WorkflowEditorComponent implements AfterViewInit {
       );
   }
 
+  private handleViewPauseOperator(): void {
+    Observable.fromEvent<JointPaperEvent>(this.getJointPaper(), 'element:pauseInfo')
+      .map(value => value[0]) // .filter(like is paused or something)
+      .subscribe(
+        elementView => {
+          const modalRef = this.modalService.open(NgbModalPausedComponent);
+          const modalComponentInstance = modalRef.componentInstance as NgbModalPausedComponent;
+          modalComponentInstance.operatorPauseDisplayData = elementView.model.id.toString();
+        }
+      );
+  }
+
   /**
    * Gets the width and height of the parent wrapper element
    */
@@ -279,5 +295,23 @@ function validateOperatorMagnet(cellView: joint.dia.CellView, magnet: SVGElement
   return false;
 }
 
+@Component({
+  selector: 'texera-ngbd-modal-content',
+  templateUrl: './workflow-editor-modal.component.html',
+  styleUrls: ['./workflow-editor.component.scss']
+})
+export class NgbModalPausedComponent {
+  // when modal is opened, currentDisplayRow will be passed as
+  //  componentInstance to this NgbModalPausedComponent to display
+  //  as data table.
+  @Input() operatorPauseDisplayData: string = 'Hello!';
 
+  // activeModal is responsible for interacting with the
+  //  ng-bootstrap modal, such as dismissing or exitting
+  //  the pop-up modal.
+  // it is used in the HTML template
+
+  constructor(public activeModal: NgbActiveModal) { }
+
+}
 

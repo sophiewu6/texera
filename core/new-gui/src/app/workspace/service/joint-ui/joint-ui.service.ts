@@ -21,6 +21,16 @@ export const deleteButtonSVG =
     <path d="${deleteButtonPath}"/>
   </svg>`;
 
+export const pauseInfoButtonPath = 'M14.59 8L12 10.59 9.41 8 8 9.41 10.59 12 8 14.59 9.41 16 12 13.41' +
+' 14.59 16 16 14.59 13.41 12 16 9.41 14.59 8zM12 2C6.47 2 2 6.47 2';
+
+export const pauseInfoButtonSVG =
+  `<svg class="pause-info-button" height="24" width="24">
+    <path d="M0 0h24v24H0z"/>
+    <path d="${pauseInfoButtonPath}"/>
+  </svg>`; //  PUT IN THE FIRST PATH: fill="none" pointer-events="visible"
+
+
 /**
  * Defines the handle (the square at the end) of the source operator for a link
  */
@@ -40,6 +50,7 @@ class TexeraCustomJointElement extends joint.shapes.devs.Model {
   markup =
     `<g class="element-node">
       <rect class="body" stroke-width="2" stroke="blue" rx="5px" ry="5px"></rect>
+      ${pauseInfoButtonSVG}
       ${deleteButtonSVG}
       <text></text>
       <image></image>
@@ -247,6 +258,10 @@ export class JointUIService {
       'text': {
         text: operatorDisplayName, fill: '#595959', 'font-size': '14px',
         'ref-x': 0.5, 'ref-y': 80, ref: 'rect', 'y-alignment': 'middle', 'x-alignment': 'middle'
+      },
+      '.pause-info-button': {
+        x: 0, y: 0, cursor: 'pointer',
+        fill: '#D8656A', event: 'element:pauseInfo'
       },
       '.delete-button': {
         x: 60, y: -20, cursor: 'pointer',

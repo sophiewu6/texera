@@ -3,6 +3,7 @@ package edu.uci.ics.texera.dataflow.common;
 import java.util.UUID;
 
 import edu.uci.ics.texera.dataflow.aggregator.AggregatorPredicate;
+import edu.uci.ics.texera.dataflow.nlp.sentiment.chinese.ChineseSentimentPredicate;
 import edu.uci.ics.texera.dataflow.twitterfeed.TwitterFeedSourcePredicate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -77,6 +78,7 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
         @Type(value = NlpSentimentPredicate.class, name = "NlpSentiment"),
         @Type(value = EmojiSentimentPredicate.class, name = "EmojiSentiment"),
         @Type(value = NltkSentimentOperatorPredicate.class, name = "NltkSentiment"),
+        @Type(value = ChineseSentimentPredicate.class, name = "ChineseSentiment"),
 
         @Type(value = ProjectionPredicate.class, name = "Projection"),
         @Type(value = RegexSplitPredicate.class, name = "RegexSplit"),

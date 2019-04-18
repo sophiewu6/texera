@@ -1,9 +1,5 @@
-package edu.uci.ics.texera.dataflow.nlp.sentiment;
+package edu.uci.ics.texera.dataflow.nlp.sentiment.chinese;
 
-import com.hankcs.hanlp.HanLP;
-import com.hankcs.hanlp.classification.classifiers.IClassifier;
-import com.hankcs.hanlp.classification.classifiers.NaiveBayesClassifier;
-import edu.uci.ics.texera.api.constants.DataConstants;
 import edu.uci.ics.texera.api.utils.Utils;
 
 import java.io.*;
@@ -12,41 +8,14 @@ import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class ChineseSentimentOperator {
+import static edu.uci.ics.texera.api.constants.DataConstants.TexeraProject.TEXERA_DATAFLOW;
 
-    public static final String CORPUS_FOLDER = ensureTestData("ChnSentiCorp情感分析酒店评论", "http://hanlp.linrunsoft.com/release/corpus/ChnSentiCorp.zip");
+public class ChineseSentimentUtils {
 
-
-    public static void main(String[] args) throws Exception {
-
-        IClassifier classifier = new NaiveBayesClassifier(); // 创建分类器，更高级的功能请参考IClassifier的接口定义
-        classifier.train(CORPUS_FOLDER);                     // 训练后的模型支持持久化，下次就不必训练了
-        predict(classifier, "前台客房服务态度非常好！早餐很丰富，房价很干净。再接再厉！");
-        predict(classifier, "结果大失所望，灯光昏暗，空间极其狭小，床垫质量恶劣，房间还伴着一股霉味。");
-        predict(classifier, "可利用文本分类实现情感分析，效果还行");
-
-        System.out.println("首次编译运行时，HanLP会自动构建词典缓存，请稍候……");
-        HanLP.Config.enableDebug();         // 为了避免你等得无聊，开启调试模式说点什么:-)
-        System.out.println(HanLP.segment("你好，欢迎使用HanLP汉语处理包！接下来请从其他Demo中体验HanLP丰富的功能~"));
-
-    }
-
-    private static void predict(IClassifier classifier, String text)
-    {
-        System.out.printf("《%s》 情感极性是 【%s】\n", text, classifier.classify(text));
-    }
-
-    /**
-     * 保证 data/test/name 存在
-     *
-     * @param name
-     * @param url
-     * @return
-     */
     public static String ensureTestData(String name, String url)
     {
         return ensureData(
-                Utils.getResourcePath("hanlp/data/" + name, DataConstants.TexeraProject.TEXERA_DATAFLOW).toString(),
+                Utils.getResourcePath("hanlp/data/" + name, TEXERA_DATAFLOW).toString(),
                 url, null, true);
     }
 
@@ -226,6 +195,5 @@ public class ChineseSentimentOperator {
             e.printStackTrace();
         }
     }
-
 
 }

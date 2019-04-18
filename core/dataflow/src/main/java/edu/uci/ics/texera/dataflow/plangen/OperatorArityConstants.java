@@ -19,6 +19,7 @@ import edu.uci.ics.texera.dataflow.nlp.entity.NlpEntityPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.EmojiSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NltkSentimentOperatorPredicate;
+import edu.uci.ics.texera.dataflow.nlp.sentiment.chinese.ChineseSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.splitter.NlpSplitPredicate;
 import edu.uci.ics.texera.dataflow.projection.ProjectionPredicate;
 import edu.uci.ics.texera.dataflow.regexmatcher.RegexPredicate;
@@ -62,6 +63,7 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(NlpSentimentPredicate.class, 1);
         fixedInputArityMap.put(NltkSentimentOperatorPredicate.class, 1);
         fixedInputArityMap.put(EmojiSentimentPredicate.class, 1);
+        fixedInputArityMap.put(ChineseSentimentPredicate.class, 1);
         fixedInputArityMap.put(ProjectionPredicate.class, 1);
         fixedInputArityMap.put(RegexSplitPredicate.class, 1);
         fixedInputArityMap.put(NlpSplitPredicate.class, 1);
@@ -103,6 +105,7 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(NlpSentimentPredicate.class, 1);
         fixedOutputArityMap.put(NltkSentimentOperatorPredicate.class, 1);
         fixedOutputArityMap.put(EmojiSentimentPredicate.class, 1);
+        fixedOutputArityMap.put(ChineseSentimentPredicate.class, 1);
         fixedOutputArityMap.put(ProjectionPredicate.class, 1);
         fixedOutputArityMap.put(RegexSplitPredicate.class, 1);
         fixedOutputArityMap.put(NlpSplitPredicate.class, 1);

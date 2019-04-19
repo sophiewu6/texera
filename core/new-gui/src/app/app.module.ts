@@ -12,7 +12,7 @@ import { TourNgBootstrapModule } from 'ngx-tour-ng-bootstrap';
 
 
 import { MaterialDesignFrameworkModule } from 'angular6-json-schema-form';
-
+import { NgxJsonViewerModule } from 'ngx-json-viewer';
 
 import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/component/workspace.component';
@@ -46,6 +46,7 @@ import { FormsModule,ReactiveFormsModule }   from '@angular/forms';
     AppRoutingModule,
     HttpClientModule,
 
+    NgxJsonViewerModule,
     CustomNgMaterialModule,
     BrowserAnimationsModule,
     NgbModule.forRoot(),

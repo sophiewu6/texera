@@ -10,15 +10,16 @@ import { OperatorMetadataService } from './../../service/operator-metadata/opera
 import { StubOperatorMetadataService } from './../../service/operator-metadata/stub-operator-metadata.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 
-import { mockOperatorSchemaList } from './../../service/operator-metadata/mock-operator-metadata.data';
+import { mockScanSourceSchema, mockViewResultsSchema } from './../../service/operator-metadata/mock-operator-metadata.data';
 
 import { configure } from 'rxjs-marbles';
 const { marbles } = configure({ run: false });
 
 import { mockResultPredicate, mockScanPredicate, mockPoint } from '../../service/workflow-graph/model/mock-workflow-data';
 import { CustomNgMaterialModule } from '../../../common/custom-ng-material.module';
+import { DynamicSchemaService } from '../../service/dynamic-schema/dynamic-schema.service';
 
-
+import { environment } from '../../../../environments/environment';
 
 /* tslint:disable:no-non-null-assertion */
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -28,6 +29,7 @@ describe('PropertyEditorComponent', () => {
   let component: PropertyEditorComponent;
   let fixture: ComponentFixture<PropertyEditorComponent>;
   let workflowActionService: WorkflowActionService;
+  let dynamicSchemaService: DynamicSchemaService;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -35,7 +37,9 @@ describe('PropertyEditorComponent', () => {
       providers: [
         JointUIService,
         WorkflowActionService,
-        { provide: OperatorMetadataService, useClass: StubOperatorMetadataService }
+        { provide: OperatorMetadataService, useClass: StubOperatorMetadataService },
+        DynamicSchemaService,
+        // { provide: HttpClient, useClass: StubHttpClient }
       ],
       imports: [
         CustomNgMaterialModule,
@@ -51,16 +55,15 @@ describe('PropertyEditorComponent', () => {
     fixture = TestBed.createComponent(PropertyEditorComponent);
     component = fixture.componentInstance;
     workflowActionService = TestBed.get(WorkflowActionService);
+    dynamicSchemaService = TestBed.get(DynamicSchemaService);
 
     fixture.detectChanges();
+    environment.propertyDescriptionEnabled = true;
+
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should receive operator json schema from operator metadata service', () => {
-    expect(component.operatorSchemaList.length).toEqual(mockOperatorSchemaList.length);
   });
 
   /**
@@ -68,17 +71,19 @@ describe('PropertyEditorComponent', () => {
    *  get the operator data (id, property, and metadata), and then display the form.
    */
   it('should change the content of property editor from an empty panel correctly', () => {
-    const predicate = mockScanPredicate;
-    const currentSchema = component.operatorSchemaList.find(schema => schema.operatorType === predicate.operatorType);
+    const jointGraphWrapper = workflowActionService.getJointGraphWrapper();
 
     // check if the changePropertyEditor called after the operator
     //  is highlighted has correctly update the variables
-    component.changePropertyEditor(predicate);
+    const predicate = mockScanPredicate;
+    workflowActionService.addOperator(predicate, mockPoint);
+    jointGraphWrapper.highlightOperator(predicate.operatorID);
+
     fixture.detectChanges();
 
     // check variables are set correctly
     expect(component.currentOperatorID).toEqual(predicate.operatorID);
-    expect(component.currentOperatorSchema).toEqual(currentSchema);
+    expect(component.currentOperatorSchema).toEqual(mockScanSourceSchema);
     expect(component.currentOperatorInitialData).toEqual(predicate.operatorProperties);
     expect(component.displayForm).toBeTruthy();
 
@@ -88,10 +93,10 @@ describe('PropertyEditorComponent', () => {
 
     // check the panel title
     expect((formTitleElement.nativeElement as HTMLElement).innerText).toEqual(
-      currentSchema!.additionalMetadata.userFriendlyName);
+      mockScanSourceSchema.additionalMetadata.userFriendlyName);
 
     // check if the form has the all the json schema property names
-    Object.keys(currentSchema!.jsonSchema.properties!).forEach((propertyName) => {
+    Object.keys(mockScanSourceSchema.jsonSchema.properties!).forEach((propertyName) => {
       expect((jsonSchemaFormElement.nativeElement as HTMLElement).innerHTML).toContain(propertyName);
     });
 
@@ -105,15 +110,13 @@ describe('PropertyEditorComponent', () => {
     workflowActionService.addOperator(mockScanPredicate, mockPoint);
     workflowActionService.addOperator(mockResultPredicate, mockPoint);
 
-    const resultOperatorSchema = component.operatorSchemaList.find(schema => schema.operatorType === mockResultPredicate.operatorType);
-
     // highlight the first operator
     jointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
     fixture.detectChanges();
 
     // check the variables
     expect(component.currentOperatorID).toEqual(mockScanPredicate.operatorID);
-    expect(component.currentOperatorSchema).toEqual(mockOperatorSchemaList[0]);
+    expect(component.currentOperatorSchema).toEqual(mockScanSourceSchema);
     expect(component.currentOperatorInitialData).toEqual(mockScanPredicate.operatorProperties);
     expect(component.displayForm).toBeTruthy();
 
@@ -122,7 +125,7 @@ describe('PropertyEditorComponent', () => {
     fixture.detectChanges();
 
     expect(component.currentOperatorID).toEqual(mockResultPredicate.operatorID);
-    expect(component.currentOperatorSchema).toEqual(mockOperatorSchemaList[2]);
+    expect(component.currentOperatorSchema).toEqual(mockViewResultsSchema);
     expect(component.currentOperatorInitialData).toEqual(mockResultPredicate.operatorProperties);
     expect(component.displayForm).toBeTruthy();
 
@@ -132,10 +135,10 @@ describe('PropertyEditorComponent', () => {
 
     // check the panel title
     expect((formTitleElementAfterChange.nativeElement as HTMLElement).innerText).toEqual(
-      resultOperatorSchema!.additionalMetadata.userFriendlyName);
+      mockViewResultsSchema.additionalMetadata.userFriendlyName);
 
     // check if the form has the all the json schema property names
-    Object.keys(resultOperatorSchema!.jsonSchema.properties!).forEach((propertyName) => {
+    Object.keys(mockViewResultsSchema.jsonSchema.properties!).forEach((propertyName) => {
       expect((jsonSchemaFormElementAfterChange.nativeElement as HTMLElement).innerHTML).toContain(propertyName);
     });
 
@@ -147,9 +150,11 @@ describe('PropertyEditorComponent', () => {
    *  and clears all the operator data, and hide the form.
    */
   it('should clear and hide the property editor panel correctly on unhighlighting an operator', () => {
-    const predicate = mockScanPredicate;
+    const jointGraphWrapper = workflowActionService.getJointGraphWrapper();
 
-    component.changePropertyEditor(predicate);
+    const predicate = mockScanPredicate;
+    workflowActionService.addOperator(predicate, mockPoint);
+    jointGraphWrapper.highlightOperator(predicate.operatorID);
 
     // check if the clearPropertyEditor called after the operator
     //  is unhighlighted has correctly update the variables
@@ -269,12 +274,16 @@ describe('PropertyEditorComponent', () => {
 
   }));
 
-
   it(`should display property description button when property description is provided, when clicked,
     should display the tooltip window on the GUI`, () => {
+
+    expect(component.hasPropertyDescription).toBeFalsy();
+    expect(component.propertyDescription.size).toEqual(0);
+
     let buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
     expect(buttonState).toBeFalsy();
 
+    workflowActionService.addOperator(mockScanPredicate, mockPoint);
     component.changePropertyEditor(mockScanPredicate);
     fixture.detectChanges();
     buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
@@ -289,16 +298,27 @@ describe('PropertyEditorComponent', () => {
 
     tooltipWindow = fixture.debugElement.query(By.css('.tooltip'));
     expect(tooltipWindow).toBeTruthy();
+
+    expect(component.hasPropertyDescription).toBeTruthy();
+    expect(component.propertyDescription.size).toBeGreaterThan(0);
   });
 
   it('should not display property description button when property description is undefined', () => {
+
+    expect(component.hasPropertyDescription).toBeFalsy();
+    expect(component.propertyDescription.size).toEqual(0);
+
     let buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
     expect(buttonState).toBeFalsy();
+    workflowActionService.addOperator(mockResultPredicate, mockPoint);
 
     component.changePropertyEditor(mockResultPredicate);
     fixture.detectChanges();
     buttonState = fixture.debugElement.query(By.css('.propertyDescriptionButton'));
 
     expect(buttonState).toBeFalsy();
+
+    expect(component.hasPropertyDescription).toBeFalsy();
+    expect(component.propertyDescription.size).toEqual(0);
   });
 });

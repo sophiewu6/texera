@@ -1,7 +1,7 @@
 import { OperatorSchema } from './../../types/operator-schema.interface';
 import { OperatorPredicate } from '../../types/workflow-common.interface';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
-import { OperatorMetadataService } from './../../service/operator-metadata/operator-metadata.service';
+import { DynamicSchemaService } from '../../service/dynamic-schema/dynamic-schema.service';
 import { Component } from '@angular/core';
 
 import { Subject } from 'rxjs/Subject';
@@ -13,7 +13,7 @@ import '../../../common/rxjs-operators';
 // to import only the function that we use
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
-
+import { environment } from '../../../../environments/environment';
 
 /**
  * PropertyEditorComponent is the panel that allows user to edit operator properties.
@@ -71,28 +71,33 @@ export class PropertyEditorComponent {
   // the current operator schema list, used to find the operator schema of current operator
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
 
-  // the map of property description
+  // the map of property description (key = property name, value = property description)
   public propertyDescription: Map<String, String> = new Map();
 
   // boolean to display the property description button
   public hasPropertyDescription: boolean = false;
 
-  constructor(
-    private operatorMetadataService: OperatorMetadataService,
-    private workflowActionService: WorkflowActionService
-  ) {
-    // handle getting operator metadata
-    this.operatorMetadataService.getOperatorMetadata().subscribe(
-      value => { this.operatorSchemaList = value.operators; }
-    );
+  // the operator data need to be stored if the Json Schema changes, else the currently modified changes will be lost
+  public cachedFormData: object | undefined;
 
-    // handle the form change event to actually set the operator property
-    this.outputFormChangeEventStream.subscribe(formData => {
-      // set the operator property to be the new form data
-      if (this.currentOperatorID) {
-        this.workflowActionService.setOperatorProperty(this.currentOperatorID, formData);
-      }
-    });
+  constructor(
+    private workflowActionService: WorkflowActionService,
+    private autocompleteService: DynamicSchemaService
+  ) {
+    // subscribe to operator schema information (with source tables names added to source operators' table name properties)
+    // this.autocompleteService.getSourceTableAddedOperatorMetadataObservable().subscribe(
+    //   metadata => { this.operatorSchemaList = metadata.operators; }
+    // );
+
+    // listen to the autocomplete event, remove invalid properties, and update the schema displayed on the form
+    this.handleOperatorSchemaChange();
+
+    // when the operator's property is updated via program instead of user updating the json schema form,
+    //  this observable will be responsible in handling these events.
+    this.handleOperatorPropertyChange();
+
+    // handle the form change event on the user interface to actually set the operator property
+    this.handleOnFormChange();
 
     // handle highlight / unhighlight event to show / hide the property editor form
     this.handleHighlightEvents();
@@ -141,24 +146,13 @@ export class PropertyEditorComponent {
 
     // set the operator data needed
     this.currentOperatorID = operator.operatorID;
-    this.currentOperatorSchema = this.operatorSchemaList.find(schema => schema.operatorType === operator.operatorType);
-
+    this.currentOperatorSchema = this.autocompleteService.getDynamicSchema(this.currentOperatorID);
     if (!this.currentOperatorSchema) {
       throw new Error(`operator schema for operator type ${operator.operatorType} doesn't exist`);
     }
 
-    // this if-else block will prevent undeclared property description to show, to check the effect
-    //  of this change, go to workspace component and use StubOperatorMetadataService as the provider
-
-    if (this.currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
-      this.propertyDescription = new Map(Object.entries(this.currentOperatorSchema.additionalMetadata.propertyDescription));
-      this.hasPropertyDescription = true;
-    } else {
-      this.propertyDescription = new Map();
-      this.hasPropertyDescription = false;
-    }
-
-
+    // show operator description or not
+    this.handleOperatorPropertyDescription(this.currentOperatorSchema);
 
     /**
      * Make a deep copy of the initial property data object.
@@ -240,6 +234,79 @@ export class PropertyEditorComponent {
       // share() because the original observable is a hot observable
       .share();
 
+  }
+
+  /**
+   * This function is a handler for displaying property description option on the property panel
+   *
+   * The if-else block will prevent undeclared property description to be displayed on the UI
+   *
+   * @param currentOperatorSchema
+   */
+  private handleOperatorPropertyDescription(currentOperatorSchema: OperatorSchema): void {
+    if (!environment.propertyDescriptionEnabled) {
+      this.propertyDescription = new Map();
+      this.hasPropertyDescription = false;
+    }
+
+    if (currentOperatorSchema.additionalMetadata.propertyDescription !== undefined) {
+      this.propertyDescription = new Map(Object.entries(currentOperatorSchema.additionalMetadata.propertyDescription));
+      this.hasPropertyDescription = true;
+    } else {
+      this.propertyDescription = new Map();
+      this.hasPropertyDescription = false;
+    }
+  }
+
+  /**
+   * This method handles the schema change event from autocomplete. It will get the new schema
+   *  propagated from autocomplete and check if the operators' properties that users input
+   *  previously are still valid. If invalid, it will remove these fields and triggered an event so
+   *  that the user interface will be updated through handleOperatorPropertyChange() method.
+   *
+   * If the operator that experiences schema changed is the same as the operator that is currently
+   *  displaying on the property panel, this handler will update the current operator schema
+   *  to the new schema.
+   */
+  private handleOperatorSchemaChange(): void {
+    this.autocompleteService.getOperatorDynamicSchemaChangedStream().subscribe(
+      event => {
+        if (event.operatorID === this.currentOperatorID) {
+          this.currentOperatorSchema = this.autocompleteService.getDynamicSchema(this.currentOperatorID);
+        }
+      }
+    );
+  }
+
+  /**
+   * This method captures the change in operator's property via program instead of user updating the
+   *  json schema form in the user interface.
+   *
+   * For instance, when the input doesn't matching the new json schema and the UI needs to remove the
+   *  invalid fields, this form will capture those events.
+   */
+  private handleOperatorPropertyChange(): void {
+    this.workflowActionService.getTexeraGraph().getOperatorPropertyChangeStream()
+      .filter(operatorChanged => operatorChanged.operator.operatorID === this.currentOperatorID)
+      .filter(operatorChanged => !isEqual(this.cachedFormData, operatorChanged.operator.operatorProperties))
+      .subscribe(operatorChanged => {
+        this.currentOperatorInitialData = cloneDeep(operatorChanged.operator.operatorProperties);
+      });
+  }
+
+  /**
+   * This method handles the form change event and set the operator property
+   *  in the texera graph.
+   */
+  private handleOnFormChange(): void {
+    this.outputFormChangeEventStream
+      .subscribe(formData => {
+      // set the operator property to be the new form data
+      if (this.currentOperatorID) {
+        this.cachedFormData = formData;
+        this.workflowActionService.setOperatorProperty(this.currentOperatorID, formData);
+      }
+    });
   }
 
   /**

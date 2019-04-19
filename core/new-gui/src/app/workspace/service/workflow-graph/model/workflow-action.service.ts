@@ -85,10 +85,12 @@ export class WorkflowActionService {
   public addOperator(operator: OperatorPredicate, point: Point): void {
     // check that the operator doesn't exist
     this.texeraGraph.assertOperatorNotExists(operator.operatorID);
+
     // check that the operator type exists
     if (! this.operatorMetadataService.operatorTypeExists(operator.operatorType)) {
       throw new Error(`operator type ${operator.operatorType} is invalid`);
     }
+
     // get the JointJS UI element
     const operatorJointElement = this.jointUIService.getJointOperatorElement(operator, point);
 

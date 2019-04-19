@@ -24,6 +24,7 @@ import { ResultPanelComponent, NgbModalComponent } from './workspace/component/r
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
 import { ResultPanelToggleComponent } from './workspace/component/result-panel-toggle/result-panel-toggle.component';
+import { FormsModule,ReactiveFormsModule }   from '@angular/forms';
 
 
 @NgModule({
@@ -51,8 +52,9 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
     RouterModule.forRoot([]),
     TourNgBootstrapModule.forRoot(),
 
-    MaterialDesignFrameworkModule
-   
+    MaterialDesignFrameworkModule,
+    FormsModule,
+    ReactiveFormsModule
 
 
   ],

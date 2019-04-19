@@ -3,6 +3,14 @@ import { OperatorMetadataService } from '../../service/operator-metadata/operato
 
 import { OperatorSchema, OperatorMetadata, GroupInfo } from '../../types/operator-schema.interface';
 
+import {FormControl} from '@angular/forms';
+import {Observable} from 'rxjs';
+
+import { Point } from "../../types/workflow-common.interface";
+
+import { WorkflowActionService } from "../../service/workflow-graph/model/workflow-action.service";
+import { WorkflowUtilService } from "../../service/workflow-graph/util/workflow-util.service";
+
 /**
  * OperatorViewComponent is the left-side panel that shows the operators.
  *
@@ -28,6 +36,14 @@ import { OperatorSchema, OperatorMetadata, GroupInfo } from '../../types/operato
 })
 export class OperatorPanelComponent implements OnInit {
 
+
+  myControl = new FormControl();
+  // options: string[] = ['Source: Word Count', 'Source: Fuzzy Token', 'Source: Dictionary', 'Source: Scan'];
+  options: string[] = []
+  filteredOptions: Observable<string[]> | undefined;
+
+  // selectedOption: Observable<string> | undefined;
+
   // a list of all operator's schema
   public operatorSchemaList: ReadonlyArray<OperatorSchema> = [];
   // a list of group names, sorted based on the groupOrder from OperatorMetadata
@@ -37,10 +53,13 @@ export class OperatorPanelComponent implements OnInit {
 
 
   constructor(
-    private operatorMetadataService: OperatorMetadataService
+    private operatorMetadataService: OperatorMetadataService,
+    private workflowActionService: WorkflowActionService,
+    private workflowUtilService: WorkflowUtilService
   ) {
   }
 
+  
   ngOnInit() {
     // subscribe to the operator metadata changed observable and process it
     // the operator metadata will be fetched asynchronously on application init
@@ -48,6 +67,7 @@ export class OperatorPanelComponent implements OnInit {
     this.operatorMetadataService.getOperatorMetadata().subscribe(
       value => this.processOperatorMetadata(value)
     );
+
   }
 
   /**
@@ -61,11 +81,35 @@ export class OperatorPanelComponent implements OnInit {
     this.operatorSchemaList = operatorMetadata.operators;
     this.groupNamesOrdered = getGroupNamesSorted(operatorMetadata.groups);
     this.operatorGroupMap = getOperatorGroupMap(operatorMetadata);
+
+
+    this.filteredOptions = this.myControl.valueChanges
+      .map(value => this._filter(value));
   }
+
+  private _filter(value: string): string[] {
+    const userFriendlyNames = this.operatorSchemaList.map(value => value.additionalMetadata.userFriendlyName);
+    const filterValue = value.toLowerCase();
+    return userFriendlyNames.filter(option => option.toLowerCase().includes(filterValue));
+  }
+
+  public OnHumanSelected(option: string) {
+    console.log(option);
+    const currentType = this.operatorSchemaList.filter(
+      schema => {
+        return schema.additionalMetadata.userFriendlyName === option;
+      }
+    ).map(schema => schema.operatorType)[0];
+    console.log(currentType);
+    const selectedOperatorPredicate = this.workflowUtilService.getNewOperatorPredicate(currentType);
+    console.log(selectedOperatorPredicate);
+    this.workflowActionService.addOperator(selectedOperatorPredicate, {x:600, y:399});
+  }
+  
 
 }
 
-// generates a list of group names sorted by the orde
+// generates a list of group names sorted by the order
 // slice() will make a copy of the list, because we don't want to sort the orignal list
 export function getGroupNamesSorted(groupInfoList: ReadonlyArray<GroupInfo>): string[] {
 
@@ -87,4 +131,39 @@ export function getOperatorGroupMap(
     }
   );
   return operatorGroupMap;
+  
+}
+
+
+
+///////////////////////////////////////////////////////
+export interface Option {
+  name: string;
+}
+export class AutocompleteOverviewExample {
+  myControl = new FormControl();
+  // filteredOptions: Observable<Option[]>;
+  optionss: string[] = ['One', 'Two', 'Three'];
+  // states: Option[] = [
+  //   {name: 'Arkansas'},
+  //   {name: 'California'},
+  //   {name: 'Florida'},
+  //   {name: 'Texas'}
+  // ];
+
+  
+
+  // constructor() {
+  //   this.filteredOptions = this.myControl.valueChanges
+  //     .pipe(
+  //       startWith(''),
+  //       map(state => state ? this._filterStates(state) : this.states.slice())
+  //     );
+  // }
+
+  // private _filterStates(value: string): Option[] {
+  //   const filterValue = value.toLowerCase();
+
+  //   return this.states.filter(state => state.name.toLowerCase().indexOf(filterValue) === 0);
+  // }
 }

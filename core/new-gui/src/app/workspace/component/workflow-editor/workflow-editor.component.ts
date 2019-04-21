@@ -1,15 +1,22 @@
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
+<<<<<<< HEAD
 import { WorkflowUtilService } from './../../service/workflow-graph/util/workflow-util.service';
 import { Component, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
 import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
+=======
+import { Component, AfterViewInit, ElementRef } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
 import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
-import { NavigationComponent } from '../navigation/navigation.component';
+import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-graph-wrapper';
+
 
 // argument type of callback event on a JointJS Paper
 // which is a 4-element tuple:
@@ -41,19 +48,20 @@ type JointPointerDownEvent = [JQuery.Event, number, number];
 })
 export class WorkflowEditorComponent implements AfterViewInit {
 
-  // zoomDifference represents the ratio that is zoom in/out everytime.
-  public static readonly ZOOM_DIFFERENCE: number = 0.02;
-
   // the DOM element ID of the main editor. It can be used by jQuery and jointJS to find the DOM element
   // in the HTML template, the div element ID is set using this variable
   public readonly WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID = 'texera-workflow-editor-jointjs-wrapper-id';
   public readonly WORKFLOW_EDITOR_JOINTJS_ID = 'texera-workflow-editor-jointjs-body-id';
 
   private paper: joint.dia.Paper | undefined;
+<<<<<<< HEAD
   /**
    * Logically, set ZoomOffset to be 1 since the intial zoom time is 1.
    */
   private newZoomRatio: number = 1;
+=======
+
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
   private ifMouseDown: boolean = false;
   private mouseDown: Point | undefined;
   private dragOffset: Point = { x : 0 , y : 0};
@@ -62,7 +70,11 @@ export class WorkflowEditorComponent implements AfterViewInit {
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
+<<<<<<< HEAD
     private loadUtilitiesTemplatesService: LoadUtilitiesTemplatesService
+=======
+    private elementRef: ElementRef
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
   ) {
   }
 
@@ -73,13 +85,17 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return this.paper;
   }
 
+<<<<<<< HEAD
  
   public getZoomRatio(): number {
     return this.newZoomRatio;
   }
 
+=======
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
   ngAfterViewInit() {
     this.initializeJointPaper();
+    this.handlePaperRestoreDefaultOffset();
     this.handlePaperZoom();
     this.handleWindowResize();
     this.handleViewDeleteOperator();
@@ -103,6 +119,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.setJointPaperOriginOffset();
     this.setJointPaperDimensions();
   }
+<<<<<<< HEAD
     /**
      * Handles zoom events passed from navigation-component, which can be used to
      *  make the jointJS paper larger or smaller.
@@ -111,9 +128,24 @@ export class WorkflowEditorComponent implements AfterViewInit {
       this.dragDropService.getWorkflowEditorZoomStream().subscribe((newRatio) => {
         this.newZoomRatio = newRatio;
         this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
-      });
-    }
+=======
 
+  /**
+   * Handles restore offset default event by translating jointJS paper
+   *  back to original position.
+   */
+  private handlePaperRestoreDefaultOffset(): void {
+    this.workflowActionService.getJointGraphWrapper().getRestorePaperOffsetStream()
+      .subscribe(newOffset => {
+        this.getJointPaper().translate(
+          (- this.getWrapperElementOffset().x + newOffset.x),
+          (- this.getWrapperElementOffset().y + newOffset.y)
+        );
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
+      });
+  }
+
+<<<<<<< HEAD
     private handlePaperUtility(): void {
       this.loadUtilitiesTemplatesService.getUtilitiesTemplatesSubject().subscribe((newUtilityIndex) => {
         this.loadUtilitiesTemplatesService.createNewOperator(newUtilityIndex, this.getWrapperElementOffset());
@@ -145,9 +177,46 @@ export class WorkflowEditorComponent implements AfterViewInit {
               this.dragDropService.setZoomProperty(this.newZoomRatio);
             }
           }
+=======
+  /**
+   * Handles zoom events passed from navigation-component, which can be used to
+   *  make the jointJS paper larger or smaller.
+   */
+  private handlePaperZoom(): void {
+    this.workflowActionService.getJointGraphWrapper().getWorkflowEditorZoomStream().subscribe(newRatio => {
+      this.getJointPaper().scale(newRatio, newRatio);
+    });
+  }
 
-        );
-    }
+  /**
+   * Handles zoom events when user slides the mouse wheel.
+   *
+   * The first filter will removes all the mousewheel events that are undefined
+   * The second filter will remove all the mousewheel events that are
+   *  from different components
+   *
+   * From the mousewheel event:
+   *  1. when delta Y is negative, the wheel is scrolling down, so
+   *      the jointJS paper will zoom in.
+   *  2. when delta Y is positive, the wheel is scrolling up, so the
+   *      jointJS paper will zoom out.
+   */
+  private handlePaperMouseZoom(): void {
+    Observable.fromEvent<WheelEvent>(document, 'mousewheel')
+      .filter(event => event !== undefined)
+      .filter(event => this.elementRef.nativeElement.contains(event.target))
+      .forEach(event => {
+        if (event.deltaY < 0) {
+          this.workflowActionService.getJointGraphWrapper()
+            .setZoomProperty(this.workflowActionService.getJointGraphWrapper().getZoomRatio() - JointGraphWrapper.ZOOM_DIFFERENCE);
+        } else {
+          this.workflowActionService.getJointGraphWrapper()
+            .setZoomProperty(this.workflowActionService.getJointGraphWrapper().getZoomRatio() + JointGraphWrapper.ZOOM_DIFFERENCE);
+        }
+      });
+  }
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
+
   /**
    * This method handles user mouse drag events to pan JointJS paper.
    *
@@ -184,8 +253,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
           // calculate the drag offset between user click on the mouse and then release the mouse, including zooming value.
           this.dragOffset = {
-            x : coordinate.x - this.mouseDown.x * this.newZoomRatio,
-            y : coordinate.y - this.mouseDown.y * this.newZoomRatio
+            x : coordinate.x - this.mouseDown.x * this.workflowActionService.getJointGraphWrapper().getZoomRatio(),
+            y : coordinate.y - this.mouseDown.y * this.workflowActionService.getJointGraphWrapper().getZoomRatio()
           };
           // do paper movement.
           this.getJointPaper().translate(
@@ -193,7 +262,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
             (- this.getWrapperElementOffset().y + this.dragOffset.y)
           );
           // pass offset to the drag-and-drop.service, make drop operator be at the right location.
-          this.dragDropService.setOffset(this.dragOffset);
+          this.workflowActionService.getJointGraphWrapper().setDragOffset(this.dragOffset);
         });
 
     // This observable captures the drop event to stop the panning
@@ -205,7 +274,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
     // when the window is resized (limit to at most one event every 30ms)
     Observable.fromEvent(window, 'resize').auditTime(30).subscribe(
       () => {
-        console.log('resize');
         // reset the origin cooredinates
         this.setJointPaperOriginOffset();
         // resize the JointJS paper dimensions
@@ -347,8 +415,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     const jointPaperOptions: joint.dia.Paper.Options = {
 
-      // set grid size to 1px (smallest grid)
-      gridSize: 1,
       // enable jointjs feature that automatically snaps a link to the closest port with a radius of 30px
       snapLinks: { radius: 30 },
       // disable jointjs default action that can make a link not connect to an operator
@@ -365,6 +431,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
       preventDefaultBlankAction: false,
       // disable jointjs default action that prevents normal right click menu showing up on jointjs paper
       preventContextMenu: false,
+      // draw dots in the background of the paper
+      drawGrid: {name: 'fixedDot', args: {color: 'black', scaleFactor: 8, thickness: 1.2 } },
+      // set grid size
+      gridSize: 2,
     };
 
     return jointPaperOptions;

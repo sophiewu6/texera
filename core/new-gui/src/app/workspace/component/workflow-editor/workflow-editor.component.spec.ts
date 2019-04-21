@@ -5,7 +5,6 @@ import { WorkflowUtilService } from './../../service/workflow-graph/util/workflo
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WorkflowEditorComponent } from './workflow-editor.component';
-import { NavigationComponent } from './../navigation/navigation.component';
 
 import { marbles } from 'rxjs-marbles';
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
@@ -135,6 +134,7 @@ describe('WorkflowEditorComponent', () => {
     let fixture: ComponentFixture<WorkflowEditorComponent>;
     let workflowActionService: WorkflowActionService;
     let dragDropService: DragDropService;
+
     beforeEach(async(() => {
       TestBed.configureTestingModule({
         declarations: [WorkflowEditorComponent],
@@ -225,24 +225,31 @@ describe('WorkflowEditorComponent', () => {
       expect(jointHighlighterElementAfterUnhighlight.length).toEqual(0);
     });
 
-    it('shoud detect changes of the zoom values when users slide the mouse wheel', marbles((m) => {
-      m.hot('-e-').do(event => component.getZoomRatio()).subscribe();
-
-      // originZoonratio is the zoom ratio that will be loaded when user first open the web page.
-      const originZoomRatio = 1;
-
-      // to justify if the zoom ratio is being changed or not.
-      let ifZoomRatioChange = false;
-
-      dragDropService.getWorkflowEditorZoomStream().subscribe(
-        newRatio => {
-          fixture.detectChanges();
-          if (originZoomRatio !== newRatio) {
-            ifZoomRatioChange = true;
-          }
-          expect(ifZoomRatioChange).toBeTruthy();
-      });
+    it('should react to jointJS paper zoom event', marbles((m) => {
+      const mockScaleRatio = 0.5;
+      m.hot('-e-').do(() => workflowActionService.getJointGraphWrapper().setZoomProperty(mockScaleRatio)).subscribe(
+        () => {
+          const currentScale = component.getJointPaper().scale();
+          expect(currentScale.sx).toEqual(mockScaleRatio);
+          expect(currentScale.sy).toEqual(mockScaleRatio);
+        }
+      );
     }));
+
+    it('should react to jointJS paper restore default offset event', marbles((m) => {
+      const mockTranslation = 20;
+      const originalOffset = component.getJointPaper().translate();
+      component.getJointPaper().translate(mockTranslation, mockTranslation);
+      expect(component.getJointPaper().translate().tx).not.toEqual(originalOffset.tx);
+      expect(component.getJointPaper().translate().ty).not.toEqual(originalOffset.ty);
+      m.hot('-e-').do(() => workflowActionService.getJointGraphWrapper().restoreDefaultZoomAndOffset()).subscribe(
+        () => {
+          expect(component.getJointPaper().translate().tx).toEqual(originalOffset.tx);
+          expect(component.getJointPaper().translate().ty).toEqual(originalOffset.ty);
+        }
+      );
+    }));
+
   });
 
 });

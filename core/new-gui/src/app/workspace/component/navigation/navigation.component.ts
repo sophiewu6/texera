@@ -1,6 +1,7 @@
 import { Component, OnInit, NgModule, Input, Output } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
+<<<<<<< HEAD
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -10,6 +11,11 @@ import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-temp
 
 
 
+=======
+import { environment } from '../../../../environments/environment';
+import { WorkflowActionService } from '../../service/workflow-graph/model/workflow-action.service';
+import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-graph-wrapper';
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -34,6 +40,7 @@ import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-temp
 
 export class NavigationComponent implements OnInit {
 
+<<<<<<< HEAD
   // zoomDifference represents the ratio that is zoom in/out everytime.
   public static readonly ZOOM_DIFFERENCE: number = 0.02;
   public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
@@ -52,6 +59,16 @@ export class NavigationComponent implements OnInit {
     // private loadUtilitiesTemplateService: LoadUtilitiesTemplatesService
     ) {
     // hide the spinner after the execution is finished, either
+=======
+  public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
+  public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
+
+  // variable binded with HTML to decide if the running spinner should show
+  public showSpinner = false;
+
+  constructor(private executeWorkflowService: ExecuteWorkflowService,
+    public tourService: TourService, private workflowActionService: WorkflowActionService) {
+>>>>>>> 04058d4456852b8b8943aa7a09124f2ae0df9ff7
     // return the run button after the execution is finished, either
     //  when the value is valid or invalid
     executeWorkflowService.getExecuteEndedStream().subscribe(
@@ -73,13 +90,6 @@ export class NavigationComponent implements OnInit {
   }
 
   ngOnInit() {
-    /**
-     * Get the new value from the mouse wheel zoom function.
-     */
-    this.dragDropService.getWorkflowEditorZoomStream().subscribe(
-      newRatio => {
-          this.newZoomRatio = newRatio;
-    });
   }
 
 
@@ -175,16 +185,23 @@ export class NavigationComponent implements OnInit {
   /**
    * send the offset value to the work flow editor panel using drag and drop service.
    * when users click on the button, we change the zoomoffset to make window larger or smaller.
-  */
+   */
   public onClickZoomIn(): void {
     // make the ratio small.
-    this.newZoomRatio += NavigationComponent.ZOOM_DIFFERENCE;
-    this.dragDropService.setZoomProperty(this.newZoomRatio);
+    this.workflowActionService.getJointGraphWrapper()
+      .setZoomProperty(this.workflowActionService.getJointGraphWrapper().getZoomRatio() + JointGraphWrapper.ZOOM_DIFFERENCE);
   }
   public onClickZoomOut(): void {
     // make the ratio big.
-    this.newZoomRatio -= NavigationComponent.ZOOM_DIFFERENCE;
-    this.dragDropService.setZoomProperty(this.newZoomRatio);
+    this.workflowActionService.getJointGraphWrapper()
+      .setZoomProperty(this.workflowActionService.getJointGraphWrapper().getZoomRatio() - JointGraphWrapper.ZOOM_DIFFERENCE);
+  }
+
+  /**
+   * Restore paper default zoom ratio and paper offset
+   */
+  public onClickRestoreZoomOffsetDefaullt(): void {
+    this.workflowActionService.getJointGraphWrapper().restoreDefaultZoomAndOffset();
   }
 }
 /**

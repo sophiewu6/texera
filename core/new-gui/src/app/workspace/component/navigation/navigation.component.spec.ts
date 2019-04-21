@@ -2,7 +2,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { NavigationComponent } from './navigation.component';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
@@ -38,12 +38,14 @@ describe('NavigationComponent', () => {
   let workflowActionService: WorkflowActionService;
   let loadUtilitiesTemplatesService: LoadUtilitiesTemplatesService;
   let modalService:  NgbModal;
+
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [NavigationComponent],
       imports: [
         CustomNgMaterialModule,
         RouterTestingModule.withRoutes([]),
+        NgbModule.forRoot()
       ],
       providers: [
         WorkflowActionService,
@@ -52,7 +54,6 @@ describe('NavigationComponent', () => {
         JointUIService,
         ExecuteWorkflowService,
         DragDropService,
-        NgbModal,
         { provide: OperatorMetadataService, useClass: StubOperatorMetadataService },
         { provide: HttpClient, useClass: StubHttpClient },
         TourService,

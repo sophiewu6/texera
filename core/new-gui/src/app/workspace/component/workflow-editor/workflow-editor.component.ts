@@ -303,6 +303,19 @@ export class WorkflowEditorComponent implements AfterViewInit {
           this.workflowActionService.deleteOperator(elementView.model.id.toString());
         }
       );
+
+    Observable
+      .fromEvent<JointPaperEvent>(this.getJointPaper(), 'tool:remove')
+      .map(value => value[0])
+      .subscribe(
+        elementView => {
+
+
+
+          this.workflowActionService.deleteLinkWithID(elementView.model.id.toString());
+          console.log(elementView.model.id.toString());
+        }
+      );
   }
 
   /**
@@ -338,7 +351,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
   private static getJointPaperOptions(): joint.dia.Paper.Options {
 
     const jointPaperOptions: joint.dia.Paper.Options = {
-
       // enable jointjs feature that automatically snaps a link to the closest port with a radius of 30px
       snapLinks: { radius: 30 },
       // disable jointjs default action that can make a link not connect to an operator

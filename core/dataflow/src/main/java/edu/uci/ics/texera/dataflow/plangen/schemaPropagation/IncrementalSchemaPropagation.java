@@ -11,6 +11,7 @@ import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.plangen.OperatorLink;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -100,9 +101,9 @@ public class IncrementalSchemaPropagation {
     private HashMap<String, IOperator> operatorObjectMap;
     // a map from operatorID to its schema
     private Map<String, Schema> schemaCollection;
-    // a map of an operator ID to outputs (a set of operator IDs)
+    // a map of an operator ID to upstream (a set of operator IDs)
     private LinkedHashMap<String, LinkedHashSet<String>> parentList;
-    // a map of an operator ID to inputs (a set of operator IDs)
+    // a map of an operator ID to downstream (a set of operator IDs)
     private LinkedHashMap<String, LinkedHashSet<String>> childList;
     
 
@@ -115,6 +116,30 @@ public class IncrementalSchemaPropagation {
     
     
     
+    public void propagateSchemaUpdate(String obID) {
+    	// recursively update the schema downstream
+    	if (childList.containsKey(obID)) {
+    		for (String childID : childList.get(obID)) {
+    			
+    			Schema tempSchema = getSchema(childID);
+    			if (tempSchema == null) continue;
+    			
+    			schemaCollection.put(childID, tempSchema);
+				propagateSchemaUpdate(childID);
+    		}
+    	}
+    }
+    
+    public void propagateSchemaDelete(String obID) {
+    	// recursively delete the schema downstream
+    	if (childList.containsKey(obID)) {
+    		for (String childID : childList.get(obID)) {
+    			propagateSchemaDelete(childID);
+    			schemaCollection.remove(childID);
+    		}
+    	}
+    }
+    
     public void updateOperatorObjectMap(OperatorValidationResult op) {
     	
     	PredicateBase pb = op.getOperatorPredicate();
@@ -122,23 +147,70 @@ public class IncrementalSchemaPropagation {
     	
     	if (!operatorObjectMap.containsKey(obID)) {
     		operatorObjectMap.put(obID, pb.newOperator());
-    	}	
+    	}
+    	
+    	Schema tempSchema = getSchema(obID);
+    	if (tempSchema != null)
+    		schemaCollection.put(obID, tempSchema);
+    	
+    	// propagate schema
+    	propagateSchemaUpdate(obID);
     }
     
     public void addRelation(OperatorLink link) {
+    	
     	String origin = link.getOrigin();
     	String destination = link.getDestination();
-    	// TODO: update parentList and childList
+    	
+    	// update parentList
+    	if (!parentList.containsKey(destination)) {
+    		parentList.put(destination, new LinkedHashSet<String>());
+    	}
+    	parentList.get(destination).add(origin);
+    	
+    	// update childList
+    	if (!childList.containsKey(origin)) {
+    		childList.put(origin, new LinkedHashSet<String>());
+    	}
+    	childList.get(origin).add(destination);
+    	
+    	// propagate schema
+    	Schema tempSchema = getSchema(destination);
+		if (tempSchema != null) {
+			schemaCollection.put(destination, tempSchema);
+			propagateSchemaUpdate(destination);
+		}
     }
     
     public void deleteRelation(OperatorLink link) {
+    	
     	String origin = link.getOrigin();
     	String destination = link.getDestination();
-    	// TODO: update parentList and childList
+    	
+    	// update parentList
+    	if (parentList.containsKey(destination)) {
+    		parentList.get(destination).remove(origin);
+    	}
+    	
+    	// update childList
+    	if (childList.containsKey(origin)) {
+    		childList.get(origin).remove(destination);
+    	}
+    	
+    	// propagate schema
+    	propagateSchemaDelete(destination);
     }
     
     public void updateOperatorProperty(OperatorValidationResult op) {
-    	// TODO: update operation property
+    	PredicateBase pb = op.getOperatorPredicate();
+    	String obID = pb.getID();
+    	
+    	Schema tempSchema = getSchema(obID);
+    	if (tempSchema != null)
+    		schemaCollection.put(obID, tempSchema);
+    	
+    	// propagate schema
+    	propagateSchemaUpdate(obID);
     }
     
     public Schema getSchema(String obID) {
@@ -152,6 +224,7 @@ public class IncrementalSchemaPropagation {
 		
     	else {
     		List<Schema> inputSchema = new ArrayList<Schema>();
+    		if (!parentList.containsKey(obID)) return null;
     		for (String parentID: parentList.get(obID)) {
     			if (schemaCollection.get(parentID) == null)
     				return null;
@@ -177,13 +250,16 @@ public class IncrementalSchemaPropagation {
             	String deleteOperatorID = deleteOperatorPayload.getOperatorID();
             	operatorObjectMap.remove(deleteOperatorID);
             	schemaCollection.remove(deleteOperatorID);
+            	propagateSchemaDelete(deleteOperatorID);
                 break;
             case ADD_LINK:
+            	// TODO: update all schema downstream
             	AddLinkPayload addLinkPayload = (AddLinkPayload) payload;
             	OperatorLink addLink = addLinkPayload.getLink();
             	addRelation(addLink);
                 break;
             case DELETE_LINK:
+            	// TODO: delete all schema downstream
             	DeleteLinkPayload deleteLinkPayload = (DeleteLinkPayload) payload;
             	OperatorLink deleteLink = deleteLinkPayload.getLink();
             	deleteRelation(deleteLink);
@@ -192,8 +268,11 @@ public class IncrementalSchemaPropagation {
             	SetOperatorPropertyPayload setOperatorPropertyPayload = (SetOperatorPropertyPayload) payload;
             	OperatorUnvalidated setOperatorProperty = setOperatorPropertyPayload.getOperatorUnvalidated();
             	OperatorValidationResult setOP = SchemaPropagation.validateOperator(setOperatorProperty);
-            	if (setOP.getErrorMessage() != null)
+            	if (setOP.getErrorMessage() != null) {
+            		// TODO: delete all schema downstream
                 	throw new DataflowException(setOP.getErrorMessage());
+            	}
+            	// TODO: update all schema downstream
                 updateOperatorProperty(setOP);
                 break;
         }
@@ -214,8 +293,32 @@ public class IncrementalSchemaPropagation {
         AddOperatorPayload addOperatorPayload1 = new AddOperatorPayload(new OperatorUnvalidated(
                 "1", "ScanSource", ImmutableMap.of("tableName", "twitter_sample")
         ));
-
         incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_OPERATOR, addOperatorPayload1);
+        
+        AddOperatorPayload addOperatorPayload2 = new AddOperatorPayload(new OperatorUnvalidated(
+                "2", "SentimentAnalysis", ImmutableMap.of("attribute", "text", "resultAttribute", "sentimentResult")
+        ));
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_OPERATOR, addOperatorPayload1);
+        
+        AddOperatorPayload addOperatorPayload3 = new AddOperatorPayload(new OperatorUnvalidated(
+                "3", "ViewResults", ImmutableMap.of()
+        ));
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_OPERATOR, addOperatorPayload3);
+
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("1", "2")));
+        
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("2", "3")));
+
+        SetOperatorPropertyPayload setPropertyPayload1 = new SetOperatorPropertyPayload(new OperatorUnvalidated(
+                "2", "SentimentAnalysis", ImmutableMap.of("attribute", "text", "resultAttribut", "abc")));
+        
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.SET_OPERATOR_PROPERTY, setPropertyPayload1);
+        
+        
+
+        System.out.println("hi");
+
+        
 
     }
 

@@ -171,7 +171,14 @@ public class SchemaPropagation {
         ObjectNode objectNode  = new ObjectMapper().createObjectNode();
         objectNode.put("operatorID", operator.getOperatorID());
         objectNode.put("operatorType", operator.getOperatorType());
-        operator.getOperatorProperties().forEach((key, value) -> objectNode.putPOJO(key, value));
+        operator.getOperatorProperties().forEach((key, value) -> {
+        	if (value.getClass().isAssignableFrom(Collection.class)) {
+        		ArrayNode arrayNode = objectNode.putArray(key);
+        		((Collection) value).forEach(v -> arrayNode.addPOJO(v));
+        	} else {
+        		objectNode.putPOJO(key, value);
+        	}
+        });
 
         Class<? extends PredicateBase> predicateClass = JsonSchemaHelper.operatorTypeMap.inverse().get(operator.getOperatorType());
         if (predicateClass == null) {

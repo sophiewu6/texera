@@ -27,7 +27,7 @@ export const pauseInfoButtonPath = 'M14.59 8L12 10.59 9.41 8 8 9.41 10.59 12 8 1
 export const pauseInfoButtonSVG =
   `<svg class="pause-info-button" height="24" width="24">
     <path d="M0 0h24v24H0z"/>
-    <path d="${pauseInfoButtonPath}"/>
+    <path d="${deleteButtonPath}"/>
   </svg>`; //  PUT IN THE FIRST PATH: fill="none" pointer-events="visible"
 
 

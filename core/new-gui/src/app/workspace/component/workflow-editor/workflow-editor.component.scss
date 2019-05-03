@@ -43,3 +43,14 @@
 ::ng-deep .texera-workspace-workflow-editor-body .link-tools .tool-remove circle{
   fill-opacity: 0 !important;
 }
+
+
+.modal-backdrop.fade {
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+
+.modal-backdrop.fade.in {
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+}

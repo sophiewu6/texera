@@ -193,9 +193,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
       .map(value => value[0]) // .filter(like is paused or something)
       .subscribe(
         elementView => {
-          const modalRef = this.modalService.open(NgbModalPausedComponent);
-          const modalComponentInstance = modalRef.componentInstance as NgbModalPausedComponent;
-          modalComponentInstance.operatorPauseDisplayData = elementView.model.id.toString();
+          const modalRef = this.modalService.open(NgbModalPausedComponent, {size: 'lg'});
+          // const modalComponentInstance = modalRef.componentInstance as NgbModalPausedComponent;
+          // modalComponentInstance.operatorPauseDisplayData = elementView.model.id.toString();
         }
       );
   }

@@ -32,7 +32,8 @@ export class NgbdModalResourceAddComponent {
   constructor(
     public activeModal: NgbActiveModal,
     public userDictionaryService: UserDictionaryService
-  ) {}
+  ) {
+  }
 
   public onChange(event: any): void {
     this.selectFile = event.target.files[0];

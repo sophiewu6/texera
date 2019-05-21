@@ -44,6 +44,17 @@ export interface ErrorExecutionResult extends Readonly< {
   message: string
 }> { }
 
+export interface SuccessPauseState extends Readonly<{
+  code: 0,
+  pauseCount: ReadonlyArray<object>,
+  resultID: string
+}> {}
+
+export interface ErrorPauseState extends Readonly<{
+  code: 1,
+  message: string
+}> {}
+
 /**
  * Discriminated Union
  * http://www.typescriptlang.org/docs/handbook/advanced-types.html
@@ -55,3 +66,12 @@ export interface ErrorExecutionResult extends Readonly< {
  *  if the code value is 1, then the object type must be ErrorExecutionResult
  */
 export type ExecutionResult = SuccessExecutionResult | ErrorExecutionResult;
+
+/**
+ * PauseState type can be either SuccessPauseState or ErrorPauseState.
+ *  but cannot contain both structures at the same time.
+ * In this case:
+ *  if the code value is 0, then the object type must be SuccessPauseState
+ *  if the code value is 1, then the object type must be ErrorPauseState
+ */
+export type PauseState = SuccessPauseState | ErrorPauseState;

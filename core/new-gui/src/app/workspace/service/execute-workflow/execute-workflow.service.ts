@@ -10,7 +10,8 @@ import { WorkflowActionService } from './../workflow-graph/model/workflow-action
 import { WorkflowGraphReadonly } from './../workflow-graph/model/workflow-graph';
 import {
   LogicalLink, LogicalPlan, LogicalOperator,
-  ExecutionResult, ErrorExecutionResult, SuccessExecutionResult
+  ExecutionResult, ErrorExecutionResult, SuccessExecutionResult,
+  PauseState, SuccessPauseState, ErrorPauseState
 } from '../../types/execute-workflow.interface';
 
 import { v4 as uuid } from 'uuid';
@@ -47,7 +48,7 @@ export class ExecuteWorkflowService {
 
   private workflowExecutionID: string | undefined;
 
-  private executionPauseResumeStream = new Subject <number> ();
+  private executionPauseResumeStream = new Subject <SuccessPauseState> ();
 
   constructor(private workflowActionService: WorkflowActionService, private http: HttpClient) { }
 
@@ -113,12 +114,16 @@ export class ExecuteWorkflowService {
     const body = {'workflowID' : this.workflowExecutionID};
 
     // The endpoint will be 'api/pause?action=pause', and workflowExecutionID will be the body
-    this.http.post(
+    this.http.post<SuccessPauseState>(
       requestURL,
       JSON.stringify(body),
       { headers: {'Content-Type' : 'application/json'}})
       .subscribe(
-        response => this.executionPauseResumeStream.next(0),
+        response => {
+          console.log('show us pause response here');
+          console.log(response);
+          this.executionPauseResumeStream.next(response);
+        },
         error => console.log(error)
     );
 
@@ -145,7 +150,7 @@ export class ExecuteWorkflowService {
       JSON.stringify(body),
       { headers: {'Content-Type' : 'application/json'}})
       .subscribe(
-        response => this.executionPauseResumeStream.next(1),
+        response => this.executionPauseResumeStream.next(),
         error => console.log(error)
     );
 
@@ -182,7 +187,7 @@ export class ExecuteWorkflowService {
    *  If pause succeeds, it will contain a number = 0
    *  If resume succeeds, it will contain a number = 1
    */
-  public getExecutionPauseResumeStream(): Observable<number> {
+  public getExecutionPauseResumeStream(): Observable<SuccessPauseState> {
     return this.executionPauseResumeStream.asObservable();
   }
 

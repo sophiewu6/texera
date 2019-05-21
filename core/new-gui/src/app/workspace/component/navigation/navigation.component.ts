@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
 import { environment } from '../../../../environments/environment';
+import {
+  PauseState, SuccessPauseState, ErrorPauseState
+} from '../../types/execute-workflow.interface';
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -45,7 +48,14 @@ export class NavigationComponent implements OnInit {
     //  is returned from the backend.
     // this will swap button between pause and resume
     executeWorkflowService.getExecutionPauseResumeStream()
-      .subscribe(state => this.isWorkflowPaused = (state === 0));
+      .subscribe(state => {
+        this.isWorkflowPaused = (state.code === 0);
+        console.log('ExecutionPauseResumeStream emits the following value');
+        if (state.code === 0) {
+          console.log((state as SuccessPauseState).pauseCount);
+        }
+      }
+      );
   }
 
   ngOnInit() {

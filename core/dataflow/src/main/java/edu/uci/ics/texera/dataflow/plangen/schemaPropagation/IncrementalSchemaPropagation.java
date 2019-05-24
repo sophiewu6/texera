@@ -146,10 +146,8 @@ public class IncrementalSchemaPropagation {
     	PredicateBase pb = op.getOperatorPredicate();
     	IOperator ob = pb.newOperator();
     	
-    	if (!operatorObjectMap.containsKey(obID)) {
-    		operatorObjectMap.put(obID, ob);
-    	}
-    	
+		operatorObjectMap.put(obID, ob);
+
     	Schema tempSchema = getSchema(obID);
     	if (tempSchema != null)
     		schemaCollection.put(obID, tempSchema);
@@ -203,16 +201,20 @@ public class IncrementalSchemaPropagation {
     	propagateSchemaDelete(destination);
     }
     
-    public void updateOperatorProperty(OperatorValidationResult op, String obID) {
-    	PredicateBase pb = op.getOperatorPredicate();
-    	
-    	Schema tempSchema = getSchema(obID);
-    	if (tempSchema != null)
-    		schemaCollection.put(obID, tempSchema);
-    	
-    	// propagate schema
-    	propagateSchemaUpdate(obID);
-    }
+//    public void updateOperatorProperty(OperatorValidationResult op, String obID) {
+//    	PredicateBase pb = op.getOperatorPredicate();
+//    	IOperator ob = pb.newOperator();
+//
+//    	this.operatorObjectMap.get(obID);
+//    	
+//    
+//    	Schema tempSchema = getSchema(obID);
+//    	if (tempSchema != null)
+//    		schemaCollection.put(obID, tempSchema);
+//    	
+//    	// propagate schema
+//    	propagateSchemaUpdate(obID);
+//    }
     
     public Schema getSchema(String obID) {
     	// return Schema if Schema from all parents are available in schemaCollection,
@@ -238,16 +240,11 @@ public class IncrementalSchemaPropagation {
     				Method setInputOperator = pclass.getDeclaredMethod("setInputOperator", IOperator.class);
 					setInputOperator.invoke(ob, parentOp);
     			} catch (Exception e) {
-    				System.out.println(e.getMessage());
+    				throw new DataflowException(e);
     			}
     		}
     		ob.open();
-    		try {
-    			return ob.getOutputSchema();
-    		} catch (Exception e) {
-    			System.out.println(e.getMessage());
-    		}
-    		return ob.transformToOutputSchema(inputSchema.toArray(new Schema[inputSchema.size()]));
+    		return ob.transformToOutputSchema(inputSchema.toArray(new Schema[inputSchema.size()]));    		
     	}
     }
 
@@ -292,7 +289,7 @@ public class IncrementalSchemaPropagation {
             		propagateSchemaDelete(obID);
                 	throw new DataflowException(setOP.getErrorMessage());
             	}
-                updateOperatorProperty(setOP, obID);
+            	updateOperatorObjectMap(setOP, obID);
                 break;
         }
     }
@@ -325,19 +322,35 @@ public class IncrementalSchemaPropagation {
         ));
         incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_OPERATOR, addOperatorPayload3);
 
-        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("1", "3")));
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("1", "2")));
         
-        //incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("2", "3")));
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("2", "3")));
+        
+        Map<String, Schema> c1 = incrementalSchemaPropagation.collectAllAvailableSchemas();
+        
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.DELETE_LINK, new DeleteLinkPayload(new OperatorLink("2", "3")));
 
-        //SetOperatorPropertyPayload setPropertyPayload1 = new SetOperatorPropertyPayload(new OperatorUnvalidated(
-        //        "2", "NlpSentiment", ImmutableMap.of("attribute", "text", "resultAttribute", "abc")));
+        Map<String, Schema> c2 = incrementalSchemaPropagation.collectAllAvailableSchemas();
         
-        //incrementalSchemaPropagation.acceptCommand(WorkflowCommand.SET_OPERATOR_PROPERTY, setPropertyPayload1);
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.DELETE_LINK, new DeleteLinkPayload(new OperatorLink("1", "2")));
+        
+        Map<String, Schema> c3 = incrementalSchemaPropagation.collectAllAvailableSchemas();
+        
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.ADD_LINK, new AddLinkPayload(new OperatorLink("1", "3")));
+
+        Map<String, Schema> c4 = incrementalSchemaPropagation.collectAllAvailableSchemas();
+
+        
+        SetOperatorPropertyPayload setPropertyPayload1 = new SetOperatorPropertyPayload(new OperatorUnvalidated(
+                "2", "NlpSentiment", ImmutableMap.of("attribute", "text", "resultAttribute", "abc")));
+        
+        incrementalSchemaPropagation.acceptCommand(WorkflowCommand.SET_OPERATOR_PROPERTY, setPropertyPayload1);
         
         
 
         System.out.println("hi");
         Map<String, Schema> c = incrementalSchemaPropagation.collectAllAvailableSchemas();
+        System.out.println(c);
         System.out.println("hi");
 
     }

@@ -118,6 +118,7 @@ public abstract class AbstractSingleInputOperator implements IOperator {
     
     public void setInputOperator(IOperator inputOperator) {
         this.inputOperator = inputOperator;
+        this.outputSchema = this.transformToOutputSchema(inputOperator.getOutputSchema());
     }
     
     public IOperator getInputOperator() {

@@ -47,8 +47,8 @@ public class TupleSink implements ISink {
     }
     
     public void setInputOperator(IOperator inputOperator) {
-        if (cursor != CLOSED) {
-            throw new TexeraException(ErrorMessages.INPUT_OPERATOR_CHANGED_AFTER_OPEN);
+        if (cursor != CLOSED) {  
+            throw new TexeraException("Cannot link this operator to other operator after the operator is opened");
         }
         this.inputOperator = inputOperator;
     }
@@ -134,6 +134,6 @@ public class TupleSink implements ISink {
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {
-        throw new TexeraException(ErrorMessages.INVALID_OUTPUT_SCHEMA_FOR_SINK);
+    	return inputSchema[0];
     }
 }

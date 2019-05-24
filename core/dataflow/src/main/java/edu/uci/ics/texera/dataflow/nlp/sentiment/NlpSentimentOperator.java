@@ -48,10 +48,8 @@ public class NlpSentimentOperator implements IOperator {
     }
     
     public void setInputOperator(IOperator operator) {
-        if (cursor != CLOSED) {  
-            throw new TexeraException("Cannot link this operator to other operator after the operator is opened");
-        }
         this.inputOperator = operator;
+        outputSchema = transformToOutputSchema(inputOperator.getOutputSchema());
     }
     
     /*

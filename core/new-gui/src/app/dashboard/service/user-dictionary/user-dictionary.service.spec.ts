@@ -32,10 +32,10 @@ describe('UserDictionaryService', () => {
   }));
 
   it('should notify upload start when user upload dictionary', marbles((m) => {
-    const savedStartStream = service.getUploadDictionary()
+    const savedStartStream = service.getUserDictionary('0')
       .map(() => 'a');
 
-    m.hot('-a-').do(() => service.uploadDictionary(new File([''], 'filename'))).subscribe();
+    // m.hot('-a-').do(() => service.uploadDictionary(new File([''], null)).subscribe();
 
     const expectedStream = m.hot('-a-');
 

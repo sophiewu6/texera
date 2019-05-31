@@ -48,7 +48,7 @@ describe('UserDictionarySectionComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ UserDictionarySectionComponent],
       providers: [
-        { provide: UserDictionaryService, useClass: StubUserDictionaryService },
+        UserDictionaryService,
         NgbActiveModal
       ],
       imports: [MatCardModule,

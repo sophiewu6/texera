@@ -13,7 +13,6 @@ import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 
 import { MaterialDesignFrameworkModule } from 'angular6-json-schema-form';
 import { NgxJsonViewerModule } from 'ngx-json-viewer';
-import { FormsModule } from '@angular/forms';
 
 import { AppComponent } from './app.component';
 import { WorkspaceComponent } from './workspace/component/workspace.component';
@@ -24,6 +23,8 @@ import { WorkflowEditorComponent } from './workspace/component/workflow-editor/w
 import { ResultPanelComponent, NgbModalComponent } from './workspace/component/result-panel/result-panel.component';
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
+import { MiniMapComponent } from './workspace/component/mini-map/mini-map.component';
+
 import { ResultPanelToggleComponent } from './workspace/component/result-panel-toggle/result-panel-toggle.component';
 
 import { DashboardComponent } from './dashboard/component/dashboard.component';
@@ -59,6 +60,8 @@ import {
 
 import { ResourceSectionComponent } from './dashboard/component/feature-container/resource-section/resource-section.component';
 
+import { FileUploadModule } from 'ng2-file-upload';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -92,6 +95,7 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
     NgbModalComponent,
     OperatorLabelComponent,
     ProductTourComponent,
+    MiniMapComponent,
     ResultPanelToggleComponent
   ],
   imports: [
@@ -105,6 +109,11 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
     NgbModule.forRoot(),
     RouterModule.forRoot([]),
     TourNgBootstrapModule.forRoot(),
+
+    MaterialDesignFrameworkModule,
+    FileUploadModule,
+    FormsModule,
+    ReactiveFormsModule,
     LoggerModule.forRoot({level: environment.production ? NgxLoggerLevel.ERROR : NgxLoggerLevel.DEBUG, serverLogLevel: NgxLoggerLevel.OFF}),
     MaterialDesignFrameworkModule,
     FormsModule

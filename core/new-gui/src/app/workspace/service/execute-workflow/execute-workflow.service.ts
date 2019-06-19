@@ -19,6 +19,7 @@ import { environment } from '../../../../environments/environment';
 
 export const EXECUTE_WORKFLOW_ENDPOINT = 'queryplan/execute';
 
+export const DOWNLOAD_WORKFLOW_ENDPOINT = 'download/result';
 export const PAUSE_WORKFLOW_ENDPOINT = 'pause';
 export const RESUME_WORKFLOW_ENDPOINT = 'resume';
 
@@ -153,7 +154,24 @@ export class ExecuteWorkflowService {
         response => this.executionPauseResumeStream.next(),
         error => console.log(error)
     );
+  }
 
+  /**
+   * Sends the finished workflow ID to the server to download the excel file using file saver library.
+   * @param executionID
+   */
+  public downloadWorkflowExecutionResult(executionID: string, downloadType: string): void {
+    const requestURL = `${AppSettings.getApiEndpoint()}/${DOWNLOAD_WORKFLOW_ENDPOINT}`
+      + `?resultID=${executionID}&downloadType=${downloadType}`;
+
+    this.http.get(
+      requestURL,
+      {responseType: 'blob'}
+    ).subscribe(
+      // response => saveAs(response, downloadName),
+      () => window.location.href = requestURL,
+      error => console.log(error)
+    );
   }
 
   /**

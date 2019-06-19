@@ -303,5 +303,100 @@ describe('JointGraphWrapperService', () => {
 
   }));
 
+  it('should get operator position successfully if the operator exists in the paper', () => {
+    const workflowActionService: WorkflowActionService = TestBed.get(WorkflowActionService);
+    const localJointGraphWrapper = workflowActionService.getJointGraphWrapper();
+
+    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+
+    expect(localJointGraphWrapper.getOperatorPosition(mockScanPredicate.operatorID)).toEqual(mockPoint);
+  });
+
+  it(`should throw an error if operator does not exist in the paper when calling 'getOperatorPosition()'`, () => {
+    const workflowActionService: WorkflowActionService = TestBed.get(WorkflowActionService);
+    const localJointGraphWrapper = workflowActionService.getJointGraphWrapper();
+
+    expect(function() {
+      localJointGraphWrapper.getOperatorPosition(mockScanPredicate.operatorID);
+    }).toThrowError(`opeartor with ID ${mockScanPredicate.operatorID} doesn't exist`);
+
+  });
+
+  it(`should throw an error if the id we are using is linkID when calling 'getOperatorPosition()'`, () => {
+    const workflowActionService: WorkflowActionService = TestBed.get(WorkflowActionService);
+    const localJointGraphWrapper = workflowActionService.getJointGraphWrapper();
+
+    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+    workflowActionService.addOperator(mockResultPredicate, mockPoint);
+    workflowActionService.addLink(mockScanResultLink);
+
+    expect(function() {
+      localJointGraphWrapper.getOperatorPosition(mockScanResultLink.linkID);
+    }).toThrowError(`${mockScanResultLink.linkID} is not an operator`);
+
+  });
+
+
+  it('should successfully set a new drag offset', () => {
+    let currentDragOffset = jointGraphWrapper.getPanningOffset();
+    expect(currentDragOffset.x).toEqual(0);
+    expect(currentDragOffset.y).toEqual(0);
+
+    jointGraphWrapper.setPanningOffset({x: 100, y: 200});
+    currentDragOffset = jointGraphWrapper.getPanningOffset();
+    expect(currentDragOffset.x).toEqual(100);
+    expect(currentDragOffset.y).toEqual(200);
+  });
+
+  it('should successfully set a new zoom property', () => {
+
+    const mockNewZoomProperty = 0.5;
+
+    let currentZoomRatio = jointGraphWrapper.getZoomRatio();
+    expect(currentZoomRatio).toEqual(1);
+
+    jointGraphWrapper.setZoomProperty(mockNewZoomProperty);
+    currentZoomRatio = jointGraphWrapper.getZoomRatio();
+    expect(currentZoomRatio).toEqual(mockNewZoomProperty);
+
+  });
+
+  it('should triggle getWorkflowEditorZoomStream when new zoom ratio is set', marbles((m) => {
+
+    const mockNewZoomProperty = 0.5;
+
+    m.hot('-e-').do(event => jointGraphWrapper.setZoomProperty(mockNewZoomProperty)).subscribe();
+    const zoomStream = jointGraphWrapper.getWorkflowEditorZoomStream().map(value => 'e');
+    const expectedStream = '-e-';
+
+    m.expect(zoomStream).toBeObservable(expectedStream);
+  }));
+
+  it('should restore default zoom ratio and offset when resumeDefaultZoomAndOffset is called', () => {
+    const defaultOffset = JointGraphWrapper.INIT_PAN_OFFSET;
+    const defaultRatio = JointGraphWrapper.INIT_ZOOM_VALUE;
+
+    const mockOffset = {x : 20, y : 20};
+    const mockRatio = 0.6;
+    jointGraphWrapper.setPanningOffset(mockOffset);
+    jointGraphWrapper.setZoomProperty(mockRatio);
+    expect(jointGraphWrapper.getPanningOffset().x).not.toEqual(defaultOffset.x);
+    expect(jointGraphWrapper.getPanningOffset().y).not.toEqual(defaultOffset.y);
+    expect(jointGraphWrapper.getZoomRatio()).not.toEqual(defaultRatio);
+
+    jointGraphWrapper.restoreDefaultZoomAndOffset();
+    expect(jointGraphWrapper.getPanningOffset().x).toEqual(defaultOffset.x);
+    expect(jointGraphWrapper.getPanningOffset().y).toEqual(defaultOffset.y);
+    expect(jointGraphWrapper.getZoomRatio()).toEqual(defaultRatio);
+  });
+
+  it('should trigger getRestorePaperOffsetStream when resumeDefaultZoomAndOffset is called', marbles((m) => {
+    m.hot('-e-').do(() => jointGraphWrapper.restoreDefaultZoomAndOffset()).subscribe();
+    const restoreStream = jointGraphWrapper.getRestorePaperOffsetStream().map(value => 'e');
+    const expectedStream = '-e-';
+
+    m.expect(restoreStream).toBeObservable(expectedStream);
+  }));
+
 });
 

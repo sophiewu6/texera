@@ -10,6 +10,7 @@ import * as joint from 'jointjs';
 import { ResultPanelToggleService } from '../../service/result-panel-toggle/result-panel-toggle.service';
 import { Point } from '../../types/workflow-common.interface';
 import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-graph-wrapper';
+import { WorkflowUtilService } from '../../service/workflow-graph/util/workflow-util.service';
 
 
 // argument type of callback event on a JointJS Paper
@@ -57,9 +58,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
     private elementRef: ElementRef,
+    private workflowUtilService: WorkflowUtilService,
     private resultPanelToggleService: ResultPanelToggleService,
-    private validationWorkflowService: ValidationWorkflowService,
-    private jointUIService: JointUIService
   ) {
 
     // bind validation functions to the same scope as component
@@ -79,7 +79,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
   ngAfterViewInit() {
 
     this.initializeJointPaper();
-    this.handleOperatorValidation();
     this.handlePaperRestoreDefaultOffset();
     this.handlePaperZoom();
     this.handleWindowResize();
@@ -365,15 +364,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
   }
 
   /**
-   * if the operator is valid , the border of the box will be default
-   */
-  private handleOperatorValidation(): void {
-
-    this.validationWorkflowService.getOperatorValidationStream()
-      .subscribe(value =>
-        this.jointUIService.changeOperatorColor(this.getJointPaper(), value.operatorID, value.status));
-  }
-  /**
    * Gets the width and height of the parent wrapper element
    */
   private getWrapperElementSize(): { width: number, height: number } {
@@ -479,6 +469,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
     return false;
   }
+
 }
 
 

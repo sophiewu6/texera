@@ -46,7 +46,7 @@ export interface ErrorExecutionResult extends Readonly< {
 
 export interface SuccessPauseState extends Readonly<{
   code: 0,
-  pauseCount: ReadonlyArray<object>,
+  result: ReadonlyArray<object>,
   resultID: string
 }> {}
 

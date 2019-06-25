@@ -146,12 +146,12 @@ export class ExecuteWorkflowService {
     const body = {'workflowID' : this.workflowExecutionID};
 
     // The endpoint will be 'api/pause?action=resume', and workflowExecutionID will be the body
-    this.http.post(
+    this.http.post<SuccessPauseState>(
       requestURL,
       JSON.stringify(body),
       { headers: {'Content-Type' : 'application/json'}})
       .subscribe(
-        response => this.executionPauseResumeStream.next(),
+        response => this.executionPauseResumeStream.next(response),
         error => console.log(error)
     );
   }

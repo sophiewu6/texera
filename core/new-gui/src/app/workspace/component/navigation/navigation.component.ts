@@ -66,9 +66,9 @@ export class NavigationComponent implements OnInit {
     executeWorkflowService.getExecutionPauseResumeStream()
       .subscribe(state => {
         this.isWorkflowPaused = (state.code === 0);
-        console.log('ExecutionPauseResumeStream emits the following value');
+        console.log('ExecutionPauseResumeStream emits the following value:');
         if (state.code === 0) {
-          console.log((state as SuccessPauseState).pauseCount);
+          console.log((state as SuccessPauseState).result);
         }
       }
       );

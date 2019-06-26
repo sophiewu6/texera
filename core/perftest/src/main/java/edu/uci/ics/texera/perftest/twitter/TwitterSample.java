@@ -92,11 +92,12 @@ public class TwitterSample {
                 tupleSink.getOutputSchema(), LuceneAnalyzerConstants.standardAnalyzerString());
         DataWriter dataWriter = relationManager.getTableDataWriter(tableName);
         dataWriter.open();
-        
+
         Tuple tuple;
         int counter = 0;
         while ((tuple = tupleSink.getNextTuple()) != null) {
-            dataWriter.insertTuple(tuple);
+            Tuple tupleWithoutID = new Tuple.Builder(tuple).removeIfExists("_id").build();
+            dataWriter.insertTuple(tupleWithoutID);
             counter++;
         }
 

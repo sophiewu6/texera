@@ -13,8 +13,8 @@ import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 public class AsterixTwitterIngest {
     
     public static void main(String[] args) {
-        ingestKeywords("16_twitter_immigration_policy_study_2", 
-                "immigration daca muslimban nobannowall buildthewall immigrants heretostay refugeeswelcome travelban refugees defenddaca nomuslimban immigrant deportation",
+        ingestKeywords("nsf_tweets",
+                "nsf",
                 null, null, null);
     }
 
@@ -22,7 +22,7 @@ public class AsterixTwitterIngest {
         
         AsterixSourcePredicate asterixSourcePredicate = new AsterixSourcePredicate(
                 "twitterJson",
-                "actinium.ics.uci.edu",
+                "americium.ics.uci.edu",
                 19002,
                 "twitter",
                 "ds_tweet",

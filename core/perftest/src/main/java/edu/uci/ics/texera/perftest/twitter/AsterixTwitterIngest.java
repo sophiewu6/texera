@@ -13,8 +13,8 @@ import edu.uci.ics.texera.dataflow.source.asterix.AsterixSourcePredicate;
 public class AsterixTwitterIngest {
     
     public static void main(String[] args) {
-        ingestKeywords("nsf_tweets",
-                "nsf",
+        ingestKeywords("nih_tweets",
+                "nih",
                 null, null, null);
     }
 

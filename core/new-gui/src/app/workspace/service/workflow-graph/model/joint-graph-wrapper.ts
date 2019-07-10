@@ -1,5 +1,6 @@
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
+import { Point } from '../../../types/workflow-common.interface';
 
 type operatorIDType = { operatorID: string };
 
@@ -30,6 +31,12 @@ type JointLinkChangeEvent = [
   { ui: boolean, updateConnectionOnly: boolean }
 ];
 
+type JointPositionChangeEvent = [
+  joint.dia.Element,
+  { x: number, y: number },
+  object
+];
+
 /**
  * JointGraphWrapper wraps jointGraph to provide:
  *  - getters of the properties (to hide the methods that could alther the jointGraph directly)
@@ -50,12 +57,32 @@ type JointLinkChangeEvent = [
  */
 export class JointGraphWrapper {
 
+  // zoom diff represents the ratio that is zoom in/out everytime, for clicking +/- buttons or using mousewheel
+  public static readonly ZOOM_CLICK_DIFF: number = 0.05;
+  public static readonly ZOOM_MOUSEWHEEL_DIFF: number = 0.01;
+  public static readonly INIT_ZOOM_VALUE: number = 1;
+  public static readonly INIT_PAN_OFFSET: Point = {x: 0, y: 0};
+
+  public static readonly ZOOM_MINIMUM: number = 0.70;
+  public static readonly ZOOM_MAXIMUM: number = 1.30;
+
   // the current highlighted operator ID
   private currentHighlightedOperator: string | undefined;
   // event stream of highlighting an operator
   private jointCellHighlightStream = new Subject<operatorIDType>();
   // event stream of un-highlighting an operator
   private jointCellUnhighlightStream = new Subject<operatorIDType>();
+  // event stream of zooming the jointJs paper
+  private workflowEditorZoomSubject: Subject<number> = new Subject<number>();
+  // event stream of restoring zoom / offset default of the jointJS paper
+  private restorePaperOffsetSubject: Subject<Point> = new Subject<Point>();
+  // event stream of panning to make mini-map and main workflow paper compatible in offset
+  private panPaperOffsetSubject: Subject<Point> = new Subject<Point>();
+
+  // current zoom ratio
+  private zoomRatio: number = JointGraphWrapper.INIT_ZOOM_VALUE;
+  // panOffset, a point of panning offset alongside x and y axis
+  private panOffset: Point = JointGraphWrapper.INIT_PAN_OFFSET;
 
   /**
    * This will capture all events in JointJS
@@ -78,6 +105,16 @@ export class JointGraphWrapper {
     // handle if the current highlighted operator is deleted, it should be unhighlighted
     this.handleOperatorDeleteUnhighlight();
   }
+
+  public getOperatorPositionChangeEvent(): Observable<{operatorID: string, newPosition: Point}> {
+    return  Observable.fromEvent<JointPositionChangeEvent>(this.jointGraph, 'change:position').map(e => {
+      return {
+        operatorID: e[0].id.toString(),
+        newPosition:  e[1]
+      };
+    });
+  }
+
 
   /**
    * Gets the operator ID of the current highlighted operator.
@@ -186,6 +223,86 @@ export class JointGraphWrapper {
     return jointLinkDeleteStream;
   }
 
+  public getPanPaperOffsetStream(): Observable<Point> {
+    return this.panPaperOffsetSubject.asObservable();
+  }
+
+  /**
+   * This method will update the panning offset so that dropping
+   *  a new operator will appear at the correct location on the UI.
+   *
+   * @param panOffset new offset from panning
+   */
+  public setPanningOffset(panOffset: Point): void {
+    this.panOffset = panOffset;
+    this.panPaperOffsetSubject.next(panOffset);
+  }
+
+  /**
+   * This method will update the zoom ratio, which will be used
+   *  in calculating the position of the operator dropped on the UI.
+   *
+   * @param ratio new ratio from zooming
+   */
+  public setZoomProperty(ratio: number): void {
+      this.zoomRatio = ratio;
+      this.workflowEditorZoomSubject.next(this.zoomRatio);
+  }
+
+  /**
+   * Check if the zoom ratio reaches the minimum.
+   */
+  public isZoomRatioMin(): boolean {
+    return this.zoomRatio <= JointGraphWrapper.ZOOM_MINIMUM;
+  }
+
+  /**
+   * Check if the zoom ratio reaches the maximum.
+   */
+  public isZoomRatioMax(): boolean {
+    return this.zoomRatio >= JointGraphWrapper.ZOOM_MAXIMUM;
+  }
+
+  /**
+   * Returns an observable stream containing the new zoom ratio
+   *  for the jointJS paper.
+   */
+  public getWorkflowEditorZoomStream(): Observable<number> {
+    return this.workflowEditorZoomSubject.asObservable();
+  }
+
+  /**
+   * This method will fetch current pan offset of the paper.
+   */
+  public getPanningOffset(): Point {
+    return this.panOffset;
+  }
+
+  /**
+   * This method will fetch current zoom ratio of the paper.
+   */
+  public getZoomRatio(): number {
+    return this.zoomRatio;
+  }
+
+  /**
+   * This method will restore the default zoom ratio and offset for
+   *  the jointjs paper by sending an event to restorePaperSubject.
+   */
+  public restoreDefaultZoomAndOffset(): void {
+    this.setZoomProperty(JointGraphWrapper.INIT_ZOOM_VALUE);
+    this.panOffset = JointGraphWrapper.INIT_PAN_OFFSET;
+    this.restorePaperOffsetSubject.next(this.panOffset);
+  }
+
+  /**
+   * Returns an Observable stream capturing the event of restoring
+   *  default offset
+   */
+  public getRestorePaperOffsetStream(): Observable<Point> {
+    return this.restorePaperOffsetSubject.asObservable();
+  }
+
   /**
    * Returns an Observable stream capturing the link cell delete event in JointJS graph.
    *
@@ -202,6 +319,21 @@ export class JointGraphWrapper {
     return jointLinkChangeStream;
   }
 
+  /**
+   * This method will get the operator position on the JointJS paper.
+   */
+  public getOperatorPosition(operatorID: string): Point {
+    const cell: joint.dia.Cell | undefined = this.jointGraph.getCell(operatorID);
+    if (! cell) {
+      throw new Error(`opeartor with ID ${operatorID} doesn't exist`);
+    }
+    if (! cell.isElement()) {
+      throw new Error(`${operatorID} is not an operator`);
+    }
+    const element = <joint.dia.Element> cell;
+    const position = element.position();
+    return { x: position.x, y: position.y };
+    }
 
   /**
    * Subscribes to operator cell delete event stream,
@@ -215,5 +347,6 @@ export class JointGraphWrapper {
       }
     });
   }
+
 
 }

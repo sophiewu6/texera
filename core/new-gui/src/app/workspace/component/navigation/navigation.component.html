@@ -1,9 +1,32 @@
+<nav class="texera-navigation-body navbar navbar-expand-sm bg-dark navbar-dark">
+  <a class="navbar-brand texera-navigation-title" href="#">
+    Texera <span class="version-number">0.5.0</span>
+  </a>
+  <div class="collapse navbar-collapse texera-navigation-utilities">
+    <i class="navbar-brand utility-button fa fa-search-minus" (click)="onClickZoomOut()" title="zoom in"></i>
+    <i class="navbar-brand utility-button fa fa-search-plus" (click)="onClickZoomIn()" title="zoom in"></i>
+    <i class="navbar-brand utility-button fa fa-arrows-alt" (click)="onClickRestoreZoomOffsetDefaullt()" title="reset zoom"></i>
+    <!-- <i class="navbar-brand fa fa-cloud-download" [ngClass]="{'utility-button-disabled' : !executionResultID,
+      'utility-button': executionResultID}" (click)="onClickDownloadExecutionResult()"
+      title="download execution result"></i> -->
 
-<nav class="texera-navigation-body navbar navbar-expand-sm bg-dark navbar-dark justify-content-between">
-    <a class="navbar-brand" href="#">
-        Texera <span class="version-number">0.3.0</span>
-      </a>
-    <div class="button" tourAnchor= "texera-workspace-navigation-run">
+      <div ngbDropdown class="d-inline-block">
+        <button class="drop-down-button" ngbDropdownToggle [disabled]="!executionResultID">
+          <i class="navbar-brand fa fa-cloud-download drop-down-icon"  [ngClass]="{'utility-button-disabled' : !executionResultID,
+          'utility-button': executionResultID}" id="downloadExcelOptions"
+            title="download execution result"></i>
+        </button>
+        <div class="drop-down-menu" ngbDropdownMenu aria-labelledby="downloadExcelOptions">
+          <button class="drop-down-item" ngbDropdownItem (click)="onClickDownloadExecutionResult('json')">Json File (*.json)</button>
+          <button class="drop-down-item" ngbDropdownItem (click)="onClickDownloadExecutionResult('csv')"> CSV File (*.csv)</button>
+          <button class="drop-down-item" ngbDropdownItem (click)="onClickDownloadExecutionResult('xlsx')">XLSX File (*.xlsx)</button>
+        </div>
+      </div>
+
+
+  </div>
+  <div class="collapse navbar-collapse texera-navigation-execute">
+    <div class="button" tourAnchor="texera-workspace-navigation-run">
       <button class="btn btn-secondary texera-workspace-tour-run" (click)="tourService.toggle()" tourAnchor="start.tour">
           <span>
             <i id="texera-tour-icon" class="fa fa-question-circle-o" aria-hidden="true"></i>
@@ -20,4 +43,5 @@
         </span>
       </button>
     </div>
-  </nav>
+  </div>
+</nav>

@@ -3,6 +3,7 @@ import { JointGraphWrapper } from './../../service/workflow-graph/model/joint-gr
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { WorkflowUtilService } from './../../service/workflow-graph/util/workflow-util.service';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ValidationWorkflowService } from './../../service/validation/validation-workflow.service';
 
 import { WorkflowEditorComponent } from './workflow-editor.component';
 
@@ -12,8 +13,13 @@ import { JointUIService } from '../../service/joint-ui/joint-ui.service';
 import { WorkflowGraph, WorkflowGraphReadonly } from '../../service/workflow-graph/model/workflow-graph';
 
 import * as joint from 'jointjs';
-import { mockScanPredicate, mockPoint } from '../../service/workflow-graph/model/mock-workflow-data';
 
+import { ResultPanelToggleService } from '../../service/result-panel-toggle/result-panel-toggle.service';
+import { marbles } from 'rxjs-marbles';
+
+import {
+  mockScanPredicate, mockPoint, mockScanResultLink, mockResultPredicate
+} from '../../service/workflow-graph/model/mock-workflow-data';
 
 class StubWorkflowActionService {
 
@@ -54,6 +60,8 @@ describe('WorkflowEditorComponent', () => {
           JointUIService,
           WorkflowUtilService,
           DragDropService,
+          ResultPanelToggleService,
+          ValidationWorkflowService,
           { provide: WorkflowActionService, useClass: StubWorkflowActionService },
           { provide: OperatorMetadataService, useClass: StubOperatorMetadataService }
         ]
@@ -72,6 +80,7 @@ describe('WorkflowEditorComponent', () => {
     it('should create', () => {
       expect(component).toBeTruthy();
     });
+
 
     it('should create element in the UI after adding operator in the model', () => {
       const operatorID = 'test_one_operator_1';
@@ -123,7 +132,6 @@ describe('WorkflowEditorComponent', () => {
 
   });
 
-
   /**
    * This sub test suites test the Integration of WorkflowEditorComponent with external modules,
    *  such as drag and drop module, and highlight operator module.
@@ -133,6 +141,8 @@ describe('WorkflowEditorComponent', () => {
     let component: WorkflowEditorComponent;
     let fixture: ComponentFixture<WorkflowEditorComponent>;
     let workflowActionService: WorkflowActionService;
+    let validationWorkflowService: ValidationWorkflowService;
+    let dragDropService: DragDropService;
 
     beforeEach(async(() => {
       TestBed.configureTestingModule({
@@ -140,8 +150,10 @@ describe('WorkflowEditorComponent', () => {
         providers: [
           JointUIService,
           WorkflowUtilService,
-          DragDropService,
           WorkflowActionService,
+          ResultPanelToggleService,
+          ValidationWorkflowService,
+          DragDropService,
           { provide: OperatorMetadataService, useClass: StubOperatorMetadataService }
         ]
       })
@@ -152,6 +164,8 @@ describe('WorkflowEditorComponent', () => {
       fixture = TestBed.createComponent(WorkflowEditorComponent);
       component = fixture.componentInstance;
       workflowActionService = TestBed.get(WorkflowActionService);
+      validationWorkflowService = TestBed.get(ValidationWorkflowService);
+      dragDropService = TestBed.get(DragDropService);
       // detect changes to run ngAfterViewInit and bind Model
       fixture.detectChanges();
     });
@@ -223,6 +237,49 @@ describe('WorkflowEditorComponent', () => {
       expect(jointHighlighterElementAfterUnhighlight.length).toEqual(0);
     });
 
+    it('should react to operator validation and change the color of operator box if the operator is valid ',
+         () => {
+    const jointGraphWrapper = workflowActionService.getJointGraphWrapper();
+    workflowActionService.addOperator(mockScanPredicate, mockPoint);
+    workflowActionService.addOperator(mockResultPredicate, mockPoint);
+    workflowActionService.addLink(mockScanResultLink);
+    const newProperty = { 'tableName': 'test-table' };
+    workflowActionService.setOperatorProperty(mockScanPredicate.operatorID, newProperty);
+    const operator1 = component.getJointPaper().getModelById(mockScanPredicate.operatorID);
+    const operator2 = component.getJointPaper().getModelById(mockResultPredicate.operatorID);
+    expect(operator1.attr('rect/stroke')).toEqual('#CFCFCF');
+    expect(operator2.attr('rect/stroke')).toEqual('#CFCFCF');
+
+    it('should react to jointJS paper zoom event', marbles((m) => {
+      const mockScaleRatio = 0.5;
+      m.hot('-e-').do(() => workflowActionService.getJointGraphWrapper().setZoomProperty(mockScaleRatio)).subscribe(
+        () => {
+          const currentScale = component.getJointPaper().scale();
+          expect(currentScale.sx).toEqual(mockScaleRatio);
+          expect(currentScale.sy).toEqual(mockScaleRatio);
+        }
+      );
+    }));
+
+    it('should react to jointJS paper restore default offset event', marbles((m) => {
+      const mockTranslation = 20;
+      const originalOffset = component.getJointPaper().translate();
+      component.getJointPaper().translate(mockTranslation, mockTranslation);
+      expect(component.getJointPaper().translate().tx).not.toEqual(originalOffset.tx);
+      expect(component.getJointPaper().translate().ty).not.toEqual(originalOffset.ty);
+      m.hot('-e-').do(() => workflowActionService.getJointGraphWrapper().restoreDefaultZoomAndOffset()).subscribe(
+        () => {
+          expect(component.getJointPaper().translate().tx).toEqual(originalOffset.tx);
+          expect(component.getJointPaper().translate().ty).toEqual(originalOffset.ty);
+        }
+      );
+    }));
+
   });
+
+
+
+  });
+
 
 });

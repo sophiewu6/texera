@@ -26,7 +26,9 @@ import edu.uci.ics.texera.api.constants.DataConstants;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.utils.Utils;
 import edu.uci.ics.texera.dataflow.annotation.AdvancedOption;
-import edu.uci.ics.texera.dataflow.nlp.sentiment.chinese.ChineseSentimentPredicate;
+//import edu.uci.ics.texera.dataflow.nlp.kmeans.chinese.ChineseKmeansPredicate;
+import edu.uci.ics.texera.dataflow.nlp.occurrence.chinese.ChineseOccurrencePredicate;
+//import edu.uci.ics.texera.dataflow.nlp.sentiment.chinese.ChineseSentimentPredicate;
 import edu.uci.ics.texera.dataflow.plangen.OperatorArityConstants;
 
 @SuppressWarnings("unchecked")
@@ -52,8 +54,12 @@ public class JsonSchemaHelper {
     }
     
     public static void main(String[] args) throws Exception {
-//        generateAllOperatorSchema();
-        generateJsonSchema(ChineseSentimentPredicate.class);
+        generateAllOperatorSchema();
+//        generateJsonSchema(ChineseSentimentPredicate.class);
+//    	  generateJsonSchema(KeywordsExtractorPredicate.class);
+    	  generateJsonSchema(ChineseOccurrencePredicate.class);
+//    	  generateJsonSchema(ChineseKmeansPredicate.class);
+
     }
     
     public static void generateAllOperatorSchema() throws Exception {

@@ -27,6 +27,7 @@ import edu.uci.ics.texera.dataflow.join.SimilarityJoinPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordSourcePredicate;
 import edu.uci.ics.texera.dataflow.nlp.entity.NlpEntityPredicate;
+import edu.uci.ics.texera.dataflow.nlp.keywordsextractor.KeywordsExtractorPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.EmojiSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NltkSentimentOperatorPredicate;
@@ -44,7 +45,8 @@ import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterJsonConverterPredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
-
+//import edu.uci.ics.texera.dataflow.nlp.kmeans.chinese.ChineseKmeansPredicate;
+import edu.uci.ics.texera.dataflow.nlp.occurrence.chinese.ChineseOccurrencePredicate;
 
 /**
  * PredicateBase is the base for all predicates which follow the 
@@ -79,6 +81,9 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
         @Type(value = EmojiSentimentPredicate.class, name = "EmojiSentiment"),
         @Type(value = NltkSentimentOperatorPredicate.class, name = "NltkSentiment"),
         @Type(value = ChineseSentimentPredicate.class, name = "ChineseSentiment"),
+        @Type(value = KeywordsExtractorPredicate.class, name = "KeywordsExtractor"),
+//        @Type(value = ChineseKmeansPredicate.class, name = "ChineseKmeans"),
+        @Type(value = ChineseOccurrencePredicate.class, name = "ChineseOccurrence"),
 
         @Type(value = ProjectionPredicate.class, name = "Projection"),
         @Type(value = RegexSplitPredicate.class, name = "RegexSplit"),
@@ -87,7 +92,7 @@ import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
 
         // remove comparable matcher because of the json schema "any" issue
         // TODO: fix the problem and add Comparable matcher back later
-         @Type(value = ComparablePredicate.class, name = "Comparison"),
+        @Type(value = ComparablePredicate.class, name = "Comparison"),
         
         @Type(value = AsterixSourcePredicate.class, name = "AsterixSource"),        
         @Type(value = TwitterJsonConverterPredicate.class, name = "TwitterJsonConverter"),

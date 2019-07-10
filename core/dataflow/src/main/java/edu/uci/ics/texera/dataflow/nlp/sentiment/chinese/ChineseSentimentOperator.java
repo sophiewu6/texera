@@ -3,22 +3,33 @@ package edu.uci.ics.texera.dataflow.nlp.sentiment.chinese;
 import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.classification.classifiers.NaiveBayesClassifier;
 import com.hankcs.hanlp.classification.models.NaiveBayesModel;
+import com.hankcs.hanlp.mining.cluster.ClusterAnalyzer;
+import com.hankcs.hanlp.seg.common.Term;
+
+import java.io.FileNotFoundException;
+
 import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.field.IField;
 import edu.uci.ics.texera.api.field.IntegerField;
+import edu.uci.ics.texera.api.field.StringField;
 import edu.uci.ics.texera.api.schema.AttributeType;
 import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.tuple.Tuple;
 import edu.uci.ics.texera.api.utils.Utils;
 import org.apache.commons.lang3.SerializationUtils;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static edu.uci.ics.texera.api.constants.DataConstants.TexeraProject.TEXERA_DATAFLOW;
 import static edu.uci.ics.texera.dataflow.nlp.sentiment.chinese.ChineseSentimentUtils.ensureTestData;
@@ -32,10 +43,25 @@ public class ChineseSentimentOperator implements IOperator {
     private int cursor = CLOSED;
 
     private NaiveBayesClassifier classifier;
+//    private HashMap<String, ArrayList<String>> dictionaryMap=new HashMap<>();
+    private HashMap<String, String> dictionaryMap=new HashMap<>();
 
 
     public ChineseSentimentOperator(ChineseSentimentPredicate predicate) {
         this.predicate = predicate;
+
+//        String applyPhase="时间,期限,形式审查,选题,论证,前期成果,积累,研究基础,研究成果,合作单位,学科代码,查重,限项,创新,指南,青基,面上,科学问题,国际合作,变更,绩效,费,立项依据,研究内容";
+//        dictionaryMap.put("申请", new ArrayList<String>(Arrays.asList(applyPhase.split(","))));
+//        String applyPhase1="研究基础,立项依据,选题,研究内容,科学问题,国际合作,论文质量,研究成果";
+//        dictionaryMap.put("评审", new ArrayList<String>(Arrays.asList(applyPhase1.split(","))));
+//        String applyPhase2="基金管理,项目管理,科研管理,中期检查,年度报告,结题,成果,论文,国际会议";
+//        dictionaryMap.put("管理", new ArrayList<String>(Arrays.asList(applyPhase2.split(","))));
+        String applyPhase="期限,形式审查,选题,论证,前期成果,积累,研究基础,研究成果,合作单位,学科代码,查重,限项,创新,指南,青基,面上,科学问题,国际合作,变更,绩效,费,立项依据,研究内容";
+        dictionaryMap.put("申请", applyPhase);
+        String applyPhase1="研究基础,立项依据,选题,研究内容,科学问题,国际合作,论文质量,研究成果";
+        dictionaryMap.put("评审", applyPhase1);
+        String applyPhase2="基金管理,项目管理,科研管理,中期检查,年度报告,结题,成果,论文,国际会议";
+        dictionaryMap.put("管理", applyPhase2);
     }
 
     public void setInputOperator(IOperator operator) {
@@ -75,20 +101,72 @@ public class ChineseSentimentOperator implements IOperator {
         }
 
         List<IField> outputFields = new ArrayList<>(inputTuple.getFields());
-        outputFields.add(new IntegerField(computeSentimentScore(inputTuple)));
+        outputFields.add(new StringField(computeSentimentScore(inputTuple)));
 
         return new Tuple(outputSchema, outputFields);
     }
 
 
-    private int computeSentimentScore(Tuple inputTuple) {
+    private String computeSentimentScore(Tuple inputTuple) {
         try {
-            String predictClass = classifier.classify(
-                    inputTuple.getField(this.predicate.getInputAttributeName()).getValue().toString());
+        	String tweet=inputTuple.getField(this.predicate.getInputAttributeName()).getValue().toString();
+        	String predictClass = classifier.classify(tweet);
+        	List<Term> terms=HanLP.segment(tweet);
+        	List<String> positiveTerms=new ArrayList<>();
+        	List<String> negativeTerms=new ArrayList<>();
+        	for(int i=0;i<terms.size();i++) {
+        		String termPredict=classifier.classify(terms.get(i).word);
+        		if(termPredict.equals("正面"))positiveTerms.add(terms.get(i).word);
+        		else if(termPredict.equals("负面"))negativeTerms.add(terms.get(i).word);
+        	}
+//            String predictClass = classifier.classify(
+//                    inputTuple.getField(this.predicate.getInputAttributeName()).getValue().toString());
             if (predictClass.equals("正面")) {
-                return 1;
+//            	HashMap<String, ArrayList<String>> positiveMap=new HashMap<>();
+//            	for(Map.Entry<String, ArrayList<String>> entity: dictionaryMap.entrySet()) {
+//            		String dictionary=entity.getKey();
+//            		ArrayList<String> list=entity.getValue();
+//            		ArrayList<String> wordList=new ArrayList<>();
+//            		for(int j=0;j<list.size();j++) {
+//            			
+//            		}
+//            		list.retainAll(positiveTerms);
+//            		if(list.size()>0)positiveMap.put(dictionary, list);
+//            	}
+//                return "1,"+positiveMap.toString();
+            	HashMap<String, ArrayList<String>> positiveMap=new HashMap<>();
+            	for(Map.Entry<String, String> entity: dictionaryMap.entrySet()) {
+            		String dictionary=entity.getKey();
+            		String keywords=entity.getValue();
+            		ArrayList<String> wordList=new ArrayList<>();
+            		for(int j=0;j<positiveTerms.size();j++) {
+            			String term=positiveTerms.get(j);
+            			if(keywords.contains(term)&&!wordList.contains(term))wordList.add(term);
+            		}
+            		if(wordList.size()>0)positiveMap.put(dictionary, wordList);
+            	}
+            	return "1,"+positiveMap.toString();
             } else if (predictClass.equals("负面")) {
-                return -1;
+//            	HashMap<String, ArrayList<String>> negativeMap=new HashMap<>();
+//            	for(Map.Entry<String, ArrayList<String>> entity: dictionaryMap.entrySet()) {
+//            		String dictionary=entity.getKey();
+//            		ArrayList<String> list=entity.getValue();
+//            		list.retainAll(negativeTerms);
+//            		if(list.size()>0)negativeMap.put(dictionary, list);
+//            	}
+//                return "-1,"+negativeMap.toString();
+            	HashMap<String, ArrayList<String>> negativeMap=new HashMap<>();
+            	for(Map.Entry<String, String> entity: dictionaryMap.entrySet()) {
+            		String dictionary=entity.getKey();
+            		String keywords=entity.getValue();
+            		ArrayList<String> wordList=new ArrayList<>();
+            		for(int j=0;j<negativeTerms.size();j++) {
+            			String term=negativeTerms.get(j);
+            			if(keywords.contains(term)&&!wordList.contains(term))wordList.add(term);
+            		}
+            		if(wordList.size()>0)negativeMap.put(dictionary, wordList);
+            	}
+            	return "-1,"+negativeMap.toString();
             } else {
                 throw new DataflowException("unknown chinese sentiment class" + predictClass);
             }
@@ -115,7 +193,7 @@ public class ChineseSentimentOperator implements IOperator {
     private Schema transformSchema(Schema inputSchema) {
         Schema.checkAttributeExists(inputSchema, predicate.getInputAttributeName());
         Schema.checkAttributeNotExists(inputSchema, predicate.getResultAttributeName());
-        return new Schema.Builder().add(inputSchema).add(predicate.getResultAttributeName(), AttributeType.INTEGER).build();
+        return new Schema.Builder().add(inputSchema).add(predicate.getResultAttributeName(), AttributeType.STRING).build();
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) {

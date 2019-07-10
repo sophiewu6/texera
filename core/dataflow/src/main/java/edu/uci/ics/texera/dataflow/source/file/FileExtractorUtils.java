@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -35,7 +36,7 @@ public class FileExtractorUtils {
      */
     public static String extractPlainTextFile(Path path) throws DataflowException {
         try {
-            return new String(Files.readAllBytes(path));
+            return new String(Files.readAllBytes(path), Charset.forName("UTF-8"));
         } catch (IOException e) {
             throw new DataflowException(e);
         }

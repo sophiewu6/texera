@@ -43,6 +43,15 @@ public class PropertyNameConstants {
     public static final String AGGREGATOR_TYPE = "aggregator";
     public static final String ATTRIBUTE_AGGREGATOR_RESULT_LIST = "listOfAggregations";
     
+    // related to keywordExtractor Operator
+    public static final String KEYWORD_NUMBER="kEYWORDNumber";
+
+    // related to Chinese Occurrence Operator
+    public static final String ORDER_NUMBER="orderNumber";
+    
+    // related to ChineseKmeans Operator
+    public static final String KMEANS_NUMBER="kmeansNumber";
+    
     // related to keyword matcher
     public static final String KEYWORD_QUERY = "query";
     public static final String KEYWORD_MATCHING_TYPE = "matchingType";

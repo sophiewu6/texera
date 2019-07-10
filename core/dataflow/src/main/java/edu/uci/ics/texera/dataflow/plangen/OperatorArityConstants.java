@@ -16,6 +16,7 @@ import edu.uci.ics.texera.dataflow.join.SimilarityJoinPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordPredicate;
 import edu.uci.ics.texera.dataflow.keywordmatcher.KeywordSourcePredicate;
 import edu.uci.ics.texera.dataflow.nlp.entity.NlpEntityPredicate;
+import edu.uci.ics.texera.dataflow.nlp.keywordsextractor.KeywordsExtractorPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.EmojiSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NlpSentimentPredicate;
 import edu.uci.ics.texera.dataflow.nlp.sentiment.NltkSentimentOperatorPredicate;
@@ -36,7 +37,8 @@ import edu.uci.ics.texera.dataflow.twitter.TwitterJsonConverterPredicate;
 import edu.uci.ics.texera.dataflow.twitterfeed.TwitterFeedSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
-
+//import edu.uci.ics.texera.dataflow.nlp.kmeans.chinese.ChineseKmeansPredicate;
+import edu.uci.ics.texera.dataflow.nlp.occurrence.chinese.ChineseOccurrencePredicate;
 /**
  * OperatorArityConstants class includes the input and output arity constraints of each operator.
  * 
@@ -85,6 +87,10 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(ExcelSinkPredicate.class, 1);
         fixedInputArityMap.put(MysqlSinkPredicate.class, 1);
         
+        fixedInputArityMap.put(KeywordsExtractorPredicate.class, 1);
+//        fixedInputArityMap.put(ChineseKmeansPredicate.class, 1);
+        fixedInputArityMap.put(ChineseOccurrencePredicate.class, 1);
+        
     }
     
     public static Map<Class<? extends PredicateBase>, Integer> fixedOutputArityMap = new HashMap<>();
@@ -127,6 +133,9 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(ExcelSinkPredicate.class, 0);
         fixedOutputArityMap.put(MysqlSinkPredicate.class, 0);
         
+        fixedOutputArityMap.put(KeywordsExtractorPredicate.class, 1);
+//        fixedOutputArityMap.put(ChineseKmeansPredicate.class, 1);
+        fixedOutputArityMap.put(ChineseOccurrencePredicate.class, 1);
     }
     
     /**

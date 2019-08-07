@@ -115,12 +115,19 @@ export class WorkflowEditorComponent implements AfterViewInit {
       this.workflowStatusService.getStatusInformationStream()
       .filter(status => status !== undefined)
       .subscribe(status => {
-        this.workflowActionService.getTexeraGraph().getAllOperators().forEach(operator => {
-          this.jointUIService.changeOperatorStatus(
-            this.getJointPaper(), operator.operatorID, JSON.stringify((status as any)['OperatorState'][operator.operatorID])
-          );
-        });
-
+        if ((status as any).message === 'ProcessCompleted') {
+          this.workflowActionService.getTexeraGraph().getAllOperators().forEach(operator => {
+            this.jointUIService.changeOperatorStatus(
+              this.getJointPaper(), operator.operatorID, 'Ready'
+            );
+          });
+        } else {
+          this.workflowActionService.getTexeraGraph().getAllOperators().forEach(operator => {
+            this.jointUIService.changeOperatorStatus(
+              this.getJointPaper(), operator.operatorID, JSON.stringify((status as any)['OperatorState'][operator.operatorID])
+            );
+          });
+        }
       });
     });
   }

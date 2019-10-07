@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { WebsocketService } from '../websocket/websocket.service';
 
-const Engine_URL = 'ws://localhost:8080/api/websocket';
+const Engine_URL = 'ws://localhost:7070/api/websocket';
 
 @Injectable()
 export class WorkflowStatusService {
@@ -18,6 +18,7 @@ export class WorkflowStatusService {
       (response: string): string => {
         console.log('received status from backend: ');
         const json = JSON.parse((response as any).data);
+        console.log(json);
         this.status.next(json);
         return response;
       }

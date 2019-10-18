@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { WebsocketService } from '../websocket/websocket.service';
+import { ProcessStatus } from '../../types/execute-workflow.interface';
+
 
 const Engine_URL = 'ws://localhost:7070/api/websocket';
 
@@ -9,7 +11,7 @@ export class WorkflowStatusService {
   // connectionChannel is dedicated to communication with backend via websocket
   private connectionChannel: Subject<string>;
   // status is responsible for communication to other components
-  private status: Subject<JSON> = new Subject<JSON>();
+  private status: Subject<ProcessStatus> = new Subject<ProcessStatus>();
 
 
   constructor(wsService: WebsocketService) {
@@ -17,9 +19,11 @@ export class WorkflowStatusService {
     this.connectionChannel = <Subject<string>>wsService.connect(Engine_URL).map(
       (response: string): string => {
         console.log('received status from backend: ');
-        const json = JSON.parse((response as any).data);
+
+        const json = JSON.parse((response as any).data) as ProcessStatus;
         console.log(json);
         this.status.next(json);
+
         return response;
       }
     );
@@ -39,7 +43,7 @@ export class WorkflowStatusService {
   //       console.log((status as any)['OperatorState']);
   //       console.log((status as any)['ProcessedCount']);
   //     });
-  public getStatusInformationStream(): Observable<JSON> {
+  public getStatusInformationStream(): Observable<ProcessStatus> {
     return this.status;
   }
 

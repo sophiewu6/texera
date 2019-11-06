@@ -204,11 +204,21 @@ export class NavigationComponent implements OnInit {
   }
 
   /**
-   * This navigates the user to the dashboard page on click.
+   * Delete all operators on the graph
    */
-  public onDashboardClick(): void {
-    return;
+  public onClickDeleteAllOperators(): void {
+    this.workflowActionService.getTexeraGraph().getAllOperators().forEach((operator) => {
+      this.workflowActionService.deleteOperator(operator.operatorID);
+    });
   }
+
+  /**
+   * Returns true if there's any operator on the graph; false otherwise
+   */
+  public hasOperators(): boolean {
+    return this.workflowActionService.getTexeraGraph().getAllOperators().length > 0;
+  }
+
   /**
    * Handler for the execution result to extract successful execution ID
    */

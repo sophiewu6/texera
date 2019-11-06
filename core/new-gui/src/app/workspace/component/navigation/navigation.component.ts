@@ -7,6 +7,10 @@ import { JointGraphWrapper } from '../../service/workflow-graph/model/joint-grap
 
 import { ExecutionResult } from './../../types/execute-workflow.interface';
 
+/**
+ * This import statement is for the dashboard navigation functionality.
+ */
+//import { AppRouter } from '../../../../app-routing.module';
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -199,6 +203,12 @@ export class NavigationComponent implements OnInit {
     this.workflowActionService.getJointGraphWrapper().restoreDefaultZoomAndOffset();
   }
 
+  /**
+   * This navigates the user to the dashboard page on click.
+   */
+  public onDashboardClick(): void {
+    return;
+  }
   /**
    * Handler for the execution result to extract successful execution ID
    */

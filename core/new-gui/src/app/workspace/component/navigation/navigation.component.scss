@@ -28,6 +28,13 @@
   grid-row-end: 1;
 }
 
+.texera-navigation-router {
+  grid-column-start: 3;
+  grid-column-end: 4;
+  grid-row-start: 1;
+  grid-row-end: 1;
+}
+
 .texera-navigation-execute {
   grid-column-start: 3;
   grid-column-end: 4;
@@ -47,6 +54,21 @@
 
 .utility-button-disabled:hover {
   color: gray;
+}
+
+.texera-navigation-dashboard-button {
+  margin-right: 3%;
+  background-color: #5081F3;
+  color: white;
+  &:hover {
+    background-color: #2E66E9;
+  }
+  .mat-raised-button {
+    height: 30px;
+  }
+  .fa {
+    padding-right: 6px;
+  }
 }
 
 .texera-navigation-run-text {

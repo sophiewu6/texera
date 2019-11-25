@@ -68,4 +68,8 @@ export class UndoRedoService {
   public getRedoLength(): number {
     return this.redoStack.length;
   }
+
+  public popUndo(): void {
+    this.undoStack.pop();
+  }
 }

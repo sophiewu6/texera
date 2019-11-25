@@ -40,6 +40,9 @@ export class WorkflowActionService {
   private readonly jointGraphWrapper: JointGraphWrapper;
   private readonly syncTexeraModel: SyncTexeraModel;
 
+  /* the current operator id being created */
+  private currentLinkId: String = '';
+
   constructor(
     private operatorMetadataService: OperatorMetadataService,
     private jointUIService: JointUIService,
@@ -52,6 +55,7 @@ export class WorkflowActionService {
 
     this.handleJointLinkAdd();
     this.handleJointOperatorDrag();
+    this.handleSyncLinkRemove();
   }
 
   public handleJointLinkAdd(): void {
@@ -60,6 +64,21 @@ export class WorkflowActionService {
         execute: () => { },
         undo: () => this.deleteLinkWithIDInternal(link.linkID),
         redo: () => this.addLinkInternal(link)
+      };
+      this.executeAndStoreCommand(command);
+    });
+  }
+
+  /**
+   * For handling connecting/unconnecting link when still dragging
+   */
+  public handleSyncLinkRemove(): void {
+    this.syncTexeraModel.getlinkChangeStream().filter(() => this.undoRedoService.listenJointCommand).subscribe(link => {
+      const operatorLink = link.operatorLink;
+      const command: Command = {
+        execute: () => {},
+        undo: () => this.addLinkInternal(operatorLink),
+        redo: () => this.deleteLinkWithIDInternal(operatorLink.linkID)
       };
       this.executeAndStoreCommand(command);
     });
@@ -132,6 +151,13 @@ export class WorkflowActionService {
     command.execute();
     this.undoRedoService.addCommand(command);
     this.undoRedoService.setListenJointCommand(true);
+  }
+
+  /**
+   * For appending to undo stack without executing, needed for certain edge cases
+   */
+  public storeCommand(command: Command): void {
+    this.undoRedoService.addCommand(command);
   }
   /**
    * Adds an opreator to the workflow graph at a point.
@@ -260,6 +286,46 @@ export class WorkflowActionService {
       execute: () => this.setOperatorPositionInternal(operatorID, newPosition),
       undo: () => this.setOperatorPositionInternal(operatorID, currentPosition)
     };
+    this.executeAndStoreCommand(command);
+  }
+
+  // For when the link gets automatically created with the operator
+  public addOperatorAndLink(operator: OperatorPredicate, point: Point, link: OperatorLink): void {
+    // pop out the operator create
+    this.undoRedoService.popUndo();
+
+    const command: Command = {
+      execute: () => this.addLinkInternal(link),
+      undo: () => {
+        this.deleteLinkWithIDInternal(link.linkID);
+        this.deleteOperatorInternal(operator.operatorID);
+      },
+      redo: () => {
+        this.addOperatorInternal(operator, point);
+        this.addLinkInternal(link);
+      }
+    };
+
+    this.executeAndStoreCommand(command);
+  }
+
+  public deleteAllOperatorsAndLinks(): void {
+    const operatorsToDelete = this.texeraGraph.getAllOperators();
+    const linksToDelete = this.texeraGraph.getAllLinks();
+    const operatorPositions: Point[] = [];
+    operatorsToDelete.forEach((operator) => operatorPositions.push(this.jointGraphWrapper.getOperatorPosition(operator.operatorID)));
+    const command: Command = {
+      execute: () => {
+        operatorsToDelete.forEach((operator) => this.deleteOperatorInternal(operator.operatorID));
+      },
+      undo: () => {
+        for (let i = 0; i < operatorsToDelete.length; i++) {
+          this.addOperatorInternal(operatorsToDelete[i], operatorPositions[i]);
+        }
+        linksToDelete.forEach((link) => this.addLinkInternal(link));
+      }
+    };
+
     this.executeAndStoreCommand(command);
   }
 

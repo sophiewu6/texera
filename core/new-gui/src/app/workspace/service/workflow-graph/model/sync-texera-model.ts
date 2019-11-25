@@ -1,7 +1,8 @@
 import { OperatorLink } from './../../../types/workflow-common.interface';
-
+import { Subject } from 'rxjs/Subject';
 import { WorkflowGraph } from './workflow-graph';
 import { JointGraphWrapper } from './joint-graph-wrapper';
+import { Observable } from 'rxjs/Observable';
 
 /**
  * SyncTexeraModel subscribes to the graph change events from JointJS,
@@ -16,15 +17,20 @@ import { JointGraphWrapper } from './joint-graph-wrapper';
  */
 export class SyncTexeraModel {
 
+  private readonly linkChangeSubject = new Subject<{ operatorLink: OperatorLink}>();
+  private currentLink: OperatorLink | undefined = undefined;
   constructor(
     private texeraGraph: WorkflowGraph,
-    private jointGraphWrapper: JointGraphWrapper
+    private jointGraphWrapper: JointGraphWrapper,
   ) {
 
     this.handleJointOperatorDelete();
     this.handleJointLinkEvents();
   }
 
+  public getlinkChangeStream(): Observable<{operatorLink: OperatorLink}> {
+    return this.linkChangeSubject.asObservable();
+  }
 
   /**
    * Handles JointJS operator element delete events:
@@ -92,12 +98,17 @@ export class SyncTexeraModel {
       // we intentially want the side effect (delete the link) to happen **before** other operations in the chain
       .do((link) => {
         const linkID = link.id.toString();
-        if (this.texeraGraph.hasLinkWithID(linkID)) { this.texeraGraph.deleteLinkWithID(linkID); }
+        const operatorLink = this.currentLink;
+        if (this.texeraGraph.hasLinkWithID(linkID) && operatorLink !== undefined) {
+          this.texeraGraph.deleteLinkWithID(linkID);
+          this.linkChangeSubject.next({operatorLink});
+        }
       })
       .filter(link => SyncTexeraModel.isValidJointLink(link))
       .map(link => SyncTexeraModel.getOperatorLink(link))
       .subscribe(link => {
         this.texeraGraph.addLink(link);
+        this.currentLink = link;
       });
   }
 

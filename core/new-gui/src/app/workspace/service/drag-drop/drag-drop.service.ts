@@ -100,15 +100,17 @@ export class DragDropService {
               / this.workflowActionService.getJointGraphWrapper().getZoomRatio()
         };
 
-        // add the operator
+        // add the operator, change the logic here
         this.workflowActionService.addOperator(operator, newOperatorOffset);
 
         // has suggestion and must auto-create the operator link between 2 operators.
         if (this.suggestionOperator !== undefined) {
           if (this.isSuggestionOnLeft) {
-            this.workflowActionService.addLink(this.getNewOperatorLink(this.suggestionOperator, operator));
+            this.workflowActionService.addOperatorAndLink(operator,
+              newOperatorOffset, this.getNewOperatorLink(this.suggestionOperator, operator));
           } else {
-            this.workflowActionService.addLink(this.getNewOperatorLink(operator, this.suggestionOperator));
+            this.workflowActionService.addOperatorAndLink(operator, newOperatorOffset,
+              this.getNewOperatorLink(operator, this.suggestionOperator));
           }
 
           // after the link is created, unhightlight the suggestion and reset suggestionOperator

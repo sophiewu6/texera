@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { UserInfoService } from 'src/app/dashboard/service/user-info/user-info.service';
 
 /**
  * UserAccountIconComponent is triggered when user wants to log into the system
@@ -16,10 +17,17 @@ export class UserAccountIconComponent implements OnInit {
 
   userName = 'User';
 
-  constructor() {
+  constructor(private userInfoService: UserInfoService) {
   }
 
   ngOnInit() {
+  }
+
+  public registerButton() {
+  }
+
+  public loginButton() {
+
   }
 
 }

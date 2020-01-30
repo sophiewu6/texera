@@ -12,7 +12,7 @@ import { MatTabChangeEvent } from '@angular/material';
 import { ErrorStateMatcher } from '@angular/material';
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
-class MyErrorStateMatcher implements ErrorStateMatcher {
+class DictionaryErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
     return !!(control && control.invalid && (control.dirty || control.touched));
   }
@@ -62,7 +62,7 @@ export class NgbdModalResourceAddComponent {
   public isUploading: boolean = false;
 
   // These are used to create custom form control validators.
-  public matcher = new MyErrorStateMatcher();
+  public matcher = new DictionaryErrorStateMatcher();
   public nameValidator: FormControl =  new FormControl('', [Validators.required]);
   public contentValidator: FormControl =  new FormControl('', [Validators.required]);
   public descriptionValidator: FormControl =  new FormControl('', [Validators.required]);

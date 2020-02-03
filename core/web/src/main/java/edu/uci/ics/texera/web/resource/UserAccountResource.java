@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.Record1;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
@@ -42,14 +43,14 @@ public class UserAccountResource {
     public static class UserAccount {
         public String userName;
         public double userID;
+        
+        public static UserAccount generateErrorAccount() {
+            return new UserAccount("", -1);
+        }
 
         public UserAccount(String userName, double userID) {
             this.userName = userName;
             this.userID = userID;
-        }
-        public UserAccount() {
-            this.userName = "";
-            this.userID = -1;
         }
     }
     
@@ -59,86 +60,84 @@ public class UserAccountResource {
     public static class UserAccountResponse {
         public int code; // 0 represents success and 1 represents error
         public UserAccount userAccount;
+        public String message;
+        
+        public static UserAccountResponse generateErrorResponse(String message) {
+            return new UserAccountResponse(1, UserAccount.generateErrorAccount(), message);
+        }
+        
+        public static UserAccountResponse generateSuccessResponse(UserAccount userAccount) {
+            return new UserAccountResponse(0, userAccount, "");
+        }
 
-        public UserAccountResponse(int code, UserAccount userAccount) {
+        public UserAccountResponse(int code, UserAccount userAccount, String message) {
             this.code = code;
             this.userAccount = userAccount;
+            this.message = message;
         }
     }
-    
-    
     
     @GET
     @Path("/login")
     public UserAccountResponse login(String userName) {
-        Condition loginCondition = USERACCOUNT.USERNAME.equal(userName);
-        Result<Record> result;
 
-        try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
-            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-            result = create.select()
-                    .from(USERACCOUNT)
-                    .where(loginCondition)
-                    .limit(1)
-                    .fetch();
-        } catch (Exception e) {
-            throw new TexeraWebException(e);
-        }
+        Condition loginCondition = USERACCOUNT.USERNAME.equal(userName); // TODO compare password
+        Result<Record1<Integer>> result = getUserID(loginCondition);
     	
-    	UserAccountResponse response;
-    	UserAccount account;
     	if (result.size() == 0) { // not found
-    	    return generateErrorResponse();
+    	    return UserAccountResponse.generateErrorResponse("The username or password is incorrect");
     	} else {
-    		account = new UserAccount(
+    	    UserAccount account = new UserAccount(
     				result.get(0).get(USERACCOUNT.USERNAME),
     				result.get(0).get(USERACCOUNT.USERID));
-    		response = new UserAccountResponse(0, account);
+    	    UserAccountResponse response = UserAccountResponse.generateSuccessResponse(account);
     		return response;
     	}
     	
     }
     
-    
-    
     @PUT
     @Path("/register")
     public UserAccountResponse register(String userName) {
-        Condition registerCondition = USERACCOUNT.USERNAME.equal(userName);
-        Result<Record> result;
-        DSLContext create;
     
+        Condition registerCondition = USERACCOUNT.USERNAME.equal(userName);
+        Result<Record1<Integer>> result = getUserID(registerCondition);
+        
+        if (result.size() == 0) { // not found and register is allowed
+            return insertUserAccount(userName);
+        } else {
+            return UserAccountResponse.generateErrorResponse("Username already exists");
+        }
+    }
+    
+    private Result<Record1<Integer>> getUserID(Condition condition) {
         try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
-            create = DSL.using(conn, SQLDialect.MYSQL);
-            result = create.select()
+            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+            Result<Record1<Integer>> result = create
+                    .select(USERACCOUNT.USERID)
                     .from(USERACCOUNT)
-                    .where(registerCondition)
+                    .where(condition)
                     .limit(1)
                     .fetch();
+            return result;
         } catch (Exception e) {
             throw new TexeraWebException(e);
         }
-        
-        if (result.size() == 0) { // not found and register is allowed
-            try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
-                create = DSL.using(conn, SQLDialect.MYSQL);
-                
-                create.insertInto(USERACCOUNT,
-                        USERACCOUNT.USERNAME)
-                        .values(userName)
-                        .execute();
-                
-            } catch (Exception e) {
-                throw new TexeraWebException(e);
-            }
-
-            return this.login(userName);
-        } else {
-            return generateErrorResponse();
-        }
     }
     
-    private UserAccountResponse generateErrorResponse() {
-        return new UserAccountResponse(1, new UserAccount());
+    private UserAccountResponse insertUserAccount(String userName) {
+        try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
+            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+            
+            create.insertInto(USERACCOUNT,
+                    USERACCOUNT.USERNAME)
+                    .values(userName)
+                    .execute();
+            
+        } catch (Exception e) {
+            throw new TexeraWebException(e);
+        }
+        return login(userName);
     }
+    
 }

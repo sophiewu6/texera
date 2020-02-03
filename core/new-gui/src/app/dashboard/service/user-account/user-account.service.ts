@@ -13,7 +13,7 @@ const loginInURL = 'users/dictionaries/loginIn';
 
 
 @Injectable()
-export class UserInfoService {
+export class UserAccountService {
   private userChangeEvent: EventEmitter<UserAccount> = new EventEmitter();
   private currentUser: UserAccount = this.createEmptyUser();
   private isLoginInFlag: boolean = false;
@@ -92,7 +92,7 @@ export class UserInfoService {
   private createEmptyUser(): UserAccount {
     const emptyUser: UserAccount = {
       userName : '',
-      ID : -1
+      userID : -1
     };
     return emptyUser;
   }

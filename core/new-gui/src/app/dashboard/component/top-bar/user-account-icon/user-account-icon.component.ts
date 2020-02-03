@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { UserAccountService } from 'src/app/dashboard/service/user-account/user-account.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { UserAccountLoginComponent } from './user-account-login/user-account-login/user-account-login.component';
 
 /**
  * UserAccountIconComponent is triggered when user wants to log into the system
@@ -15,8 +16,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./user-account-icon.component.scss']
 })
 export class UserAccountIconComponent implements OnInit {
-
-  private userName: string = this.getDefaultUserName();
+  public userName: string = this.getDefaultUserName();
 
   constructor(
     private modalService: NgbModal,
@@ -27,25 +27,49 @@ export class UserAccountIconComponent implements OnInit {
     this.subscribeFromUser();
   }
 
-
-  public registerButton() {
+  public logOutButton(): void {
+    this.userAccountService.logOut();
   }
 
-  public loginInButton() {
-    const modalRef = this.modalService.open(NgbdModalResourceAddComponent);
+  public logInButton(): void {
+    this.openLoginInComponent(0);
+  }
+
+  public registerButton(): void {
+    this.openLoginInComponent(1);
+  }
+
+  public isLogIn() {
+    return this.userAccountService.isLogIn();
+  }
+
+  private openLoginInComponent(mode: number): void {
+    const modalRef: NgbModalRef = this.modalService.open(UserAccountLoginComponent);
+
+    this.userAccountService.getUserChangeEvent()
+    .subscribe(
+      () => {
+        if (this.userAccountService.isLogIn()) {
+          try {
+            modalRef.close();
+          } catch (e) {}
+        }
+      }
+    );
   }
 
   private subscribeFromUser(): void {
     this.userAccountService.getUserChangeEvent()
     .subscribe(
       () => {
-        if (this.userAccountService.isLoginIn()) {
+        if (this.userAccountService.isLogIn()) {
           this.userName = this.userAccountService.getCurrentUser().userName;
         } else {
           this.userName = this.getDefaultUserName();
         }
       }
     );
+
   }
 
   private getDefaultUserName(): string {

@@ -9,19 +9,19 @@ import { UserAccount } from '../../type/user-account';
 import { UserAccountResponse } from '../../type/user-account';
 
 const registerURL = 'users/accounts/register';
-const loginInURL = 'users/accounts/loginIn';
+const loginInURL = 'users/accounts/logIn';
 
 
 @Injectable()
 export class UserAccountService {
   private userChangeEvent: EventEmitter<UserAccount> = new EventEmitter();
   private currentUser: UserAccount = this.createEmptyUser();
-  private isLoginInFlag: boolean = false;
+  private isLogInFlag: boolean = false;
 
   constructor(private http: HttpClient) { }
 
   public registerUser(userName: string): Observable<UserAccountResponse> {
-    if (this.isLoginIn()) {
+    if (this.isLogIn()) {
       throw new Error('Already logged in when register.');
     }
 
@@ -30,7 +30,7 @@ export class UserAccountService {
         if (res.code === 0) {
           this.currentUser = res.userAccount;
           this.userChangeEvent.emit(this.currentUser);
-          this.isLoginInFlag = true;
+          this.isLogInFlag = true;
           return res;
         } else { // register failed
           return res;
@@ -39,17 +39,17 @@ export class UserAccountService {
     );
   }
 
-  public loginInUser(userName: string):  Observable<UserAccountResponse> {
-    if (this.isLoginIn()) {
+  public logInUser(userName: string):  Observable<UserAccountResponse> {
+    if (this.isLogIn()) {
       throw new Error('Already logged in when login in.');
     }
 
-    return this.loginIn(userName).map(
+    return this.logIn(userName).map(
       res => {
         if (res.code === 0) {
           this.currentUser = res.userAccount;
           this.userChangeEvent.emit(this.currentUser);
-          this.isLoginInFlag = true;
+          this.isLogInFlag = true;
           return res;
         } else { // login in failed
           return res;
@@ -59,13 +59,13 @@ export class UserAccountService {
   }
 
   public logOut(): void {
-    this.isLoginInFlag = false;
+    this.isLogInFlag = false;
     this.currentUser = this.createEmptyUser();
     this.userChangeEvent.emit(this.currentUser);
   }
 
-  public isLoginIn(): boolean {
-    return this.isLoginInFlag;
+  public isLogIn(): boolean {
+    return this.isLogInFlag;
   }
 
   public getCurrentUser(): UserAccount {
@@ -83,7 +83,7 @@ export class UserAccountService {
     );
   }
 
-  private loginIn(userName: string): Observable<UserAccountResponse> {
+  private logIn(userName: string): Observable<UserAccountResponse> {
     return this.http.get<UserAccountResponse>(`${environment.apiUrl}/${loginInURL}`,
       {params : {name : userName}}
     );

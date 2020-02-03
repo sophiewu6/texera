@@ -62,6 +62,7 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
 
 import { FileUploadModule } from 'ng2-file-upload';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UserAccountLoginComponent } from './dashboard/component/top-bar/user-account-icon/user-account-login/user-account-login/user-account-login.component';
 
 @NgModule({
   declarations: [
@@ -96,7 +97,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     OperatorLabelComponent,
     ProductTourComponent,
     MiniMapComponent,
-    ResultPanelToggleComponent
+    ResultPanelToggleComponent,
+    UserAccountLoginComponent
   ],
   imports: [
     BrowserModule,

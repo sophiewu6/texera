@@ -64,16 +64,16 @@ public class UserAccountResource {
     
     
     @GET
-    @Path("/loginIn")
-    public UserAccountResponse loginIn(String userName) {
-        Condition loginInCondition = USERACCOUNT.USERNAME.equal(userName);
+    @Path("/logIn")
+    public UserAccountResponse logIn(String userName) {
+        Condition logInCondition = USERACCOUNT.USERNAME.equal(userName);
         Result<Record> result;
 
         try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
             DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
             result = create.select()
                     .from(USERACCOUNT)
-                    .where(loginInCondition)
+                    .where(logInCondition)
                     .limit(1)
                     .fetch();
         } catch (Exception e) {
@@ -127,7 +127,7 @@ public class UserAccountResource {
                 throw new TexeraWebException(e);
             }
 
-            return this.loginIn(userName);
+            return this.logIn(userName);
         } else {
             return generateErrorResponse();
         }

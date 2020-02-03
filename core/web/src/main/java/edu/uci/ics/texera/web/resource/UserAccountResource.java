@@ -31,6 +31,9 @@ public class UserAccountResource {
     private final static String url = "jdbc:mysql://localhost:3306/texera";
     
     
+    /**
+     * Corresponds to `src/app/dashboard/type/user-account.ts`
+     */
     public static class UserAccount {
         public String userName;
         public double userID;
@@ -45,6 +48,9 @@ public class UserAccountResource {
         }
     }
     
+    /**
+     * Corresponds to `src/app/dashboard/type/user-account.ts`
+     */
     public static class UserAccountResponse {
         public int code; // 0 represents success and 1 represents error
         public UserAccount userAccount;
@@ -54,9 +60,10 @@ public class UserAccountResource {
             this.userAccount = userAccount;
         }
     }
-	
-	
-	@GET
+    
+    
+    
+    @GET
     @Path("/loginIn")
     public UserAccountResponse loginIn(String userName) {
         Condition loginInCondition = USERACCOUNT.USERNAME.equal(userName);
@@ -86,6 +93,8 @@ public class UserAccountResource {
     	}
     	
     }
+    
+    
     
     @PUT
     @Path("/register")

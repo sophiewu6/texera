@@ -6,10 +6,10 @@ import { environment } from '../../../../environments/environment';
 import { EventEmitter } from '@angular/core';
 import { observable } from 'rxjs';
 import { UserAccount } from '../../type/user-account';
-import { UserAccountResponse } from '../../type/user-account-response';
+import { UserAccountResponse } from '../../type/user-account';
 
-const registerURL = 'users/dictionaries/register';
-const loginInURL = 'users/dictionaries/loginIn';
+const registerURL = 'users/accounts/register';
+const loginInURL = 'users/accounts/loginIn';
 
 
 @Injectable()
@@ -32,7 +32,7 @@ export class UserAccountService {
           this.userChangeEvent.emit(this.currentUser);
           this.isLoginInFlag = true;
           return res;
-        } else {
+        } else { // register failed
           return res;
         }
       }
@@ -51,7 +51,7 @@ export class UserAccountService {
           this.userChangeEvent.emit(this.currentUser);
           this.isLoginInFlag = true;
           return res;
-        } else {
+        } else { // login in failed
           return res;
         }
       }

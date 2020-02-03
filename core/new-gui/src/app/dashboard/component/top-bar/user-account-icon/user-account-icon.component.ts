@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UserAccountService } from 'src/app/dashboard/service/user-account/user-account.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 /**
  * UserAccountIconComponent is triggered when user wants to log into the system
@@ -15,19 +16,40 @@ import { UserAccountService } from 'src/app/dashboard/service/user-account/user-
 })
 export class UserAccountIconComponent implements OnInit {
 
-  userName = 'User';
+  private userName: string = this.getDefaultUserName();
 
-  constructor(private userAccountService: UserAccountService) {
-  }
+  constructor(
+    private modalService: NgbModal,
+    private userAccountService: UserAccountService
+  ) {}
 
   ngOnInit() {
+    this.subscribeFromUser();
   }
+
 
   public registerButton() {
   }
 
-  public loginButton() {
+  public loginInButton() {
+    const modalRef = this.modalService.open(NgbdModalResourceAddComponent);
+  }
 
+  private subscribeFromUser(): void {
+    this.userAccountService.getUserChangeEvent()
+    .subscribe(
+      () => {
+        if (this.userAccountService.isLoginIn()) {
+          this.userName = this.userAccountService.getCurrentUser().userName;
+        } else {
+          this.userName = this.getDefaultUserName();
+        }
+      }
+    );
+  }
+
+  private getDefaultUserName(): string {
+    return 'User';
   }
 
 }

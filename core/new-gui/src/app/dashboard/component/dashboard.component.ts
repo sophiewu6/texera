@@ -4,6 +4,7 @@ import { UserDictionaryService } from '../service/user-dictionary/user-dictionar
 import { StubUserDictionaryService } from '../service/user-dictionary/stub-user-dictionary.service';
 import { SavedProjectService } from '../service/saved-project/saved-project.service';
 import { StubSavedProjectService } from '../service/saved-project/stub-saved-project.service';
+import { UserAccountService } from '../service/user-account/user-account.service';
 
 /**
  * dashboardComponent is the component which contains all the subcomponents

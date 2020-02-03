@@ -8,26 +8,26 @@
 <div class="modal-body">
   <mat-tab-group mat-stretch-tabs>
     <!-- login tab -->
-    <mat-tab label="loginIn">
+    <mat-tab label="Sign In">
       <div class= "content">
         <mat-dialog-content>
           <mat-form-field>
             <input matInput [(ngModel)]="loginUserName" placeholder="userName">
           </mat-form-field>
         </mat-dialog-content>
-        <button (click) = "login()"> login </button>
+        <button (click) = "login()"> Sign In </button>
       </div>
     </mat-tab>
 
     <!-- register tab -->
-    <mat-tab label="register">
+    <mat-tab label="Sign Up">
       <div class= "content">
         <mat-dialog-content>
           <mat-form-field>
             <input matInput [(ngModel)]="registerUserName" placeholder="userName">
           </mat-form-field>
         </mat-dialog-content>
-        <button (click) = "register()"> register </button>
+        <button (click) = "register()"> Sign Up </button>
       </div>
     </mat-tab>
   </mat-tab-group>

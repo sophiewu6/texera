@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { UserAccountService } from 'src/app/dashboard/service/user-account/user-account.service';
+import { UserAccountService } from '../../../../../service/user-account/user-account.service';
 
 @Component({
   selector: 'texera-user-account-login',
   templateUrl: './user-account-login.component.html',
   styleUrls: ['./user-account-login.component.scss']
 })
-export class UserAccountLoginComponent implements OnInit {
+export class NgbdModalUserAccountLoginComponent implements OnInit {
   public loginUserName: string = '';
   public registerUserName: string = '';
 
@@ -24,7 +24,7 @@ export class UserAccountLoginComponent implements OnInit {
       return;
     }
 
-    this.userAccountService.logInUser(this.loginUserName)
+    this.userAccountService.loginUser(this.loginUserName)
       .subscribe(
         res => {
           if (res.code === 0) { // successfully login in

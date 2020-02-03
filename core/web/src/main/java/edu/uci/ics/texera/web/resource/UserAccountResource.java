@@ -1,8 +1,11 @@
 package edu.uci.ics.texera.web.resource;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -25,6 +28,8 @@ import java.util.List;
 
 
 @Path("/users/accounts/")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class UserAccountResource {
     private final static String serverName = "root";
     private final static String password = "PassWithWord";
@@ -64,16 +69,16 @@ public class UserAccountResource {
     
     
     @GET
-    @Path("/logIn")
-    public UserAccountResponse logIn(String userName) {
-        Condition logInCondition = USERACCOUNT.USERNAME.equal(userName);
+    @Path("/login")
+    public UserAccountResponse login(String userName) {
+        Condition loginCondition = USERACCOUNT.USERNAME.equal(userName);
         Result<Record> result;
 
         try (Connection conn = DriverManager.getConnection(url, serverName, password)) {
             DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
             result = create.select()
                     .from(USERACCOUNT)
-                    .where(logInCondition)
+                    .where(loginCondition)
                     .limit(1)
                     .fetch();
         } catch (Exception e) {
@@ -127,7 +132,7 @@ public class UserAccountResource {
                 throw new TexeraWebException(e);
             }
 
-            return this.logIn(userName);
+            return this.login(userName);
         } else {
             return generateErrorResponse();
         }

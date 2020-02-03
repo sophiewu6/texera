@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { UserAccountService } from 'src/app/dashboard/service/user-account/user-account.service';
+import { UserAccountService } from '../../../service/user-account/user-account.service';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { UserAccountLoginComponent } from './user-account-login/user-account-login/user-account-login.component';
+import { NgbdModalUserAccountLoginComponent } from './user-account-login/user-account-login/user-account-login.component';
 
 /**
  * UserAccountIconComponent is triggered when user wants to log into the system
@@ -31,25 +31,25 @@ export class UserAccountIconComponent implements OnInit {
     this.userAccountService.logOut();
   }
 
-  public logInButton(): void {
-    this.openLoginInComponent(0);
+  public loginButton(): void {
+    this.openLoginComponent(0);
   }
 
   public registerButton(): void {
-    this.openLoginInComponent(1);
+    this.openLoginComponent(1);
   }
 
-  public isLogIn() {
-    return this.userAccountService.isLogIn();
+  public isLogin() {
+    return this.userAccountService.isLogin();
   }
 
-  private openLoginInComponent(mode: number): void {
-    const modalRef: NgbModalRef = this.modalService.open(UserAccountLoginComponent);
+  private openLoginComponent(mode: number): void {
+    const modalRef: NgbModalRef = this.modalService.open(NgbdModalUserAccountLoginComponent);
 
     this.userAccountService.getUserChangeEvent()
     .subscribe(
       () => {
-        if (this.userAccountService.isLogIn()) {
+        if (this.userAccountService.isLogin()) {
           try {
             modalRef.close();
           } catch (e) {}
@@ -62,7 +62,7 @@ export class UserAccountIconComponent implements OnInit {
     this.userAccountService.getUserChangeEvent()
     .subscribe(
       () => {
-        if (this.userAccountService.isLogIn()) {
+        if (this.userAccountService.isLogin()) {
           this.userName = this.userAccountService.getCurrentUser().userName;
         } else {
           this.userName = this.getDefaultUserName();

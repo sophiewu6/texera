@@ -20,6 +20,8 @@ public class OperatorGroupConstants {
     public static final String UTILITY_GROUP = "Utilities";
     
     public static final String DATABASE_GROUP = "Database";
+
+    public static final String VISUALIZATION_GROUP = "Visualization";
     
     public static final String RESULT_GROUP = "View Results";
     
@@ -52,7 +54,8 @@ public class OperatorGroupConstants {
         OperatorGroupOrderList.add(new GroupOrder(JOIN_GROUP, 4));
         OperatorGroupOrderList.add(new GroupOrder(UTILITY_GROUP, 5));
         OperatorGroupOrderList.add(new GroupOrder(DATABASE_GROUP, 6));
-        OperatorGroupOrderList.add(new GroupOrder(RESULT_GROUP, 7));
+        OperatorGroupOrderList.add(new GroupOrder(VISUALIZATION_GROUP, 7));
+        OperatorGroupOrderList.add(new GroupOrder(RESULT_GROUP, 8));
     }
     
 

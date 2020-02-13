@@ -10,12 +10,23 @@ import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
-public class LinePlotPredicate extends PredicateBase{
+public class LinePlotPredicate extends PredicateBase {
+
+    @JsonCreator
+    public LinePlotPredicate () {
+
+    }
+
+    @Override
+    public LinePlot newOperator() {
+        return new LinePlot(this);
+    }
+
     public static Map<String, Object> getOperatorMetadata() {
         return ImmutableMap.<String, Object>builder()
             .put(PropertyNameConstants.USER_FRIENDLY_NAME, "Line Plot")
             .put(PropertyNameConstants.OPERATOR_DESCRIPTION, "View the results in a line plot")
-            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, OperatorGroupConstants.DATABASE_GROUP)
+            .put(PropertyNameConstants.OPERATOR_GROUP_NAME, OperatorGroupConstants.VISUALIZATION_GROUP)
             .build();
     }
 }

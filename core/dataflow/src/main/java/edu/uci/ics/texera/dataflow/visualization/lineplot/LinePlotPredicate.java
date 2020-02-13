@@ -1,5 +1,6 @@
 package edu.uci.ics.texera.dataflow.visualization.lineplot;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -12,10 +13,19 @@ import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
 public class LinePlotPredicate extends PredicateBase {
 
+    private final String xAxis;
+
     @JsonCreator
-    public LinePlotPredicate () {
+    public LinePlotPredicate (
+            @JsonProperty(value = PropertyNameConstants.LINEPLOT_XAXIS, required = true)
+                    String xAxis) {
+
+        this.xAxis = xAxis;
 
     }
+
+    @JsonProperty(value = PropertyNameConstants.LINEPLOT_XAXIS)
+    public String getXAxis() { return xAxis; }
 
     @Override
     public LinePlot newOperator() {

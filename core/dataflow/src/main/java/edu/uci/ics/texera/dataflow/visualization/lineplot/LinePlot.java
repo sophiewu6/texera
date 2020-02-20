@@ -10,6 +10,7 @@ import edu.uci.ics.texera.api.dataflow.IOperator;
 import edu.uci.ics.texera.api.dataflow.ISink;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
+import edu.uci.ics.texera.api.field.IField;
 import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.tuple.Tuple;
 import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotPredicate;
@@ -27,6 +28,7 @@ public class LinePlot implements ISink {
     private int cursor = CLOSED;
 
     private String xAxis;
+    private HashMap<IField, Integer> map;
 
     public LinePlot(LinePlotPredicate predicate) {
         this.predicate = predicate;
@@ -65,7 +67,14 @@ public class LinePlot implements ISink {
 
     @Override
     public void processTuples() throws TexeraException {
-        return;
+        xAxis = predicate.getXAxis();
+        Tuple inputTuple;
+        while ((inputTuple = inputOperator.getNextTuple()) != null)
+        {
+            IField field = inputTuple.getField(xAxis);
+            map.putIfAbsent(field, 0);
+            map.put(field, map.get(field) + 1);
+        }
     }
 
     @Override

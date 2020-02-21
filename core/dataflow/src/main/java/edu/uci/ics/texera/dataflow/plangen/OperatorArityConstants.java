@@ -35,6 +35,7 @@ import edu.uci.ics.texera.dataflow.twitter.TwitterJsonConverterPredicate;
 import edu.uci.ics.texera.dataflow.twitterfeed.TwitterFeedSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
+import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotSinkPredicate;
 
 /**
  * OperatorArityConstants class includes the input and output arity constraints of each operator.
@@ -82,7 +83,8 @@ public class OperatorArityConstants {
         fixedInputArityMap.put(TupleSinkPredicate.class, 1);
         fixedInputArityMap.put(ExcelSinkPredicate.class, 1);
         fixedInputArityMap.put(MysqlSinkPredicate.class, 1);
-        
+
+        fixedInputArityMap.put(LinePlotSinkPredicate.class, 1);
     }
     
     public static Map<Class<? extends PredicateBase>, Integer> fixedOutputArityMap = new HashMap<>();
@@ -123,7 +125,8 @@ public class OperatorArityConstants {
         fixedOutputArityMap.put(TupleSinkPredicate.class, 0);
         fixedOutputArityMap.put(ExcelSinkPredicate.class, 0);
         fixedOutputArityMap.put(MysqlSinkPredicate.class, 0);
-        
+
+        fixedOutputArityMap.put(LinePlotSinkPredicate.class, 0);
     }
     
     /**

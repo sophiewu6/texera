@@ -11,14 +11,16 @@ import edu.uci.ics.texera.api.dataflow.ISink;
 import edu.uci.ics.texera.api.exception.DataflowException;
 import edu.uci.ics.texera.api.exception.TexeraException;
 import edu.uci.ics.texera.api.field.IField;
+import edu.uci.ics.texera.api.field.IntegerField;
+import edu.uci.ics.texera.api.schema.AttributeType;
 import edu.uci.ics.texera.api.schema.Schema;
 import edu.uci.ics.texera.api.tuple.Tuple;
-import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotPredicate;
+import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotSinkPredicate;
 import edu.uci.ics.texera.dataflow.utils.DataflowUtils;
 
-public class LinePlot implements ISink {
+public class LinePlotSink implements ISink {
 
-    private final LinePlotPredicate predicate;
+    private final LinePlotSinkPredicate predicate;
 
     private IOperator inputOperator;
 
@@ -28,9 +30,9 @@ public class LinePlot implements ISink {
     private int cursor = CLOSED;
 
     private String xAxis;
-    private HashMap<IField, Integer> map;
+    private HashMap<String, IField> result;
 
-    public LinePlot(LinePlotPredicate predicate) {
+    public LinePlotSink(LinePlotSinkPredicate predicate) {
         this.predicate = predicate;
     }
 
@@ -69,11 +71,12 @@ public class LinePlot implements ISink {
     public void processTuples() throws TexeraException {
         xAxis = predicate.getXAxis();
         Tuple inputTuple;
+
         while ((inputTuple = inputOperator.getNextTuple()) != null)
         {
-            IField field = inputTuple.getField(xAxis);
-            map.putIfAbsent(field, 0);
-            map.put(field, map.get(field) + 1);
+            String field = inputTuple.getField(xAxis);
+            result.putIfAbsent(field, new IntegerField(0));
+            result.put(field, new IntegerField(((IntegerField)result.get(field)).getValue() + 1));
         }
     }
 
@@ -82,22 +85,11 @@ public class LinePlot implements ISink {
         if (cursor == CLOSED) {
             return null;
         }
-        if (cursor >= predicate.getLimit() + predicate.getOffset()) {
-            return null;
-        }
-        Tuple resultTuple = null;
-        while (true) {
-            resultTuple = inputOperator.getNextTuple();
-            if (resultTuple == null) {
-                return null;
-            }
-            cursor++;
-            if (cursor > predicate.getOffset()) {
-                break;
-            }
-        }
-        return new Tuple.Builder(resultTuple)
-                .removeIfExists(SchemaConstants.PAYLOAD).build();
+        Tuple.Builder tupleBuilder = new Tuple.Builder();
+
+        result.forEach((k,v) -> tupleBuilder.add(k, AttributeType.INTEGER, v));
+
+        return tupleBuilder.build();
 
     }
 

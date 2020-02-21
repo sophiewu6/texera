@@ -43,7 +43,7 @@ import edu.uci.ics.texera.dataflow.source.scan.ScanSourcePredicate;
 import edu.uci.ics.texera.dataflow.twitter.TwitterJsonConverterPredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountIndexSourcePredicate;
 import edu.uci.ics.texera.dataflow.wordcount.WordCountOperatorPredicate;
-import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotPredicate;
+import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotSinkPredicate;
 
 
 /**
@@ -101,7 +101,7 @@ import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotPredicate;
         @Type(value = WordCountOperatorPredicate.class, name = "WordCount"),
         @Type(value = AggregatorPredicate.class, name = "Aggregation"),
 
-        @Type(value = LinePlotPredicate.class, name = "LinePlot")
+        @Type(value = LinePlotSinkPredicate.class, name = "LinePlot")
 })
 public abstract class PredicateBase implements IPredicate {
     

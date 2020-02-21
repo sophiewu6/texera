@@ -11,12 +11,12 @@ import edu.uci.ics.texera.dataflow.common.OperatorGroupConstants;
 import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
-public class LinePlotPredicate extends PredicateBase {
+public class LinePlotSinkPredicate extends PredicateBase {
 
     private final String xAxis;
 
     @JsonCreator
-    public LinePlotPredicate (
+    public LinePlotSinkPredicate (
             @JsonProperty(value = PropertyNameConstants.LINEPLOT_XAXIS, required = true)
                     String xAxis) {
 
@@ -28,8 +28,8 @@ public class LinePlotPredicate extends PredicateBase {
     public String getXAxis() { return xAxis; }
 
     @Override
-    public LinePlot newOperator() {
-        return new LinePlot(this);
+    public LinePlotSink newOperator() {
+        return new LinePlotSink(this);
     }
 
     public static Map<String, Object> getOperatorMetadata() {

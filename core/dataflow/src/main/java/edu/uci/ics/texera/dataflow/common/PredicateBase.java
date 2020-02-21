@@ -101,7 +101,7 @@ import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotSinkPredicate;
         @Type(value = WordCountOperatorPredicate.class, name = "WordCount"),
         @Type(value = AggregatorPredicate.class, name = "Aggregation"),
 
-        @Type(value = LinePlotSinkPredicate.class, name = "LinePlot")
+        @Type(value = LinePlotSinkPredicate.class, name = "LinePlotSink")
 })
 public abstract class PredicateBase implements IPredicate {
     

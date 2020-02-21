@@ -4,6 +4,7 @@ package edu.uci.ics.texera.dataflow.visualization.lineplot;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.google.protobuf.MapEntry;
 import edu.uci.ics.texera.api.constants.ErrorMessages;
 import edu.uci.ics.texera.api.constants.SchemaConstants;
 import edu.uci.ics.texera.api.dataflow.IOperator;
@@ -30,7 +31,7 @@ public class LinePlotSink implements ISink {
     private int cursor = CLOSED;
 
     private String xAxis;
-    private HashMap<String, IField> result;
+    private HashMap<String, IField> result = new HashMap<>();
 
     public LinePlotSink(LinePlotSinkPredicate predicate) {
         this.predicate = predicate;
@@ -71,12 +72,15 @@ public class LinePlotSink implements ISink {
     public void processTuples() throws TexeraException {
         xAxis = predicate.getXAxis();
         Tuple inputTuple;
-
         while ((inputTuple = inputOperator.getNextTuple()) != null)
         {
-            String field = inputTuple.getField(xAxis);
+            String field = (String)inputTuple.getField(xAxis).getValue();
             result.putIfAbsent(field, new IntegerField(0));
             result.put(field, new IntegerField(((IntegerField)result.get(field)).getValue() + 1));
+        }
+        for (Map.Entry<String, IField> entry : result.entrySet())
+        {
+            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
         }
     }
 
@@ -101,6 +105,23 @@ public class LinePlotSink implements ISink {
             inputOperator.close();
         }
         cursor = CLOSED;
+    }
+
+    /**
+     * Collects ALL the tuples to an in-memory list.
+     *
+     * @return a list of tuples
+     * @throws TexeraException
+     */
+    public List<Tuple> collectAllTuples() throws TexeraException {
+        this.open();
+        ArrayList<Tuple> results = new ArrayList<>();
+        Tuple tuple;
+        while ((tuple = this.getNextTuple()) != null) {
+            results.add(tuple);
+        }
+        this.close();
+        return results;
     }
 
     public Schema transformToOutputSchema(Schema... inputSchema) throws DataflowException {

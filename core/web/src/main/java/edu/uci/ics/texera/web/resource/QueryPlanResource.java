@@ -31,6 +31,7 @@ import edu.uci.ics.texera.dataflow.common.PredicateBase;
 import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 import edu.uci.ics.texera.dataflow.plangen.LogicalPlan;
 import edu.uci.ics.texera.dataflow.sink.tuple.TupleSink;
+import edu.uci.ics.texera.dataflow.visualization.lineplot.LinePlotSink;
 import edu.uci.ics.texera.web.TexeraWebException;
 
 /**
@@ -98,12 +99,48 @@ public class QueryPlanResource {
                 response.put("resultID", resultID);
                 return response;
             } else {
-                // execute the plan and return success message
-                Engine.getEngine().evaluate(plan);
-                ObjectNode response = new ObjectMapper().createObjectNode();
-                response.put("code", 1);
-                response.put("message", "plan sucessfully executed");
-                return response;
+                if (sink instanceof LinePlotSink) {
+                    LinePlotSink linePlotSink = (LinePlotSink) sink;
+                    linePlotSink.open();
+                    List<Tuple> results = linePlotSink.collectAllTuples();
+                    linePlotSink.close();
+
+                    // make sure result directory is created
+                    if (Files.notExists(resultDirectory)) {
+                        Files.createDirectories(resultDirectory);
+                    }
+
+                    // clean up old result files
+                    cleanupOldResults();
+
+                    // generate new UUID as the result id
+                    String resultID = UUID.randomUUID().toString();
+
+                    // write original json of the result into a file
+                    java.nio.file.Path resultFile = resultDirectory.resolve(resultID + ".json");
+
+                    Files.createFile(resultFile);
+                    Files.write(resultFile, new ObjectMapper().writeValueAsBytes(results));
+
+                    // put readable json of the result into response
+                    ArrayNode resultNode = new ObjectMapper().createArrayNode();
+                    for (Tuple tuple : results) {
+                        resultNode.add(tuple.getReadableJson());
+                    }
+
+                    ObjectNode response = new ObjectMapper().createObjectNode();
+                    response.put("code", 0);
+                    response.set("result", resultNode);
+                    response.put("resultID", resultID);
+                    return response;
+                } else {
+                    // execute the plan and return success message
+                    Engine.getEngine().evaluate(plan);
+                    ObjectNode response = new ObjectMapper().createObjectNode();
+                    response.put("code", 1);
+                    response.put("message", "plan sucessfully executed");
+                    return response;
+                }
             }
             
         } catch (IOException | TexeraException e) {

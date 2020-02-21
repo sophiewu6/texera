@@ -74,7 +74,7 @@ public class LinePlotSink implements ISink {
         Tuple inputTuple;
         while ((inputTuple = inputOperator.getNextTuple()) != null)
         {
-            String field = (String)inputTuple.getField(xAxis).getValue();
+            String field = inputTuple.getField(xAxis).getValue().toString();
             result.putIfAbsent(field, new IntegerField(0));
             result.put(field, new IntegerField(((IntegerField)result.get(field)).getValue() + 1));
         }
@@ -116,11 +116,8 @@ public class LinePlotSink implements ISink {
     public List<Tuple> collectAllTuples() throws TexeraException {
         this.open();
         ArrayList<Tuple> results = new ArrayList<>();
-        Tuple tuple;
-        while ((tuple = this.getNextTuple()) != null) {
-            results.add(tuple);
-        }
-        this.close();
+        this.processTuples();
+        results.add(this.getNextTuple());
         return results;
     }
 

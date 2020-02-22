@@ -30,7 +30,7 @@ public class LinePlotSink implements ISink {
 
     private int cursor = CLOSED;
 
-    private String xAxis;
+    private String attributeName;
     private HashMap<String, IField> result = new HashMap<>();
 
     public LinePlotSink(LinePlotSinkPredicate predicate) {
@@ -70,17 +70,13 @@ public class LinePlotSink implements ISink {
 
     @Override
     public void processTuples() throws TexeraException {
-        xAxis = predicate.getXAxis();
+        attributeName = predicate.getAttributeName();
         Tuple inputTuple;
         while ((inputTuple = inputOperator.getNextTuple()) != null)
         {
-            String field = inputTuple.getField(xAxis).getValue().toString();
+            String field = inputTuple.getField(attributeName).getValue().toString();
             result.putIfAbsent(field, new IntegerField(0));
             result.put(field, new IntegerField(((IntegerField)result.get(field)).getValue() + 1));
-        }
-        for (Map.Entry<String, IField> entry : result.entrySet())
-        {
-            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
         }
     }
 
@@ -114,7 +110,6 @@ public class LinePlotSink implements ISink {
      * @throws TexeraException
      */
     public List<Tuple> collectAllTuples() throws TexeraException {
-        this.open();
         ArrayList<Tuple> results = new ArrayList<>();
         this.processTuples();
         results.add(this.getNextTuple());

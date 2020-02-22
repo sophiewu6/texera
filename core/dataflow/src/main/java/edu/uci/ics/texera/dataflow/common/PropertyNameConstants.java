@@ -138,7 +138,4 @@ public class PropertyNameConstants {
     public static final String INVALID_SAMPLE_SIZE_EXCEPTION = "Sample size should be greater than 0.";
     public static final String INVALID_LIMIT_EXCEPTION = "limit must be greater than or equal to 0";
     public static final String INVALID_OFFSET_EXCEPTION = "offset must be greater than or equal to 0";
-
-    // related to LinePlot
-    public static final String LINEPLOT_XAXIS = "xAxis";
 }

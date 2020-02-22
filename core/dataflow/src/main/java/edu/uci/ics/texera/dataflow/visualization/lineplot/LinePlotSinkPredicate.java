@@ -13,19 +13,19 @@ import edu.uci.ics.texera.dataflow.common.PropertyNameConstants;
 
 public class LinePlotSinkPredicate extends PredicateBase {
 
-    private final String xAxis;
+    private final String attributeName;
 
     @JsonCreator
     public LinePlotSinkPredicate (
-            @JsonProperty(value = PropertyNameConstants.LINEPLOT_XAXIS, required = true)
-                    String xAxis) {
+            @JsonProperty(value = PropertyNameConstants.ATTRIBUTE_NAME, required = true)
+                    String attributeName) {
 
-        this.xAxis = xAxis;
+        this.attributeName = attributeName;
 
     }
 
-    @JsonProperty(value = PropertyNameConstants.LINEPLOT_XAXIS)
-    public String getXAxis() { return xAxis; }
+    @JsonProperty(value = PropertyNameConstants.ATTRIBUTE_NAME)
+    public String getAttributeName() { return attributeName; }
 
     @Override
     public LinePlotSink newOperator() {

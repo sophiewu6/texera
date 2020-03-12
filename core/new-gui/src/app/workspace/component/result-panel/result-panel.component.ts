@@ -1,4 +1,4 @@
-import { Component, ViewChild, Input } from '@angular/core';
+import { Component, ViewChild, Input, AfterViewInit } from '@angular/core';
 import { MatPaginator, MatTableDataSource, PageEvent } from '@angular/material';
 
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
@@ -10,6 +10,7 @@ import { TableColumn, IndexableObject } from './../../types/result-table.interfa
 import { ResultPanelToggleService } from './../../service/result-panel-toggle/result-panel-toggle.service';
 import deepMap from 'deep-map';
 import { isEqual } from 'lodash';
+import * as c3 from 'c3';
 
 /**
  * ResultPanelCompoent is the bottom level area that displays the
@@ -30,7 +31,19 @@ import { isEqual } from 'lodash';
   templateUrl: './result-panel.component.html',
   styleUrls: ['./result-panel.component.scss']
 })
-export class ResultPanelComponent {
+export class ResultPanelComponent implements AfterViewInit {
+
+  ngAfterViewInit() {
+    const chart = c3.generate({
+    bindto: '#chart',
+        data: {
+            columns: [
+                ['data1', 30, 200, 100, 400, 150, 250],
+                ['data2', 50, 20, 10, 40, 15, 25]
+            ]
+        }
+    });
+  }
 
   private static readonly PRETTY_JSON_TEXT_LIMIT: number = 50000;
   private static readonly TABLE_COLUMN_TEXT_LIMIT: number = 1000;

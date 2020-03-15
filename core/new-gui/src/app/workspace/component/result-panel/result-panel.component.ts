@@ -1,4 +1,4 @@
-import { Component, ViewChild, Input, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, Input, ViewEncapsulation } from '@angular/core';
 import { MatPaginator, MatTableDataSource, PageEvent } from '@angular/material';
 
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
@@ -29,29 +29,21 @@ import * as c3 from 'c3';
 @Component({
   selector: 'texera-result-panel',
   templateUrl: './result-panel.component.html',
-  styleUrls: ['./result-panel.component.scss']
+  styleUrls: ['./result-panel.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ResultPanelComponent implements AfterViewInit {
-
-  ngAfterViewInit() {
-    const chart = c3.generate({
-    bindto: '#chart',
-        data: {
-            columns: [
-                ['data1', 30, 200, 100, 400, 150, 250],
-                ['data2', 50, 20, 10, 40, 15, 25]
-            ]
-        }
-    });
-  }
+export class ResultPanelComponent {
 
   private static readonly PRETTY_JSON_TEXT_LIMIT: number = 50000;
   private static readonly TABLE_COLUMN_TEXT_LIMIT: number = 1000;
 
   public showMessage: boolean = false;
+  public showGraph: boolean = false;
   public message: string = '';
   public currentColumns: TableColumn[] | undefined;
   public currentDisplayColumns: string[] | undefined;
+  public currentKeys: string[] | undefined;
+  public currentValues: any[] | undefined;
   public currentDataSource: MatTableDataSource<object> | undefined;
   public showResultPanel: boolean | undefined;
 
@@ -170,7 +162,8 @@ export class ResultPanelComponent implements AfterViewInit {
     }
 
     // execution success, display result table
-    this.displayResultTable(response);
+    // this.displayResultTable(response);
+    this.displayGraph(response);
   }
 
   /**
@@ -209,6 +202,7 @@ export class ResultPanelComponent implements AfterViewInit {
 
     // save a copy of current result
     this.currentResult = resultData;
+    console.log(this.currentResult);
 
     // When there is a result data from the backend,
     //  1. Get all the column names except '_id', using the first instance of
@@ -239,6 +233,54 @@ export class ResultPanelComponent implements AfterViewInit {
     // get the current page size, if the result length is less than 10, then the maximum number of items
     //   each page will be the length of the result, otherwise 10.
     this.currentMaxPageSize = this.currentPageSize = resultData.length < 10 ? resultData.length : 10;
+  }
+
+  private displayGraph(response: SuccessExecutionResult): void {
+    if (response.result.length < 1) {
+      throw new Error(`display result table inconsistency: result data should not be empty`);
+    }
+    // don't display message, display result table instead
+    this.showMessage = false;
+    this.showGraph = true;
+
+    // creates a shallow copy of the readonly response.result,
+    //  this copy will be has type object[] because MatTableDataSource's input needs to be object[]
+    const resultData = response.result.slice();
+
+    // save a copy of current result
+    this.currentResult = resultData;
+
+    // When there is a result data from the backend,
+    //  1. Get all the column names except '_id', using the first instance of
+    //      result data.
+    //  2. Use those names to generate a list of display columns, which would
+    //      be used for displaying on angular mateiral table.
+    //  3. Pass the result data as array to generate a new angular material
+    //      data table.
+    //  4. Set the newly created data table to our own paginator.
+
+
+    // generate columnDef from first row, column definition is in order
+    this.currentKeys = Object.keys(resultData[0]);
+    this.currentValues = Object.values(resultData[0]);
+    console.log(this.currentKeys);
+    console.log(this.currentValues);
+    const value = ['states'].concat(this.currentValues);
+    console.log(value);
+    const chart = c3.generate({
+      bindto: '#chart',
+      data: {
+        columns: [
+          ['states', 9, 1, 4, 3, 1, 3, 6, 4, 1, 1, 4, 5, 5, 3, 4, 5, 25, 1, 2, 3, 1, 33, 14, 3, 5, 4, 1, 1, 1, 17, 6, 1, 2, 5, 2, 3, 6, 4]
+        ]
+      },
+      axis: {
+        x: {
+          type: 'category',
+          categories: this.currentKeys
+        }
+      }
+    });
   }
 
   /**

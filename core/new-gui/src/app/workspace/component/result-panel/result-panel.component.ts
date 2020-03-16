@@ -250,28 +250,16 @@ export class ResultPanelComponent {
     // save a copy of current result
     this.currentResult = resultData;
 
-    // When there is a result data from the backend,
-    //  1. Get all the column names except '_id', using the first instance of
-    //      result data.
-    //  2. Use those names to generate a list of display columns, which would
-    //      be used for displaying on angular mateiral table.
-    //  3. Pass the result data as array to generate a new angular material
-    //      data table.
-    //  4. Set the newly created data table to our own paginator.
-
-
-    // generate columnDef from first row, column definition is in order
     this.currentKeys = Object.keys(resultData[0]);
     this.currentValues = Object.values(resultData[0]);
-    console.log(this.currentKeys);
     console.log(this.currentValues);
-    const value = ['states'].concat(this.currentValues);
+    const value = ['states'].concat(this.currentValues) as [string, any];
     console.log(value);
     const chart = c3.generate({
       bindto: '#chart',
       data: {
         columns: [
-          ['states', 9, 1, 4, 3, 1, 3, 6, 4, 1, 1, 4, 5, 5, 3, 4, 5, 25, 1, 2, 3, 1, 33, 14, 3, 5, 4, 1, 1, 1, 17, 6, 1, 2, 5, 2, 3, 6, 4]
+          value
         ]
       },
       axis: {
